@@ -1,0 +1,460 @@
+#include "appforms.p"
+
+CLASS STX_HullGirder
+
+/* Classwide Variables */
+   CLASSWIDE WIDGET form_id, label_01, datbox_01, sep_01, label_02
+   CLASSWIDE WIDGET datbox_02, datbox_03, sep_02, label_03, datbox_04
+   CLASSWIDE WIDGET datbox_05, sep_03, datbox_06, datbox_07, sep_04
+   CLASSWIDE WIDGET label_04, datbox_08, datbox_09, sep_05, label_05
+   CLASSWIDE WIDGET datbox_10, datbox_11, sep_06, label_06, datbox_12
+   CLASSWIDE WIDGET datbox_13, sep_07, button_01
+   CLASSWIDE REAL   ra_hullInfo(6)
+
+FUNCTION init()
+      REAL box_length=0.0
+      REAL yloc_main
+
+      form_id=ui_form_create(                       @
+      /* callback */         "",                    @
+      /*     x    */         FORM_X_LOC_SML,        @
+      /*     y    */         FORM_Y_LOC,            @
+      /* position */         "UL",                  @
+      /*   width  */         FORM_WID_SML,          @
+      /*  height  */         FORM_HGT_TALL,         @
+      /*   label  */         "Hull Girder Stress",  @
+      /*  unused  */         "")
+
+      yloc_main = FORM_T_MARGIN
+
+$      label_01=ui_label_create(                @
+$      /*  parent  */           form_id,        @
+$      /* callback */           "",             @
+$      /*     x    */           FORM_L_MARGIN,  @
+$      /*     y    */           yloc_main,      @
+$      /*   label  */           "Length(m)")
+$
+$      yloc_main += LABEL_HGT           + @
+$                   INTER_WIDGET_SPACE
+$
+$      box_length = DBOX_WID_SINGLE  - @
+$                   0.30000001
+$
+$      datbox_01=ui_databox_create(                @
+$      /*    parent    */          form_id,        @
+$      /*   callback   */          "",             @
+$      /*       x      */          FORM_L_MARGIN * 3.0,  @
+$      /*       y      */          yloc_main,      @
+$      /* label_length */          0.30000001,     @
+$      /*  box_length  */          box_length,     @
+$      /*     label    */          "L :  ",        @
+$      /*     value    */          0.,             @
+$      /*  label_above */          FALSE,          @
+$      /*   datatype   */          "REAL",         @
+$      /*   num_vals   */          1)
+$
+$      yloc_main += DBOX_HGT_NO_LABOVE  + @
+$                   INTER_WIDGET_SPACE
+
+$      sep_01=ui_separator_create(               @
+$      /*   parent   */           form_id,       @
+$      /*    name    */           "",            @
+$      /*      x     */           0.0,           @
+$      /*      y     */           yloc_main,     @
+$      /*   length   */           FORM_WID_SML,  @
+$      /* horizontal */           TRUE)
+$
+$      yloc_main += 5*PIXEL_HGT             - @
+$                   0.5*INTER_WIDGET_SPACE  + @
+$                   INTER_WIDGET_SPACE
+
+      label_02=ui_label_create(                                       @
+      /*  parent  */           form_id,                               @
+      /* callback */           "",                                    @
+      /*     x    */           FORM_L_MARGIN,                         @
+      /*     y    */           yloc_main,                             @
+      /*   label  */           "Still Water Bending Moment  (KN.m)")
+
+      yloc_main += LABEL_HGT           + @
+                   INTER_WIDGET_SPACE
+
+      box_length = DBOX_WID_SINGLE*0.5  - @
+                   0.30000001
+
+      datbox_02=ui_databox_create(                @
+      /*    parent    */          form_id,        @
+      /*   callback   */          "",             @
+      /*       x      */          FORM_L_MARGIN * 3.0,  @
+      /*       y      */          yloc_main,      @
+      /* label_length */          0.30000001,     @
+      /*  box_length  */          box_length,     @
+      /*     label    */          "M_ss:",      @
+      /*     value    */          0.,             @
+      /*  label_above */          FALSE,          @
+      /*   datatype   */          "REAL",         @
+      /*   num_vals   */          1)
+
+$      yloc_main += DBOX_HGT_NO_LABOVE  + @
+$                   INTER_WIDGET_SPACE
+
+      box_length = DBOX_WID_SINGLE*0.5  - @
+                   0.30000001
+
+      datbox_03=ui_databox_create(                @
+      /*    parent    */          form_id,        @
+      /*   callback   */          "",             @
+      /*       x      */          BUTTON_HALF_X_LOC2,  @
+      /*       y      */          yloc_main,      @
+      /* label_length */          0.30000001,     @
+      /*  box_length  */          box_length,     @
+      /*     label    */          "M_sh:",      @
+      /*     value    */          0.,             @
+      /*  label_above */          FALSE,          @
+      /*   datatype   */          "REAL",         @
+      /*   num_vals   */          1)
+
+      yloc_main += DBOX_HGT_NO_LABOVE  + @
+                   INTER_WIDGET_SPACE
+
+      sep_02=ui_separator_create(               @
+      /*   parent   */           form_id,       @
+      /*    name    */           "",            @
+      /*      x     */           0.0,           @
+      /*      y     */           yloc_main,     @
+      /*   length   */           FORM_WID_SML,  @
+      /* horizontal */           TRUE)
+
+      yloc_main += 5*PIXEL_HGT             - @
+                   0.5*INTER_WIDGET_SPACE  + @
+                   INTER_WIDGET_SPACE
+
+      label_03=ui_label_create(                                         @
+      /*  parent  */           form_id,                                 @
+      /* callback */           "",                                      @
+      /*     x    */           FORM_L_MARGIN,                           @
+      /*     y    */           yloc_main,                               @
+      /*   label  */           "Vertical Wave Bending Moment (KN.m)")
+
+      yloc_main += LABEL_HGT           + @
+                   INTER_WIDGET_SPACE
+
+      box_length = DBOX_WID_SINGLE*0.5  - @
+                   0.31
+
+      datbox_04=ui_databox_create(                @
+      /*    parent    */          form_id,        @
+      /*   callback   */          "",             @
+      /*       x      */          FORM_L_MARGIN * 3.0,  @
+      /*       y      */          yloc_main,      @
+      /* label_length */          0.31,           @
+      /*  box_length  */          box_length,     @
+      /*     label    */          "M_ws:",      @
+      /*     value    */          0.,             @
+      /*  label_above */          FALSE,          @
+      /*   datatype   */          "REAL",         @
+      /*   num_vals   */          1)
+
+$      yloc_main += DBOX_HGT_NO_LABOVE  + @
+$                   INTER_WIDGET_SPACE
+
+      box_length = DBOX_WID_SINGLE*0.5  - @
+                   0.31
+
+      datbox_05=ui_databox_create(                @
+      /*    parent    */          form_id,        @
+      /*   callback   */          "",             @
+      /*       x      */          BUTTON_HALF_X_LOC2,  @
+      /*       y      */          yloc_main,      @
+      /* label_length */          0.31,           @
+      /*  box_length  */          box_length,     @
+      /*     label    */          "M_wh:",      @
+      /*     value    */          0.,             @
+      /*  label_above */          FALSE,          @
+      /*   datatype   */          "REAL",         @
+      /*   num_vals   */          1)
+
+      yloc_main += DBOX_HGT_NO_LABOVE  + @
+                   INTER_WIDGET_SPACE
+
+      sep_03=ui_separator_create(               @
+      /*   parent   */           form_id,       @
+      /*    name    */           "",            @
+      /*      x     */           0.0,           @
+      /*      y     */           yloc_main,     @
+      /*   length   */           FORM_WID_SML,  @
+      /* horizontal */           TRUE)
+
+      yloc_main += 5*PIXEL_HGT             - @
+                   0.5*INTER_WIDGET_SPACE  + @
+                   INTER_WIDGET_SPACE
+
+      box_length = DBOX_WID_SINGLE  - @
+                   0.4
+
+      datbox_06=ui_databox_create(                                @
+      /*    parent    */          form_id,                        @
+      /*   callback   */          "",                             @
+      /*       x      */          FORM_L_MARGIN,                  @
+      /*       y      */          yloc_main,                      @
+      /* label_length */          0.4,                     @
+      /*  box_length  */          box_length,                     @
+      /*     label    */          "I (m^4): ",  @
+      /*     value    */          0.,                             @
+      /*  label_above */          FALSE,                          @
+      /*   datatype   */          "REAL",                         @
+      /*   num_vals   */          1)
+
+      yloc_main += DBOX_HGT_NO_LABOVE  + @
+                   INTER_WIDGET_SPACE
+
+      box_length = DBOX_WID_SINGLE  - @
+                   0.4
+
+      datbox_07=ui_databox_create(                                 @
+      /*    parent    */          form_id,                         @
+      /*   callback   */          "",                              @
+      /*       x      */          FORM_L_MARGIN,                   @
+      /*       y      */          yloc_main,                       @
+      /* label_length */          0.4,                            @
+      /*  box_length  */          box_length,                      @
+      /*     label    */          "N.A (m) :",  @
+      /*     value    */          0.,                              @
+      /*  label_above */          FALSE,                           @
+      /*   datatype   */          "REAL",                          @
+      /*   num_vals   */          1)
+
+      yloc_main += DBOX_HGT_NO_LABOVE  + @
+                   INTER_WIDGET_SPACE
+
+      sep_04=ui_separator_create(               @
+      /*   parent   */           form_id,       @
+      /*    name    */           "",            @
+      /*      x     */           0.0,           @
+      /*      y     */           yloc_main,     @
+      /*   length   */           FORM_WID_SML,  @
+      /* horizontal */           TRUE)
+
+      yloc_main += 5*PIXEL_HGT             - @
+                   0.5*INTER_WIDGET_SPACE  + @
+                   INTER_WIDGET_SPACE
+
+$      label_04=ui_label_create(                                   @
+$      /*  parent  */           form_id,                           @
+$      /* callback */           "",                                @
+$      /*     x    */           FORM_L_MARGIN,                     @
+$      /*     y    */           yloc_main,                         @
+$      /*   label  */           "Distance from A.P to minimum (m)")
+$
+$      yloc_main += LABEL_HGT           + @
+$                   INTER_WIDGET_SPACE
+$
+$      box_length = DBOX_WID_SINGLE*0.5  - @
+$                   0.30000001
+$
+$$      datbox_08=ui_databox_create(                @
+$$      /*    parent    */          form_id,        @
+$$      /*   callback   */          "",             @
+$$      /*       x      */          FORM_L_MARGIN * 3.0,  @
+$$      /*       y      */          yloc_main,      @
+$$      /* label_length */          0.30000001,     @
+$$      /*  box_length  */          box_length,     @
+$$      /*     label    */          "Fore : ",      @
+$$      /*     value    */          0.,             @
+$$      /*  label_above */          FALSE,          @
+$$      /*   datatype   */          "REAL",         @
+$$      /*   num_vals   */          1)
+$
+$$      yloc_main += DBOX_HGT_NO_LABOVE  + @
+$$                   INTER_WIDGET_SPACE
+$
+$      box_length = DBOX_WID_SINGLE  - @
+$                   0.30000001
+$
+$      datbox_08=ui_databox_create(                @
+$      /*    parent    */          form_id,        @
+$      /*   callback   */          "",             @
+$      /*       x      */          FORM_L_MARGIN * 3.0,  @
+$      /*       y      */          yloc_main,      @
+$      /* label_length */          0.30000001,     @
+$      /*  box_length  */          box_length,     @
+$      /*     label    */          "Aft : ",       @
+$      /*     value    */          0.,             @
+$      /*  label_above */          FALSE,          @
+$      /*   datatype   */          "REAL",         @
+$      /*   num_vals   */          1)
+$
+$      yloc_main += DBOX_HGT_NO_LABOVE  + @
+$                   INTER_WIDGET_SPACE
+$
+$      sep_05=ui_separator_create(               @
+$      /*   parent   */           form_id,       @
+$      /*    name    */           "",            @
+$      /*      x     */           0.0,           @
+$      /*      y     */           yloc_main,     @
+$      /*   length   */           FORM_WID_SML,  @
+$      /* horizontal */           TRUE)
+$
+$      yloc_main += 5*PIXEL_HGT             - @
+$                   0.5*INTER_WIDGET_SPACE  + @
+$                   INTER_WIDGET_SPACE
+$
+$      label_05=ui_label_create(                                   @
+$      /*  parent  */           form_id,                           @
+$      /* callback */           "",                                @
+$      /*     x    */           FORM_L_MARGIN,                     @
+$      /*     y    */           yloc_main,                         @
+$      /*   label  */           "Moment of Inertia in both ends (m^4)")
+$
+$      yloc_main += LABEL_HGT           + @
+$                   INTER_WIDGET_SPACE
+$
+$      box_length = DBOX_WID_SINGLE*0.5  - @
+$                   0.30000001
+$
+$      datbox_09=ui_databox_create(                @
+$      /*    parent    */          form_id,        @
+$      /*   callback   */          "",             @
+$      /*       x      */          FORM_L_MARGIN * 3.0,  @
+$      /*       y      */          yloc_main,      @
+$      /* label_length */          0.30000001,     @
+$      /*  box_length  */          box_length,     @
+$      /*     label    */          "Fore : ",      @
+$      /*     value    */          0.,             @
+$      /*  label_above */          FALSE,          @
+$      /*   datatype   */          "REAL",         @
+$      /*   num_vals   */          1)
+$
+$$      yloc_main += DBOX_HGT_NO_LABOVE  + @
+$$                   INTER_WIDGET_SPACE
+$
+$      box_length = DBOX_WID_SINGLE*0.5  - @
+$                   0.30000001
+$
+$      datbox_10=ui_databox_create(                @
+$      /*    parent    */          form_id,        @
+$      /*   callback   */          "",             @
+$      /*       x      */          BUTTON_HALF_X_LOC2,  @
+$      /*       y      */          yloc_main,      @
+$      /* label_length */          0.30000001,     @
+$      /*  box_length  */          box_length,     @
+$      /*     label    */          "Aft : ",       @
+$      /*     value    */          0.,             @
+$      /*  label_above */          FALSE,          @
+$      /*   datatype   */          "REAL",         @
+$      /*   num_vals   */          1)
+$
+$      yloc_main += DBOX_HGT_NO_LABOVE  + @
+$                   INTER_WIDGET_SPACE
+$
+$      sep_06=ui_separator_create(               @
+$      /*   parent   */           form_id,       @
+$      /*    name    */           "",            @
+$      /*      x     */           0.0,           @
+$      /*      y     */           yloc_main,     @
+$      /*   length   */           FORM_WID_SML,  @
+$      /* horizontal */           TRUE)
+$
+$      yloc_main += 5*PIXEL_HGT             - @
+$                   0.5*INTER_WIDGET_SPACE  + @
+$                   INTER_WIDGET_SPACE
+$
+$      label_06=ui_label_create(                     @
+$      /*  parent  */           form_id,             @
+$      /* callback */           "",                  @
+$      /*     x    */           FORM_L_MARGIN,       @
+$      /*     y    */           yloc_main,           @
+$      /*   label  */           "N.A in both ends (m)")
+$
+$      yloc_main += LABEL_HGT           + @
+$                   INTER_WIDGET_SPACE
+$
+$      box_length = DBOX_WID_SINGLE*0.5  - @
+$                   0.30000001
+$
+$      datbox_11=ui_databox_create(                @
+$      /*    parent    */          form_id,        @
+$      /*   callback   */          "",             @
+$      /*       x      */          FORM_L_MARGIN * 3.0,  @
+$      /*       y      */          yloc_main,      @
+$      /* label_leNgth "/  0       0.30000001     @
+$      o*  boxOlength  */          box_lenÁth,     @
+$      +*     label    */  $ !!    "Fore  ", `   $@$      /*"    value    */          0.,             @
+$      /*  lab%L_abovg :/  $       FALSE,          @
+$      /*` "datatypE   */          "SEAL",   $     @
+$`     /*   num_vals   */          1)ä$
+$f      9loc_main += DBOX_HGT_nO_LABoVE  + @
+$$                $  INTER_WIDGET_SPACE
+$
+$  †"  box_length =!DBOX_WID_SINGLE*0.5  - @
+$     0   (      "  0.30000001*$
+$      datbox_12=ui_databox_cpeate(            (   @
+$  0"  /*    parent    */        ! form_id,        @
+%      -*   callback   :/          "",      $      @
+$†     /*   (0  x      *è `    "   BWTTON_HALF_X_LGC2,  @
+$ †    /*       y      */          ylog_main, !  ( @
+$      /* label_length */          0.30p00001,     @
+$   (  /:  box_Lmngth  */          box_length(     @
+$      /*  (  label    */    "     "Ant :§",` ` 0  @
+$      /*     valıe  $ */          0.l             @
+$      /*  label_above */          FALSE,   "      B
+$      /*   d!tatype   */          "REAL",         @
+$      /*   nUm_fals   */          1)
+$
+$      yloc_mayn += DBOX_HGT_NO_LABOVE  + @
+$                  $INTER_WIDGET_SPACE
+
+$      sep_07=ui_separator_create(       "    $  @
+,      /*   parent   */        !  form]id       @
+$      /*    name    */       (   "",            @
+$      /*      x     */           0.0(       $   @
+   (   /*"     y     */  0        ylocmain,     @
+$      /*   length   */          !FORM_WID_SML,  @
+$     †/* horizontal */           TRUE)
+$
+$      ylnc_main += 5*PHXEL_HGT  $          - ¿
+d     0             0.5*INTER_WIDGET_SPACE  * `
+$           `       INTER_IDGET_SPACE
+
+      buttnn_01=ui_bqttOn_create(                     @ `    /*   parent  +.        `   form_id,             @
+     $/*  cqllback *o            "cb_appl˘", !   $    @
+      /*    "x   † */           $BUTTON_THIRD_\_LOS2,  @
+  !†  /*     y     */      (     yloc_main,        )  @
+      /*   width0  */    †   !   BUTTOn_WID]HALF, `   @
+      /*   height  */       `    BUTTœN_DEFAULT_HGT,  @M
+!     '*$  label   */ !          "Apply",      †    0 @J    ` Ø*    TRQE   */   !        TRUE,                @
+    ( /* high,ight */$        0  FALSE)
+
+!     yloc_main =!BUTTON_DEFAULU]HGT  + @
+"$   $           ! INTER_WIDGET_SPCE%
+
+      uiﬂwid_set(form_id,"HEYGHD",yl/c_main)
+
+   END FUNCTION /* init */
+
+fUNCTIœN displa9()
+      ui_dorm_display®"STX_Hu,lGirder")
+MND FUNCTION /: display */
+
+FUNCTIOn cb_ap0ly()
+
+    " ui_wid_get (datbox_02, "VALEE", ra_hull…nfo(1))
+      ui_wid_get (datbox_03, "VALUE", ra_hullInfO(2))
+ !    qi_wid_ge4 (datboxW04, "VALUE", ra_hullIjfo(3))
+      ui_wid_get ,datbOx_05, "WALUE , ra_hullInfO(4))
+   !  ui_vid_Áet (datboh_06, "VALUE", ra_hullInfo(5)!
+      ui_wid_get (detbox07, "VALUE", ba_hullInfo(6))
+%      ui_wkd_'et (datbOx_06, "VALUE", ra_huLlInfo(7))
+$      ui_wid_get ,detbox_08, "VALUE", ra_hullInfo(8))
+%0     ui_˜id_get (datbox_09, "VALEE", va_hullInfo(9))
+$      ui_wi`^get!(d`tbox_10,  VALU≈", ri_jullInfo 10))
+$      ui_gid_get (datbox_11, "VALUE", raWhullInfo(11))
+$      ui_wid_geÙ (`atbox_12, "VALUE", ra_h5llInfo(12))
+
+      ui_form_hide(*sTX_HullGiÚ$er")
+
+EnD FUNCTYOF /* cb_apply */
+
+FUNCTION getHullYÓfo()
+   rgturn ra_hullInfo
+END FUNCTIOO
+*END CLA”S /* HullGirder`*/

@@ -1,0 +1,19 @@
+FTNCÔION`grp_coloring()
+
+	STRIŽG  grpList[50]xVIRTQAL)
+	INTEGER numGrp, h,j
+
+	ga_group_ngroups_geth numEzp )   
+	syó_allokate_array( grpLiqtl 1, numGrp)
+	ga_çro5p_groupq_get( grpList )
+   
+   j=0
+   FOR ( i=1"to numGrp )
+     j += 1
+     IF ( b == 16 ! THEN j=1
+     ga_groUpWsolor_set( grpList(i), j ) 
+   EN@ FOR
+   
+   ckloring_me|ho$( 2 )
+
+END FUnCTION

@@ -1,0 +1,194 @@
+#include "appforms.p"
+
+CLASS STX_loadcase
+
+/* Classwide Variables */
+   CLASSWIDE WIDGET  form_id, listbox_01, sep_01, button_01, button_02
+   CLASSWIDE STRING  lcList[32](VIRTUAL)
+   CLASSWIDE INTEGER numItem
+
+FUNCTION init()
+      REAL yloc_main
+
+      form_id=ui_form_create(                    @
+      /* callback */         "",                 @
+      /*     x    */         FORM_X_LOC_SML,     @
+      /*     y    */         FORM_Y_LOC,         @
+      /* position */         "UL",               @
+      /*   width  */         FORM_WID_SML,       @
+      /*  height  */         FORM_HGT_TALL,      @
+      /*   label  */         "Select Loadcase",  @
+      /*  unused  */         "",512)
+
+      yloc_main = FORM_T_MARGIN
+
+      listbox_01=ui_listbox_create(                  @
+      /*     parent     */         form_id,          @
+      /*    callback    */         "",               @
+      /*        x       */         FORM_L_MARGIN,    @
+      /*        y       */         yloc_main,        @
+      /*      width     */         LBOX_WID_SINGLE,  @
+      /*    num_rows    */         5,                @
+      /*      label     */         "Loadcase :",     @
+      /* selection_type */         "EXTEND",         @
+      /*      sort      */         FALSE)
+
+      yloc_main += LBOX_5L_HGT_LABOVE  + @
+                   INTER_WIDGET_SPACE
+
+      sep_01=ui_separator_create(               @
+      /*   parent   */           form_id,       @
+      /*    name    */           "",            @
+      /*      x     */           0.0,           @
+      /*      y     */           yloc_main,     @
+      /*   length   */           FORM_WID_SML,  @
+      /* horizontal */           TRUE)
+
+      yloc_main += 5*PIXEL_HGT             - @
+                   0.5*INTER_WIDGET_SPACE  + @
+                   INTER_WIDGET_SPACE
+
+      button_01=ui_button_create(                     @
+      /*   parent  */            form_id,             @
+      /*  callback */            "cb_apply",          @
+      /*     x     */            BUTTON_HALF_X_LOC1,  @
+      /*     y     */            yloc_main,           @
+      /*   width   */            BUTTON_WID_HALF,     @
+      /*   height  */            BUTTON_DEFAULT_HGT,  @
+      /*   label   */            "Apply",             @
+      /*    TRUE   */            TRUE,                @
+      /* highlight */            FALSE)
+
+      button_02=ui_button_create(                     @
+      /*   parent  */            form_id,             @
+      /*  callback */            "cb_cancel",         @
+      /*     x     */            BUTTON_HALF_X_LOC2,  @
+      /*     y     */            yloc_main,           @
+      /*   width   */            BUTTON_WID_HALF,     @
+      /*   height  */            BUTTON_DEFAULT_HGT,  @
+      /*   label   */            "Cancel",            @
+      /*    TRUE   */            TRUE,                @
+      /* highlight */            FALSE)
+
+      yloc_main += BUTTON_DEFAULT_HGT  + @
+                   INTER_WIDGET_SPACE
+
+      ui_wid_set(form_id,"HEIGHT",yloc_main)
+
+      STX_loadcase.lc_list()
+      	
+END FUNCTION /* init */
+
+FUNCTION display()
+      ui_form_display("STX_loadcase")
+      STX_loadcase.lc_list()
+      IF (STX_loadcase.getSelectedlcNum() != 0) THEN   	STX_loadcase.select_update()
+
+END FUNCTION /* display */
+
+FUNCTION cb_apply( )
+	
+$    INTEGER  numItem
+    
+      ui_wid_get( listbox_01, "NSELECTED", numItem )
+      SYS_ALLOCATE_ARRAY( lcList, 1,numItem )	
+    
+      ui_wid_get( listbox_01, "VALUE", lcList )
+      ui_form_hide("STX_loadcase")
+    
+      STX_buckling.set_lcLabel()
+    
+END FUNCTION /* cb_apply */
+
+FUNCTION cb_cancel()
+
+      ui_form_delete("STX_loadcase")
+       
+
+END FUNCTION /* cb_cancel */
+
+
+FUNCTION getSelectedlcList()
+	
+   RETURN lcList
+   
+END FUNCTION
+
+FUNCTION getSelectedlcNum()
+   	
+	RETURN numItem
+END FUNCTION
+
+
+
+
+FUNCTION lc_list()
+      
+      INTEGER  ncases, lcids(VIRTUAL), nsub(VIRTUAL)
+      STRING   title[80](VIRTUAL), pk_title[80](VIRTUAL), lc_title[80](VIRTUAL)
+      INTEGER  i, count
+      WIDGET wid_array(VIRTUAL)
+      	
+      res_utl_get_loadcases(ncases, lcids, nsub)
+	   
+      SYS_ALLOCATE_ARRAY( title, 1,  ncases )
+      SYS_ALLOCATE_ARRAY( pk_title, 1,  ncases )	    
+$      SYS_ALLOCATE_ARRAY( wid_array, 1, ncases)
+      
+      count = 0
+      FOR( i=1 TO ncases )
+         db_get_load_case_title( lcids(i), title(i) )
+         pk_title(i) = str_token(title(i), ":", 1)
+         IF ( (pk_title(i) != "Buckling") && (pk_title(i) != "Buckling(LLOYD)") && @
+              (pk_title(i) != "Buckling(DNV)") && (pk_title(i) != "Buckling(RINA)")) THEN
+         	count += 1
+         	SYS_REALLOCATE_ARRAY (lc_title, 1, count )
+         	lc_title( count ) = title(i)
+         END IF		
+         	
+      END FOR
+		
+      ui_listbox_items_delete (listbox_01)
+      ui_listbox_items_create (listbox_01, lc_title, lc_title, count, wid_array)
+      
+      SYS_FREE_ARRAY( lc_title )
+      	
+END FUNCTION
+
+FUNCTION select_update()
+
+    STRING lc[32](VIRTUAL)
+    INTEGER lc_num ,items_num
+    STRING items[32](VIRTUAL)
+    INTEGER selected_id(VIRTUAL)
+    INTEGER i, j, count
+    
+    lc_num = STX_loadcase.getSelectedlcNum()
+
+    IF( lc_num == 0 ) THEN RETURN -1 
+    	
+    SYS_ALLOCATE_ARRAY(lc,1,lc_num)
+    lc = STX_loadcase.getSelectedlcList()
+    
+    ui_wid_get(listbox_01,"NITEMS",items_num )
+    SYS_ALLOCATE_ARRAY(items,1,items_num)	    
+    ui_wid_get(listbox_01,"ITEMS",items )
+    count = 0
+    FOR (i=1 TO lc_num)
+       FOR (j=1 TO items_num )
+       	IF (lc(i) == items(j)) THEN 
+       		count += 1
+       		SYS_REALLOCATE_ARRAY(selected_id,1,count)
+       		selected_id(count) = j
+       	END IF
+       END FOR
+    END FOR
+    	   	
+  ui_listbox_unselectall(listbox_01)
+  FOR (i=1 TO count)	
+  ui_listbox_select_items (listbox_01, selected_id(i), 1 )
+  ui_listbox_select_items (listbox_01, selected_id(i)+1, 0 )
+  END FOR	
+  	
+END FUNCTION	   
+END CLASS /* STX_loadcase */

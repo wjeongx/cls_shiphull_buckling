@@ -1,0 +1,123 @@
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C add_beams.PCL add_beams.CPP
+add_beams.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C add_nodes.PCL add_nodes.CPP
+add_nodes.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C basic.PCL basic.CPP
+basic.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C bfnc.PCL bfnc.CPP
+bfnc.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C client_data_put_get.PCL client_data_put_get.CPP
+client_data_put_get.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C create_group.PCL create_group.CPP
+create_group.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C extractStress.PCL extractStress.CPP
+extractStress.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C fileWid.PCL fileWid.CPP
+fileWid.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C getElmXYZ.PCL getElmXYZ.CPP
+getElmXYZ.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C get_vector.PCL get_vector.CPP
+get_vector.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C grp_coloring.PCL grp_coloring.CPP
+grp_coloring.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C highlight_grp.PCL highlight_grp.CPP
+highlight_grp.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C node_location.PCL node_location.CPP
+node_location.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C plotFringe.PCL plotFringe.CPP
+plotFringe.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C res_data_dbload_test.PCL res_data_dbload_test.CPP
+res_data_dbload_test.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C revert.PCL revert.CPP
+revert.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C shrink.PCL shrink.CPP
+shrink.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C sort_grp.PCL sort_grp.CPP
+sort_grp.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C str_find_char_num.PCL str_find_char_num.CPP
+str_find_char_num.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX.PCL STX.CPP
+STX.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_buckling.PCL STX_buckling.CPP
+STX_buckling.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_buckling_dnv.PCL STX_buckling_dnv.CPP
+STX_buckling_dnv.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_buckling_fringe.PCL STX_buckling_fringe.CPP
+STX_buckling_fringe.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_buckling_lloyd.PCL STX_buckling_lloyd.CPP
+STX_buckling_lloyd.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_buckling_rina.PCL STX_buckling_rina.CPP
+STX_buckling_rina.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_check_panel.PCL STX_check_panel.CPP
+STX_check_panel.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_chkPnlArea.PCL STX_chkPnlArea.CPP
+STX_chkPnlArea.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_chkPnlAuto.PCL STX_chkPnlAuto.CPP
+STX_chkPnlAuto.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_chkPnlManual.PCL STX_chkPnlManual.CPP
+STX_chkPnlManual.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_chkPnlMethod.PCL STX_chkPnlMethod.CPP
+STX_chkPnlMethod.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_chkPnlShape.PCL STX_chkPnlShape.CPP
+STX_chkPnlShape.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_DNVinp_param.PCL STX_DNVinp_param.CPP
+STX_DNVinp_param.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_getPanelEdge.PCL STX_getPanelEdge.CPP
+STX_getPanelEdge.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_hltPanel.PCL STX_hltPanel.CPP
+STX_hltPanel.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_HullGirder.PCL STX_HullGirder.CPP
+STX_HullGirder.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_hull_girder_stress.PCL STX_hull_girder_stress.CPP
+STX_hull_girder_stress.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_input_param.PCL STX_input_param.CPP
+STX_input_param.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_loadcase.PCL STX_loadcase.CPP
+STX_loadcase.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_make_panel_inform.PCL STX_make_panel_inform.CPP
+STX_make_panel_inform.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_menubar.PCL STX_menubar.CPP
+STX_menubar.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_newgrp.PCL STX_newgrp.CPP
+STX_newgrp.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_panelinfo_table.PCL STX_panelinfo_table.CPP
+STX_panelinfo_table.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_panel_input.PCL STX_panel_input.CPP
+STX_panel_input.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_panel_result.PCL STX_panel_result.CPP
+STX_panel_result.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_pnlElement.PCL STX_pnlElement.CPP
+STX_pnlElement.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_result_table.PCL STX_result_table.CPP
+STX_result_table.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_RINA_inputParam.PCL STX_RINA_inputParam.CPP
+STX_RINA_inputParam.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C STX_setPanel.PCL STX_setPanel.CPP
+STX_setPanel.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C s_lc_result.PCL s_lc_result.CPP
+s_lc_result.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C tFringe.PCL tFringe.CPP
+tFringe.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C UTL.PCL UTL.CPP
+UTL.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C UTL_accessDB.PCL UTL_accessDB.CPP
+UTL_accessDB.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C UTL_dbvariable.PCL UTL_dbvariable.CPP
+UTL_dbvariable.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C UTL_drawRect.PCL UTL_drawRect.CPP
+UTL_drawRect.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C UTL_getAngles.PCL UTL_getAngles.CPP
+UTL_getAngles.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C UTL_getElemArea.PCL UTL_getElemArea.CPP
+UTL_getElemArea.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C UTL_getMidNode.PCL UTL_getMidNode.CPP
+UTL_getMidNode.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C UTL_getNodeDist.PCL UTL_getNodeDist.CPP
+UTL_getNodeDist.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C UTL_getNormVect.PCL UTL_getNormVect.CPP
+UTL_getNormVect.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C UTL_markID.PCL UTL_markID.CPP
+UTL_markID.pob -> DASOL_Buckling.plb
+CPP -IC:\MSC.Software\Patran\2008_r1\customization -C UTL_setArrayToString.PCL UTL_setArrayToString.CPP
+UTL_setArrayToString.pob -> DASOL_Buckling.plb
+***** Complete ******

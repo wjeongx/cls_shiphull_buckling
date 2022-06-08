@@ -1,0 +1,577 @@
+#include "appforms.p"
+#define CLASSNAME         STX_panelinfo_table
+#define CLASSNAME_QUOTED "STX_panelinfo_table"
+
+CLASS CLASSNAME
+ 
+ CLASSWIDE WIDGET  range_form, spread, input_dbox, text_01
+ CLASSWIDE STRING  spread_save[40](virtual)
+$ CLASSWIDE INTEGER imin_lbl(virtual), imax_lbl(virtual)
+ CLASSWIDE INTEGER ioffset(virtual)
+ CLASSWIDE INTEGER _NUM_CASES 
+ CLASSWIDE STRING  row_labels[30](virtual)
+ CLASSWIDE LOGICAL chk
+ 
+/*--------------------------------------------------------------------------*/ 
+
+
+FUNCTION init
+ 
+     REAL x_loc, y_loc, label_wid, wid, hgt, spread_wid
+
+     STRING  col_labels[20](12,1)
+     INTEGER i
+     WIDGET  dummy_label_id
+          
+     chk = FALSE
+     
+     FOR ( i = 1 TO _NUM_CASES ) 
+        row_labels( i,1 ) = ""
+     END FOR
+
+
+     
+     /* labels */
+     col_labels( 1,1 ) = "PID"
+     col_labels( 2,1 ) = "LCID"
+     col_labels( 3,1 ) = "a"
+     col_labels( 4,1 ) = "b"
+     col_labels( 5,1 ) = "t"
+     col_labels( 6,1 ) = "c"
+     col_labels( 7,1 ) = "d"     
+     col_labels( 8,1 ) = "SIGMA x"
+     col_labels( 9,1 ) = "SIGMA y"
+     col_labels( 10,1 ) = "TAU"
+     col_labels( 11,1 ) = "SIGMA H"
+     col_labels( 12,1 ) = "Element"
+
+     wid = FORM_WID_LRG + FORM_WID_SML
+     hgt = SPREADSHEET_HGT_2D_10ROW * 1.02
+     spread_wid = SPREADSHEET_WID_TRIPLE + SPREADSHEET_WID_SINGLE
+     
+/*
+ * Initialize:
+ * ----------
+ */
+
+     FOR( i = 1 to _NUM_CASES )
+        ioffset(i) = 0
+        spread_save(i) = ""
+     END FOR
+
+ 
+ /*
+   * Create the "Clevis Design Cases" form:
+   * ------------------------------------------------
+   */
+
+	range_form = ui_form_create(  	@
+			/*	callback	*/	"",	@
+			/*	 x    	*/	FORM_X_LOC_MED_CEN,	@
+			/*	 y 	   */	FORM_Y_LOC,	@
+			/* position */	"UL",	@
+			/*	width	   */	wid,	@
+			/*	height	*/	FORM_HGT_TALL,	@
+			/*	label	   */	"Panel Information Table",	@
+	      /* iconname */	""  )
+
+  /*
+   * Find the longest Entity label:
+   * -----------------------------
+   */
+        dummy_label_id = ui_label_create( range_form, "", 0.0, 0.0, "Dummy" )
+        ui_wid_set( dummy_label_id, "DISPLAY", FALSE )
+
+        label_wid = 0.0
+        FOR( i = 1 to _NUM_CASES )
+           ui_wid_set( dummy_label_id, "LABEL", row_labels(i,1) )
+           ui_wid_get( dummy_label_id, "WIDTH", wid )
+           IF( wid > label_wid ) THEN label_wid = wid
+        END FOR
+        label_wid += 20.0*PIXEL_WID
+           
+  
+
+/*
+   * Create the Neutral Entities list of items: 
+   * ----------------------------------------- 
+   */
+        x_loc = UNFRAMED_L_MARGIN
+        y_loc = FORM_T_MARGIN
+  
+
+
+        spread = ui_spread_create(                      @
+             /* parent    */   range_form,               @
+             /* callback  */   "spread_cb",              @
+             /*    x      */   x_loc,                    @
+             /*    y      */   y_loc,                    @
+             /*  width    */   spread_wid,   @
+             /*  height   */   hgt,                      @
+             /* label_wid */   0.0,                @
+             /*num_v_cols */   12,                        @
+             /* num_cols  */   12,                        @
+             /*  num_rows */   _NUM_CASES,               @
+             /*num_layers */   1,                        @
+             /* col_label */   col_labels,               @
+             /* row_labels*/   row_labels,               @
+             /*   label   */   "",    @
+             /* layer lab */   "Case",                       @
+             /* layer val lab*/"",                       @
+             /* selection */   "SINGLE")
+
+         y_loc += hgt +  SPREADSHEET_2EDGE* 1.02 + INTER_WIDGET_SPACE 
+
+$  /*
+$   * Create the control buttons:
+$   * --------------------------
+$   */
+$
+$        ui_button_create (                                      @
+$             /*    parent   */  range_form,                      @
+$             /*   callback  */  "reset",                         @
+$             /*      x      */  (FORM_WID_MED - BUTTON_WID_THIRD )/2.,@
+$             /*      y      */  y_loc,                           @
+$             /*    width    */  BUTTON_WID_THIRD,                @
+$             /*    height   */  0.0,                             @
+$             /*    label    */  "Reset",                         @
+$             /* labelinside */  TRUE,                            @
+$             /*  highlight  */  FALSE )
+$        y_loc  += BUTTON_HGT + INTER_WIDGET_SPACE
+
+  
+
+
+/*
+   * Create a separator widget.
+   * -------------------------
+   */
+        ui_separator_create( range_form, "", 0.0,                            @
+                             y_loc,                                          @
+                             2.02*FORM_WID_LRG, TRUE  )
+
+        y_loc += LINE_THICKNESS + INTER_WIDGET_SPACE
+
+$        ui_button_create(                                       @
+$             /*    parent   */  range_form,                      @
+$             /*   callback  */ "done",                           @
+$             /*      x      */  BUTTON_THIRD_X_LOC2,             @
+$             /*      y      */  y_loc,                           @
+$             /*    width    */  BUTTON_WID_THIRD,                @
+$             /*    height   */  0.0,                             @
+$             /*    label    */  "OK",                            @
+$             /* labelinside */  TRUE,                            @
+$             /*  highlight  */  FALSE )
+
+      text_01 = ui_text_create(                   @
+      /*  parent  */         range_form,           @
+      /* callback */         "",                @
+      /*     x    */         x_loc,     @
+      /*     y    */         y_loc,      @
+      /*   width  */         TBOX_WID_SINGLE,  @
+      /* num_rows */         2,                 @
+      /*   label  */         "",                @
+      /*   text   */         "",                @
+      /* editable */         FALSE)
+
+$      y_loc += TBOX_3L_HGT_NO_LABOVE  + @
+$                      INTER_WIDGET_SPACE
+                        
+      input_dbox = ui_databox_create(             @
+            /*    parent    */  range_form,          @
+            /*   callback   */  "input_data",        @
+            /*      x       */  x_loc+TBOX_WID_SINGLE*1.2,               @
+            /*      y       */  y_loc,               @
+            /* label_length */  0.0,                 @
+            /*  box_length  */  DBOX_WID_SINGLE,     @
+            /*    label     */  "Input New Value",   @
+            /*    value     */  0.0,                 @
+            /* label_above  */  TRUE,                @
+            /*   datatype   */  "REAL",              @
+            /*   num_vals   */  1 )
+$        y_loc += DBOX_HGT_LABOVE + INTER_WIDGET_SPACE
+        
+        ui_button_create (                                       @
+              /*    parent   */  range_form,                      @
+              /*   callback  */ "apply",                         @
+              /*      x      */  BUTTON_THIRD_X_LOC3_COL3 * 1.58,        @
+              /*      y      */  y_loc,                           @
+              /*    width    */  BUTTON_WID_THIRD,                @
+              /*    height   */  0.0,                             @
+              /*    label    */  "Apply",                        @
+              /* labelinside */  TRUE,                            @
+              /*  highlight  */  FALSE )
+
+      y_loc += TBOX_2L_HGT_NO_LABOVE  + @
+                      INTER_WIDGET_SPACE
+  
+$        y_loc  += BUTTON_HGT + FORM_B_MARGIN
+$Example (cont...)
+        ui_wid_set( range_form, "HEIGHT", y_loc )
+
+       	
+         	
+
+       	
+       	
+       	
+END FUNCTION   /* init */
+
+
+
+
+     
+ 
+     
+
+/*--------------------------------------------------------------------------*/
+
+
+FUNCTION spread_cb( status, from_c, from_r, to_c, to_r, layer )
+
+      STRING  status[]
+      INTEGER from_c, from_r, to_c, to_r, layer
+      STRING  cell_data[40]   
+      INTEGER loadcase_id
+      STRING loadcase_title[40]
+      
+      INTEGER i_CntPanel, i_prevID
+      
+      ui_spread_get_cell( spread, from_c, from_r, layer, cell_data )
+
+      IF ( from_c == 1 ) THEN
+      	ui_wid_set ( text_01, "VALUE", "You selected \n Panel "//cell_data )	
+      Else IF ( from_c == 2 ) THEN
+      	loadcase_id = str_to_integer( cell_data )
+      	db_get_load_case_title(loadcase_id, loadcase_title)
+      	ui_wid_set ( text_01, "VALUE", "You selected \n"//loadcase_title )
+      ELSE		
+         ui_wid_set ( text_01, "VALUE", "You selected \n"//cell_data )	
+      END IF      
+         
+      IF ( from_c == 3 || from_c == 4 || from_c == 5 || from_c == 6 || from_c == 7 ) THEN
+      	   ui_wid_set ( input_dbox, "VALUE", cell_data )
+      	   ui_wid_set( input_dbox, "DISPLAY", TRUE)    
+      ELSE
+      	  ui_wid_set( input_dbox, "DISPLAY", FALSE)      
+
+      END IF      	   
+         
+         ui_spread_get_cell( spread, 1, from_r, layer, cell_data )
+         i_CntPanel = str_to_integer(cell_data)
+         
+         i_prevID = UTL_markID.getElemID()
+         
+         STX_hltPanel(i_prevID, 0 ) 
+         STX_hltPanel(i_CntPanel, 1 )
+         	
+         
+         UTL_markID.setElmID(i_CntPanel)	 
+         	
+END FUNCTION  /* spread_cb */
+
+/*--------------------------------------------------------------------------*/
+
+
+FUNCTION input_data ( value )
+      STRING value[]
+
+      INTEGER  i, j
+      REAL   data
+      STRING cell_data[40]
+      INTEGER  from_col, from_row, to_col, to_row, layer
+
+  /*
+   * Retrieve the starting and ending column and row positions and layer
+   * for the currently selected (highlighted) cells of the spreadsheet:
+   */
+      ui_spread_get_selected( spread, from_col, from_row, to_col,            @
+                                                          to_row, layer     )
+      
+         	
+    	ui_wid_set( input_dbox, "DATATYPE", "REAL")
+     	ui_wid_get( input_dbox, "VALUE", data )
+     	cell_data = str_from_real (data)
+            
+
+   	
+      IF (value == "CR") THEN 
+      	
+         FOR ( i = from_col to to_col )
+
+            FOR ( j = from_row to to_row )
+
+                   ui_spread_set_cell( spread, i, j, layer, cell_data  )
+
+            END FOR
+
+         END FOR
+
+       END IF
+   	
+   	
+
+   END FUNCTION /*input data */
+
+/*--------------------------------------------------------------------------*/
+
+FUNCTION display
+
+        ui_form_display( CLASSNAME_QUOTED )
+$        ui_set_focus( input_dbox )
+
+        ui_spread_set_layer_value(spread, 1, "STX result table" )
+$     	  ui_spread_set_layer_value(spread, 2, "Inner Curve Generation" )
+$        ui_spread_set_layer_value(spread, 3, "Stringer Curve Generation" )
+        
+        ui_wid_set( input_dbox, "DISPLAY", FALSE)    
+        
+END FUNCTION   /* display */
+
+/*--------------------------------------------------------------------------*/
+
+
+FUNCTION fill_data(min_lbl, max_lbl )
+
+      STRING   min_lbl[](), max_lbl[]()
+      INTEGER  j
+
+
+         FOR ( j = 1 to _NUM_CASES )
+
+               ui_spread_set_cell( spread, 1, j, 1, min_lbl(j) )
+
+               ui_spread_set_cell( spread, 2, j, 1, max_lbl(j) )
+
+         END FOR
+
+END FUNCTION   /* fill_data */
+
+/*--------------------------------------------------------------------------*/
+
+
+$FUNCTION done
+$
+$     INTEGER  j,status
+$     STRING   data[40]
+$
+$     GLOBAL REAL radius, width, length
+$	  GLOBAL STRING P3_HOME[VIRTUAL]
+$
+$
+$      
+$     
+$         FOR ( j = 1 to _NUM_CASES )
+$  /*
+$   *       Get column 1 data:
+$   */
+$               ui_spread_get_cell( spread, 1, j, 1, data )
+$
+$               imin_lbl(j) = STR_TO_INTEGER( data )
+$
+$               width = str_to_real(data)
+$  /*
+$   *       Get column 2 data:
+$   */
+$               ui_spread_get_cell( spread, 2, j, 1, data )
+$
+$               imax_lbl(j) = STR_TO_INTEGER( data )
+$
+$               length =  str_to_real(data)
+$  /*
+$   *       Get column 3 data:
+$   */
+$               ui_spread_get_cell( spread, 3, j, 1, data )
+$
+$               spread_save(j) = data
+$
+$               radius = str_to_real(data)
+$
+$               IF( data == "Auto" ) THEN
+$
+$                   ioffset(j) = -2000000000
+$
+$               ELSE
+$
+$                   ioffset(j) = STR_TO_INTEGER( data )
+$
+$               END IF
+$
+$
+$ 
+$
+$
+$
+$         END FOR
+$     
+$         spread_vent_l.modify_vent_l ()
+$ 
+$     END FUNCTION   /* done */
+
+
+/*--------------------------------------------------------------------------*/
+
+
+$     FUNCTION get_data( min_lbl, max_lbl, offset )
+$        INTEGER i, min_lbl(), max_lbl(), offset()
+$
+$          FOR( i = 1 to _NUM_CASES )
+$
+$               min_lbl(i) = imin_lbl(i)
+$
+$               max_lbl(i) = imax_lbl(i)
+$
+$                offset(i) =  ioffset(i)
+$
+$          END FOR
+$
+$     END FUNCTION   /* get_data */
+
+/*--------------------------------------------------------------------------*/
+
+
+$FUNCTION reset()
+$      
+$     INTEGER i
+$ 
+$  /*
+$   * Cancel changes; reset form.  Form remains open.
+$   */
+$ 
+$        FOR( i = 1 to _NUM_CASES )
+$	   ui_spread_set_cell( spread, 1, i, 1, str_from_real( 0.5 + 0.01 * i))
+$	   ui_spread_set_cell( spread, 2, i, 1 ,str_from_real( 5))
+$           ui_spread_set_cell( spread, 3, i, 1, str_from_real(0.5 + 0.1 * i) )
+$        END FOR
+$
+$END FUNCTION   /* reset */
+
+/*--------------------------------------------------------------------------*/
+ 
+
+FUNCTION apply()
+
+        CLASSNAME.get_celldata()
+$        UTL_clearMark()
+$        ui_wid_restore( CLASSNAME_QUOTED )
+        ui_form_delete  ( CLASSNAME_QUOTED )
+        	
+        CLASSNAME.chk_apply()
+END FUNCTION   /* cancel */
+
+FUNCTION chk_apply()
+	chk = TRUE
+END FUNCTION
+
+FUNCTION get_apply()
+	return chk
+END FUNCTION
+
+FUNCTION put_apply()
+	chk = FALSE
+END FUNCTION		
+/*--------------------------------------------------------------------------*/
+
+
+$FUNCTION setDBoxVal( val )
+$	
+$	string val[]
+$   INTEGER  from_col, from_row, to_col, to_row, layer
+$	
+$	ui_wid_set( input_dbox, "VALUE", val)	
+$   ui_spread_get_selected( spread, from_col, from_row, to_col, to_row, layer )
+$   	
+$   ui_spread_set_cell( spread, from_col, from_row, layer, val  )	
+$   	
+$
+$
+$END FUNCTION
+$
+$
+$
+$
+$
+$FUNCTION blank_offsets( entity_toggle_values )
+$   LOGICAL entity_toggle_values()
+$
+$      INTEGER  i
+$
+$  /*
+$   * Blank out appropriate OFFSET column entities of the spreadsheet:
+$   */
+$
+$         FOR ( i = 1 to _NUM_CASES )
+$
+$             IF (! entity_toggle_values(i) ) THEN
+$               ui_spread_set_cell( spread, 3, i, 1, "" )
+$             END IF
+$
+$         END FOR
+$
+$   END FUNCTION   /* blank_offsets */
+
+/*--------------------------------------------------------------------------*/
+
+FUNCTION InterFace( count, Data  )
+	  
+	  INTEGER count
+	  STRING Data[]()
+$     STRING val[50](2,9) 
+$     STRING sell_val[50]
+     INTEGER i, j
+
+     _NUM_CASES = count
+
+ 
+     sys_allocate_array(row_labels,1,_NUM_CASES,1,1)
+     sys_allocate_array(spread_save,1,_NUM_CASES)
+$     sys_allocate_array(imin_lbl,1,_NUM_CASES)
+$     sys_allocate_array(imax_lbl,1,_NUM_CASES)
+     sys_allocate_array(ioffset,1,_NUM_CASES)
+  
+
+     CLASSNAME.init()
+     CLASSNAME.display()
+ 
+     
+     FOR (i=1 to _NUM_CASES)
+       
+       FOR (j=1 to 12)
+       
+         ui_spread_set_cell( spread, j, i, 1, Data(i,j) )
+         	
+       END FOR
+       	  	
+     END FOR
+    
+   sys_free_array(Data)	
+   sys_free_array(row_labels)
+   sys_free_array(spread_save) 	
+   sys_free_array(ioffset) 	
+
+	
+END FUNCTION 
+
+FUNCTION get_celldata()
+	
+     STRING Data[4096](VIRTUAL)
+     INTEGER i, j
+     
+     sys_allocate_array(Data,1,_NUM_CASES,1,12)
+
+     FOR (i=1 to _NUM_CASES)
+       
+       FOR (j=1 to 12)
+
+         ui_spread_get_cell( spread, j, i, 1, Data(i,j) )
+         	
+       END FOR
+       	  	
+	  END FOR	
+	  
+	  STX_panel_input.modInput(_NUM_CASES,Data)
+	  
+END FUNCTION	
+ 
+END CLASS   /* spread_sheet */
+

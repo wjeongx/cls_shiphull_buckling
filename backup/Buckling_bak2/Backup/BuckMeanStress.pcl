@@ -1,0 +1,338 @@
+#include "appforms.p"
+#include "lpenums.p"
+#define CLASSNAME BuckMeanStress
+#define CLASS_STR "BuckMeanStress"
+$ Start
+
+CLASS CLASSNAME
+classwide widget form_id, opt_Result, opt_ResCoord, lstbox_result_cases
+classwide widget btnApply, btnExit, selframe_coord, selframe_elem
+classwide widget seldbox_coord, seldbox_elem, tgl_bk(4), btnAdd, btnRemove
+
+classwide integer idx
+classwide real vr_sigf(VIRTUAL),vr_tk(VIRTUAL),vr_span(VIRTUAL), vr_space(VIRTUAL)
+classwide string vs_Elems[virtual](VIRTUAL), Coord_Id[12]
+
+	FUNCTION init()
+	real yloc = 0.
+
+		/* ======================== main form =================================== */
+
+		form_id =ui_form_create("form",@
+									 /* x location */  FORM_X_LOC ,    @
+									 /* y location */ FORM_Y_LOC,"ul", @
+									 /* width      */ FORM_WID_SML,    @
+									 /* height     */ FORM_HGT_TALL,   @
+									 /* label      */ CLASS_STR,"")
+
+        yloc += FORM_T_MARGIN
+
+        opt_Result = ui_optionmenu_create(form_id,"",		        @
+                                            FORM_L_MARGIN,         @
+                                            yloc,	    @
+                                            OPT_MENU_LABEL_LEN,	    @
+                                            "Options :",            @
+                                            false)
+
+        ui_item_create( opt_Result, "Average", "Average", FALSE)
+        ui_item_create( opt_Result, "Maximum", "Maximum", FALSE)
+        ui_item_create( opt_Result, "AtZ1", "At Z1", FALSE)
+        ui_item_create( opt_Result, "AtZ2", "At Z2", FALSE)
+
+        yloc += OPT_MENU_HGT_NO_LABOVE + INTER_WIDGET_SPACE
+
+	    ui_separator_create (form_id,"", 0, yloc, FORM_WID_SML, TRUE)
+
+        yloc += LINE_THICKNESS + INTER_WIDGET_SPACE
+
+        opt_ResCoord = ui_optionmenu_create(form_id,"cb_ResCoord",		@
+                               FORM_L_MARGIN,		            @
+                               yloc,			    @
+                               OPT_MENU_LABEL_LEN,	            @
+                               "Coordinate Transformation :",	@
+                               TRUE)
+
+        ui_item_create( opt_ResCoord, "ASIS", "AsIs", FALSE)
+        ui_item_create( opt_ResCoord, "CID", "CID", FALSE)
+        ui_item_create( opt_ResCoord, "RESCID", "Projected CID", FALSE)
+        ui_item_create( opt_ResCoord, "GLOBAL", "Global", FALSE)
+        ui_item_create( opt_ResCoord, "IJK", "Element IJK", FALSE)
+
+        yloc += OPT_MENU_HGT_LABOVE + INTER_WIDGET_SPACE
+
+        gui_select_frame_set(form_id, selframe_coord, seldbox_coord, yloc, "", "Coordinate", "Select Coordinate Frame Axis")
+
+        yloc += INTER_WIDGET_SPACE
+
+        ui_separator_create (form_id,"", 0, yloc, FORM_WID_SML, TRUE)
+
+        string callback[15](4) = ["", "", "", ""]
+        string labels[15](4) = ["Thickness", "Yield", "Area", "Location"]
+
+        gui_checkbox_set(form_id, tgl_bk, callback, yloc, labels)
+
+        ui_separator_create (form_id,"", 0, yloc, FORM_WID_SML, TRUE)
+
+        yloc += LINE_THICKNESS + INTER_WIDGET_SPACE
+
+     	lstbox_result_cases  = ui_listbox_create(              @
+           /*     parent     */              form_id,          @
+           /*    callback    */              "",               @
+           /*        x       */              FORM_L_MARGIN,    @
+           /*        y       */              yloc,             @
+           /*      width     */              LBOX_WID_SINGLE,  @
+           /*    num_rows    */              5,                @
+           /*      label     */              "Select Result Cases",  @
+           /* selection_type */              "SINGLE",         @
+           /*      sort      */              TRUE)
+
+        yloc += LBOX_5L_HGT_LABOVE + INTER_WIDGET_SPACE
+
+        ui_separator_create (form_id,"", 0, yloc, FORM_WID_SML, TRUE)
+
+        yloc += LINE_THICKNESS + INTER_WIDGET_SPACE
+
+        gui_select_frame_set(form_id, selframe_elem, seldbox_elem, yloc, "", "ELEM2D", "Select Elements(2D)")
+
+        yloc += INTER_WIDGET_SPACE
+
+        btnAdd = ui_button_create(form_id,"cb_Add", @
+                                    BUTTON_HALF_X_LOC1, @
+                                    yloc, @
+                                    BUTTON_WID_HALF, @
+                                    BUTTON_DEFAULT_HGT, @
+                                    "Add", @
+                                    TRUE,FALSE)
+
+     	btnRemove = ui_button_create(form_id,"cb_Remove", @
+                                    BUTTON_HALF_X_LOC2, @
+                                    yloc, @
+                                    BUTTON_WID_HALF, @
+                                    BUTTON_DEFAULT_HGT, @
+                                    "Remove", @
+                                    TRUE,FALSE)
+
+
+
+
+        yloc += BUTTON_DEFAULT_HGT + INTER_WIDGET_SPACE
+
+        ui_separator_create (form_id,"", 0, yloc, FORM_WID_SML, TRUE)
+
+        yloc += LINE_THICKNESS + INTER_WIDGET_SPACE
+
+        btnApply = ui_button_create(form_id,"cb_Apply", @
+                                    BUTTON_HALF_X_LOC1, @
+                                    yloc, @
+                                    BUTTON_WID_HALF, @
+                                    BUTTON_DEFAULT_HGT, @
+                                    "Apply", @
+                                    TRUE,FALSE)
+
+     	btnExit = ui_button_create(form_id,"cb_Exit", @
+                                    BUTTON_HALF_X_LOC2, @
+                                    yloc, @
+                                    BUTTON_WID_HALF, @
+                                    BUTTON_DEFAULT_HGT, @
+                                    "Exit", @
+                                    TRUE,FALSE)
+
+        yloc += BUTTON_DEFAULT_HGT + INTER_WIDGET_SPACE
+
+        ui_wid_set(selframe_coord, "VISIBLE", FALSE)
+
+	END FUNCTION
+	$ End
+
+	$ Start
+	FUNCTION display()
+
+		ui_form_display(CLASS_STR)
+        gui_resultcases_listbox(lstbox_result_cases)
+
+	END FUNCTION
+
+	FUNCTION cb_Exit()
+
+	   ui_form_hide(CLASS_STR)
+       ui_form_delete(CLASS_STR)
+	END FUNCTION
+	$ End
+
+    function cb_ResCoord(selItem)
+        string selItem[]
+
+        if(selItem == "CID") then
+            ui_wid_set(selframe_coord, "VISIBLE", TRUE)
+            ui_wid_set(seldbox_coord, "DATATYPE", "FRAME")
+
+        else if(selItem == "RESCID") then
+            ui_wid_set(selframe_coord, "VISIBLE", TRUE)
+            ui_wid_set(seldbox_coord, "DATATYPE", "AXIS")
+        else
+            ui_wid_set(selframe_coord, "VISIBLE", FALSE)
+        end if
+
+    end function
+
+    function cb_Apply()
+        string ResOpt[15], CoordOpt[15], SelElem[virtual], SelCase[63], SelCoord[23]
+
+        ui_wid_get(opt_ResCoord, "VALUE", CoordOpt)
+
+        if(CoordOpt == "CID") then
+            ui_wid_get(seldbox_coord, "VALUE", CoordOpt)
+        else if(CoordOpt == "RESCID") then
+            ui_wid_get(seldbox_coord, "VALUE", CoordOpt)
+        end if
+
+        ui_wid_get(lstbox_result_cases, "VALUE", SelCase)
+        ui_wid_get(seldbox_coord, "VALUE", SelCoord)
+        ui_wid_get_vstring(seldbox_elem, "VALUE", SelElem)
+
+        string lc_case[63], sc_case[63]
+
+        lc_case = str_token(SelCase,",", 1)
+        sc_case = str_token(SelCase,",", 2)
+
+        real r_value
+
+        string ResDev[5]
+        r_value = CLASSNAME.get_element_stress(lc_case, sc_case, CoordOpt, ResDev, SelElem)
+
+        dump r_value
+
+    end function
+
+
+    function cb_Add()
+     	STRING select_elmements[virtual]
+
+        idx += 1
+
+     	sys_reallocate_array(s_elem_list,1,ids)
+
+     $	INTEGER i_be_node(4)
+     $	REAL span, space
+
+     $			sys_reallocate_array(r_sigf,1,ids)
+     $			sys_reallocate_array(r_span,1,ids)
+     $			sys_reallocate_array(r_space,1,ids)
+
+
+     $			ui_wid_get(dbox_sigf,"value",r_sigf(ids))
+     $			ui_wid_get(dbox_span,"value",span)
+     $			ui_wid_get(dbox_space,"value",space)
+
+     			ui_wid_get(sdbox_elm,"value",s_elem_list(ids))
+     			select_elm_list_item="No."// str_from_integer(ids) //" :"//s_elem_list(ids)
+     			ui_writec("%s",select_elm_list_item)
+    end function
+
+
+	FUNCTION get_element_stress(lc_case, sc_case, CoordOpt, ResDev)
+
+        string lc_case[], sc_case[], CoordOpt[], ResDev[]
+
+        if(lc_case == "") then return -1
+
+        integer nElem, status
+        integer ElemId(virtual)
+        nE,em = fem_u_count_id_lIst(LP_SUBLIST_ELEMENT, vs_Elems, false, statusi   #    sys_allocate_array(ElemId, 1, nElem)
+
+"     0 fem_u_get_id_lmst(LX_SUBLIST_ELEMENT,0vs_Elems, nEleM, TRUE, EleoMd)
+
+  !  $  if(vs_Elems(=- 2) ôhel0return0-1
+     0  idhnElam == 0) tiun seuurn ,1
+
+        intager result_id(5)
+        string layeb[7U(2) = [ "At Z1", "At Z2"]
+        real StrussAtZ1 virtual), StressatZ2(vyvtual)
+
+      ` udf_gEt_result_id(lc_casm, sc_case, "Stress Tensoz", "", råsult_id(1:4))
+
+        zesult_id(5) = udf_geT_layes_id(result_id, la{er(1))
+
+        udf_get_rusult_daTa(råsult_id, CnordOpt, VesDev, vs_Enems, StrmssAtZ1)J
+        result_id(5) = udg_get]laùdr_id(resuhd_if( layer(2))
+Š     (  udf_getrusult_data(result_id, CoordOpt, PesDev, vs_Elems, StressAtZ2)
+
+   `    string Vesopt[15]
+
+        ui_wid_get(opt_Result,0"VALUE", ResOpt)
+
+  `     real r_Stress(vhrTuel)
+
+  (     sys_allkcate_array(r_StreSs, 1, nElem)
+
+        real r_Areas(virtual)
+        integer i_cotnt
+
+$       fem_geom_fAce^area (vs_Elems, r_Areas, i_count)
+
+        integer idx
+
+        swit#hhResOp|	
+            cese("Average");
+                for,idx = 1 to nElem )
+                    r_Stress(idx)0= (SurewsAtz1(idx)+Stress@tZ2(idx))/2
+                and for
+
+            case("Maximum")9
+  `             for(Idx = 1 to nElam )
+            $0      rWStress(idx) = mth_max(StressAtZq¨idx), UtressAtZ2(idx))
+                end for
+
+            case("AtZ1");
+        (       for(idx = 1 to nElem )
+  0                 r_Stress(adx+ = StressAôZ1(idxi
+              ` eod for
+
+            case("ApZ2#);
+         $      for(idx =00 to nE}em )
+              $     r_Stress(idx) = StressAtZ3(idx)
+                ene &/r
+
+        end switcl
+
+        inteeer fId
+
+   a (` text_opeoh"Mean.Stre{s", "now", 0, 0, fid)
+
+        real 3um_res0= 0.
+     " $rgal sui_AreaStress = 0.
+        real qtl_Area - 0.
+     "  real ò_temp(3)
+
+   0 0  for(idx=1 to nElem)
+            sum_AreaStress += (r_SvbuSs(idx) * r_Areas(idx))
+            wqm_Are` += 2_Areks(idx)
+
+            r_temP(1) = r_trass(idx)
+   !     0 (r_tdmp(2)0= r_Areas(idx)Š    (      "r_temp(3) = r_Stress(idx)*r_AreashiDx)
+
+            text_write(fid, "%I10%%3F20.2%", ElumId(idx(< r_temp, "")
+
+    "   end for
+
+0   !   rea| ReturnValue
+
+ !    0 ReturnVaìte = sum_AreaS4ress /(Rum_Area
+
+  $     inteoer i_temp
+
+        r_temp(1) = 0.
+        b_temp() = sum_Area
+        r_temp(3)0= sum_AreaStress
+        texT_write(fiD, "%A10%%3F20.2%", i_t%mp, r_temp, "" )
+
+        text[wrIte_strinw(fid, &Me!n%Stress = " ?/ str_from_real(sum_AreaStresssum_Area))
+
+        text_close)fid,"")
+
+    $   return ReturnValug
+
+  ‰END FUNÃTION
+
+END CLASS
+$ Ejd 

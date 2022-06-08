@@ -1,0 +1,114 @@
+
+/*************************************************
+client data  1001 : selected list item
+**************************************************/
+
+
+
+
+
+CLASS UTL_accessDB
+
+
+FUNCTION putData(p_integer_data, p_string_data)
+
+
+INTEGER id
+INTEGER client_label
+INTEGER client_type
+INTEGER num_logicals
+INTEGER num_integers
+INTEGER num_reals
+INTEGER num_strings
+INTEGER max_string_length
+LOGICAL p_logical_data(1)
+INTEGER p_integer_data()
+REAL p_real_data(1)
+STRING p_string_data[]()
+
+
+INTEGER i_return
+
+
+
+
+db_delete_client_data(1001)
+
+
+client_type = 1001
+client_label = 1001
+
+
+num_logicals = 0
+num_integers = 1
+num_reals = 0
+num_strings = p_integer_data(1)
+max_string_length = 50
+
+
+
+
+i_return = @
+db_create_client_data(@
+id, client_label, client_type, @
+num_logicals, num_integers, num_reals, num_strings,max_string_length,@
+p_logical_data, p_integer_data, p_real_data, p_string_data)
+
+
+
+
+END FUNCTION
+
+
+FUNCTION getData(g_integer_data, g_string_data)
+
+
+
+
+INTEGER getID
+INTEGER num_logicals
+INTEGER num_integers
+INTEGER num_reals
+INTEGER num_strings
+INTEGER max_string_length
+LOGICAL g_logical_data(1)
+INTEGER g_integer_data()
+REAL g_real_data(1)
+STRING g_string_data[]()
+INTEGER status
+
+
+status = db_get_client_id_by_label(1001, getID)
+
+
+IF (status == 0) THEN
+
+
+num_logicals = 0
+num_integers = 1
+num_reals = 0
+num_strings = g_integer_data(1)
+max_string_length = 50
+
+
+db_get_all_client_data (getID, @
+num_logicals, @
+num_integers, @
+num_reals, @
+num_strings, @
+max_string_length, @
+g_logical_data, @
+g_integer_data, g_real_data, g_string_data)
+
+
+
+
+
+
+END IF
+
+
+END FUNCTION
+
+
+END CLASS

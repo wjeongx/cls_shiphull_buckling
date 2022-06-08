@@ -1,0 +1,40 @@
+
+/*******************************************************************************
+ *
+ *   FUNCTION UTL_getMidNode( )
+ *
+ *   Purpose :
+ *             get mid node's coordinate
+ *   Input   :
+ *             integer     i_nodeA, i_nodeB
+ *             real_array  ra_midNode
+ *   Output  :
+ *        integer  <return value> This function returns a value of 0 when executed 
+ *
+ *   Side Effects :
+ *        <none>
+ *******************************************************************************/
+
+
+
+function UTL_getMidNode(i_nodeA, i_nodeB, ra_midNode)
+
+
+integer i_nodeA, i_nodeB
+integer i
+real ra_xyz(2,3), ra_midNode()
+
+
+db_get_node(i_nodeA,ra_xyz(1,1:3))
+db_get_node(i_nodeB,ra_xyz(2,1:3))
+
+
+for ( i=1 to 3 )
+ra_midNode(i) = (ra_xyz(1,i) + ra_xyz(2,i)) /2.
+end for
+
+
+dump ra_midNode	
+
+
+end function

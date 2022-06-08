@@ -1,0 +1,333 @@
+
+
+/* $Header: /banff/vbs/Dev.X700/cCase/d1/src_1/./lp/include/RCS/lpenums.p,v 1.1 91/05/21 15:58:43 deiner Exp $ */
+/* Evaluation methods for LpEval */
+
+/* SublistType filters for LpSublistType */
+
+
+
+
+/* note:
+ * if the mask order is disturbed, the customer
+ *  must recompile any custom pcl to plb.
+ *  conclusion: add new mask bits to the end.
+ * these constants are used by fortran and
+ *  may only be expressed as decimal numbers.
+ */
+
+
+
+
+/* Attribute names for LpSublistAttributeGet */
+
+/* Data formats for LpCOERCE */
+
+/* FORTRAN interface help */
+
+
+
+CLASS extractStress
+
+
+CLASSWIDE REAL ra_stress(VIRTUAL)
+CLASSWIDE INTEGER i_cntElem, ia_elemIDs(VIRTUAL), i_cntLc, ia_g_lcids(VIRTUAL), i_g_chkLc
+
+
+FUNCTION doit(ia_lcids, sa_elmList, i_o_cntElem, ia_o_elemIDs, ra_o_stress)
+
+
+INTEGER i_o_cntElem, ia_o_elemIDs(), ia_lcids()
+REAL ra_o_stress()
+
+
+INTEGER i_ncases, ia_nsub(VIRTUAL), i,j , i_status
+INTEGER i_nsub2, ia_subids(VIRTUAL), i_nres, ia_Elems(VIRTUAL), ia_Nodes(4)
+INTEGER ia_primary_id(VIRTUAL), ia_secondary_id(VIRTUAL), i_Cnt
+REAL ra_normVect(3)
+STRING s_buffer[32] , sa_elmList[](), s_elmList[VIRTUAL]
+
+
+i_cntLc = sys_array_hbound(ia_lcids,1)
+IF( i_cntLc ==0 ) THEN RETURN -1
+SYS_ALLOCATE_ARRAY(ia_g_lcids,1,i_cntLc)
+
+
+ia_g_lcids = ia_lcids
+
+
+i_status = sys_array_hbound(sa_elmList,1)
+ga_group_delete ("_msc_dummy_grpC")
+ga_group_create ("_msc_dummy_grpC")
+FOR ( i=1 TO i_status )
+ga_group_entity_add("_msc_dummy_grpC", sa_elmList(i) )
+END FOR
+	
+
+
+s_elmList = UTL.get2DElm("_msc_dummy_grpC")
+get_ids_from_entity_list( s_elmList, "elem", i_Cnt, ia_Elems )
+
+
+$	i_Cnt = fem_u_count_id_list(		1024, s_elmList, false, i_status)
+$	sys_allocate_array(ia_Elems, 1, i_Cnt)
+$	fem_u_get_id_list(		1024, s_elmList, i_Cnt, TRUE, ia_Elems)
+
+
+ga_group_delete ("_msc_dummy_grpA")
+ga_group_delete ("_msc_dummy_grpB")
+ga_group_create("_msc_dummy_grpA")/* prj_crd = crd.0.2 */
+ga_group_create("_msc_dummy_grpB")/* prj_crd = crd.0.1 */
+	
+
+
+FOR(i=1 TO i_Cnt)	
+db_get_nodes_for_elems(1,4,ia_Elems(i:i),ia_Nodes)
+UTL_getNormVect(ia_Nodes(1:3), ra_normVect)
+IF ( abs(ra_normVect(1)) ==1 && ra_normVect(2)==0 && ra_normVect(3)==0 ) THEN
+ga_group_entity_add("_msc_dummy_grpA","elem "//str_from_integer(ia_Elems(i)) )
+ELSE
+ga_group_entity_add("_msc_dummy_grpB","elem "//str_from_integer(ia_Elems(i)) )
+END IF 	
+
+
+END FOR
+	
+
+
+$ i_status=res_utl_get_loadcases(i_ncases, ia_lcids, ia_nsub)
+$ IF( i_status !=0 ) THEN RETURN -1
+
+
+
+
+
+
+$ FOR ( i=1 TO i_ncases )
+FOR ( i=1 TO i_cntLc )
+res_utl_get_subcases(ia_lcids(i), i_nsub2, ia_subids)
+res_utl_get_result_ids( 1, ia_lcids(i:i), ia_subids, @
+i_nres, ia_primary_id , ia_secondary_id)
+IF ( i ==1 ) THEN
+i_g_chkLc =999
+ELSE
+i_g_chkLc =0
+END IF	
+
+
+ui_writec("==> loadcase #:%d data were extracted",ia_lcids(i))	
+$$ FOR( j=1 TO i_nres )
+$
+$$ db_get_primary_res_label(ia_primary_id(j),s_buffer)
+$$dump "++++++++++++++++++"
+$$dump str_from_integer(ia_primary_id(j))//s_buffer
+$$dump "++++++++++++++++++"
+$$ ia_primary_id =1 mean Stress Tensor
+$$ IF ( s_buffer == "Stress Tensor") THEN
+s_elmList = UTL.get2DElm("_msc_dummy_grpA")
+extractStress.getData(i,s_elmList,2)
+s_elmList = UTL.get2DElm("_msc_dummy_grpB")
+extractStress.getData(i,s_elmList,1)
+
+
+$ END IF
+$
+$$ END FOR
+$
+IF ( i != i_cntLc ) THEN i_cntElem = 0	
+
+
+END FOR 	
+
+
+i_o_cntElem = i_cntElem
+
+
+SYS_ALLOCATE_ARRAY(ia_o_elemIDs,1,i_cntElem)
+SYS_ALLOCATE_ARRAY(ra_o_stress, 1,i_cntLc, 1,i_cntElem*3)
+
+
+ia_o_elemIDs = ia_elemIDs
+ra_o_stress = ra_stress
+
+
+$ DUMP i_cntElem, ia_elemIDs
+ga_group_delete ("_msc_dummy_grpA")
+ga_group_delete ("_msc_dummy_grpB")
+ga_group_delete ("_msc_dummy_grpC")
+	
+i_cntElem=0
+SYS_FREE_ARRAY(ia_elemIDs)	
+SYS_FREE_ARRAY(ra_stress)			
+
+
+END FUNCTION
+
+
+
+
+FUNCTION getData(lcid, s_elmList, i_prjID )
+
+
+STRING s_elmList[]
+STRING s_label[80](VIRTUAL)
+STRING label[90], title[80], title2[80]
+STRING val[VIRTUAL] , grp_list[64](1), triElm[VIRTUAL], quadElm[VIRTUAL]
+STRING res_type[2]
+
+
+INTEGER nsub2, nres, i, j, i_prjID
+INTEGER lcids(1), nsub(VIRTUAL), subids(VIRTUAL), primary_id(VIRTUAL)
+INTEGER secondary_id(VIRTUAL)
+INTEGER data_type, resloc
+INTEGER eids(VIRTUAL)
+INTEGER nresults(VIRTUAL), minloc(12), maxloc(12)
+INTEGER result_ids(VIRTUAL)
+INTEGER nlayers
+INTEGER i_pos , i_str_length
+INTEGER dummy, type
+INTEGER nullflag
+INTEGER lcid, pid(1), sid(1), lid(VIRTUAL), i_preCntElm
+
+
+REAL xyz(3), origin(3), matrix(3, 3)
+REAL result(VIRTUAL), r_data, z_data, theta
+REAL sorted_results(VIRTUAL)
+
+
+IF( s_elmList =="" ) THEN RETURN -1
+
+
+$res_utl_get_loadcases(ncases, lcids, nsub)
+$ SYS_ALLOCATE_ARRAY(lcids,1,1)
+$ db_get_load_case_id (lc, lcids(1))
+lcids(1) = ia_g_lcids(lcid)
+
+
+res_utl_get_subcases( lcids(1), nsub2, subids)
+res_utl_get_result_ids( 1, lcids, subids, @
+nres, primary_id , secondary_id)
+
+
+FOR( j=1 TO nres )
+
+
+db_get_primary_res_label(primary_id(j),title)
+
+
+IF ( title == "Stress Tensor") THEN
+pid(1) = primary_id(j)
+END IF
+
+
+END FOR
+
+
+
+
+
+
+sid(1) = secondary_id(1)
+
+
+SYS_REALLOCATE_ARRAY(result_ids,1,4)
+result_ids(1) = lcids(1)
+result_ids(2) = subids(1)
+result_ids(3) = pid(1)
+result_ids(4) = sid(1)
+
+
+res_utl_get_result_layers( result_ids, @
+nlayers, @
+lid, @
+s_label )
+
+
+$ nlayers = 3
+$ s_label[80](VIRTUAL) = ["At Center", "At Z1", "At Z2"]
+
+
+SYS_REALLOCATE_ARRAY(result_ids,1,5)
+
+
+result_ids(1) = lcids(1)
+result_ids(2) = subids(1)
+result_ids(3) = pid(1)
+result_ids(4) = sid(1)
+result_ids(5) = lid(2)/*At Z1*/
+
+
+$LIST ( res_type = "XX", "YY", "XY" )
+$ LIST ( res_type = "" )
+res_utl_extract_elem_results (/* input */ @
+result_ids, @
+s_elmList, @
+"", @
+"C", @
+"ResCoord 0."//str_from_integer(i_prjID), @
+/* output */@
+data_type, resloc, nres, eids, nresults, result, minloc, maxloc)
+
+
+
+
+IF( i_g_chkLc == 999 ) THEN
+IF( i_cntElem == 0 ) THEN
+SYS_ALLOCATE_ARRAY(ia_elemIDs,1,nres)
+SYS_ALLOCATE_ARRAY( ra_stress ,1,i_cntLc ,1,nres*3)
+ia_elemIDs = eids
+ELSE
+SYS_REALLOCATE_ARRAY(ia_elemIDs,1,i_cntElem + nres)
+SYS_REALLOCATE_ARRAY( ra_stress ,1,i_cntLc,1, (i_cntElem+nres)*3)
+ia_elemIDs(i_cntElem+1:i_cntElem+nres) = eids
+END IF
+END IF	
+
+
+i_preCntElm = i_cntElem
+i_cntElem = i_cntElem + nres
+
+
+FOR(i=1 TO nres)
+ra_stress(lcid,3*i-2+i_preCntElm*3)=result(i,1)
+ra_stress(lcid,3*i-1+i_preCntElm*3)=result(i,2)
+ra_stress(lcid,3*i +i_preCntElm*3)=result(i,4)
+END FOR
+
+/*
+ 
+ IF( i_cntElem == 0 ) THEN
+   i_cntElem = nres 
+   SYS_ALLOCATE_ARRAY(ia_elemIDs,1,i_cntElem)
+   SYS_ALLOCATE_ARRAY( ra_stress ,1,i_cntLc ,1,i_cntElem*3)
+   ia_elemIDs = eids
+   
+   FOR(i=1 TO i_cntElem)
+     ra_stress(lcid,3*i-2)=result(i,1)
+     ra_stress(lcid,3*i-1)=result(i,2)
+     ra_stress(lcid,3*i  )=result(i,4) 
+   END FOR
+   	
+ ELSE
+   i_preCntElm = i_cntElem
+$   IF( i_g_chkLc == 999 ) THEN  i_cntElem = i_cntElem + nres
+   i_cntElem = i_cntElem + nres
+   SYS_REALLOCATE_ARRAY(ia_elemIDs,1,i_cntElem)
+   SYS_REALLOCATE_ARRAY( ra_stress ,1,i_cntLc,1, i_cntElem*3)
+   ia_elemIDs(i_preCntElm+1:i_cntElem) = eids
+   
+   FOR(i=1 TO nres)
+     ra_stress(lcid,3*i-2+i_preCntElm*3)=result(i,1)
+     ra_stress(lcid,3*i-1+i_preCntElm*3)=result(i,2)
+     ra_stress(lcid,3*i  +i_preCntElm*3)=result(i,4) 
+   END FOR
+   
+   
+ END IF	
+*/
+	
+		
+END FUNCTION
+
+
+END CLASS

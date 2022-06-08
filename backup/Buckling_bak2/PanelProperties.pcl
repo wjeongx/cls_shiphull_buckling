@@ -1,0 +1,331 @@
+#include "appforms.p"
+#include "lpenums.p"
+#define CLASSNAME PanelProperties
+#define CLASSNAME_STR "PanelProperties"
+
+$ Start
+
+CLASS CLASSNAME
+classwide widget form_id,opt_action,opt_object,opt_method, tgl_thk, tgl_mat, tgl_area, @
+                 tgl_loc, fra_sltelm, sdbox_elm, fra_appregion
+
+classwide integer ids
+classwide real r_sigf(VIRTUAL),r_tk(VIRTUAL),r_span(VIRTUAL), r_space(VIRTUAL),r_bc2(VIRTUAL)
+classwide string s_elem_list[2048](VIRTUAL),s_bc1[20](VIRTUAL),s_coord_id[12]
+
+/* ===========================================
+             Initial FUNCTION
+   =========================================== */
+   
+   $ Start
+	FUNCTION init()
+	real yloc_main,yloc_parm,yloc_appregion,FRA_APPRGN_HGT
+
+		ids=0
+
+		/* ======================== main form =================================== */
+
+		form_id = ui_form_create("",@
+									 /* x location */  FORM_X_LOC , @
+									 /* y location */ FORM_Y_LOC,"ul", @
+									 /* width      */ FORM_WID_SML, @
+									 /* height     */ FORM_HGT_TALL, @
+									 /* label      */ CLASSNAME_STR,"")
+
+		/* ============ action, object, method - option menu ===================== */
+		opt_action=ui_optionmenu_create(/* parent       */  form_id, @
+										 /* callback     */  "Action_cb", @
+										 /* x            */ AOM_MENU_X_LOC, @
+										 /* y            */ ACTION_MENU_Y_LOC, @
+										 /* label length */ AOM_MENU_LABEL_LEN, @
+										 /* label        */ "Action:", @
+										 /*              */  false)
+
+				ui_item_create(opt_action,"CREATE","Create",true)
+		
+		opt_object=ui_optionmenu_create(form_id,"",@
+													AOM_MENU_X_LOC, @
+													OBJECT_MENU_Y_LOC, @
+													AOM_MENU_LABEL_LEN, @
+													"Object:", @
+													 FALSE)
+
+		       ui_item_create(opt_object,"MP","Multi Panel",FALSE)
+
+		$	ui_wid_set(object_item(1),"ENABLE",FALSE)
+
+		opt_method=ui_optionmenu_create(form_id,"",		@
+									   AOM_MENU_X_LOC,		@
+									   METHOD_MENU_Y_LOC,			@
+									   AOM_MENU_LABEL_LEN,	@
+									   "Method:",				@
+									   false)
+
+				 ui_item_create(opt_method,"BPSTRESS", "Buckling Panel Stress", true)
+				 ui_item_create(opt_method,"MEANSTRESS", "Mean Stress", true)
+
+		yloc_main = METHOD_MENU_Y_LOC + OPT_MENU_HGT_NO_LABOVE + INTER_WIDGET_SPACE
+
+		ui_separator_create(/* patrent  */  form_id, @
+							/* callback */  "",@
+							/* x        */  0, @
+							/* y        */  yloc_main, @
+							/* width    */  FORM_WID_SML, @
+											true)
+
+		/* ================= configuration button =========================== */
+
+        yloc_main += INTER_WIDGET_SPACE
+
+        tgl_thk = ui_toggle_create ( form_id, "",             @
+                                          FORM_L_MARGIN,              @
+                                          yloc_main,              @
+                                          "Thickness" )
+
+        yloc_main += TOGGLE_HGT + TOGGLE_Y_OFFSET
+
+        tgl_mat = ui_toggle_create ( form_id, "",             @
+                                          FORM_L_MARGIN,              @
+                                          yloc_main,              @
+                                          "Yield" )
+
+        yloc_main += TOGGLE_HGT + TOGGLE_Y_OFFSET
+
+        tgl_area = ui_toggle_create ( form_id, "",             @
+                                          FORM_L_MARGIN,              @
+                                          yloc_main,              @
+                                          "Area" )
+
+        yloc_main += TOGGLE_HGT + TOGGLE_Y_OFFSET
+
+        tgl_loc = ui_toggle_create ( form_id, "",             @
+                                          FORM_L_MARGIN,              @
+                                          yloc_main,              @
+                                          "Location" )
+
+        yloc_main += TOGGLE_HGT + TOGGLE_Y_OFFSET + INTER_WIDGET_SPACE
+
+		/* ============= select frame FOR element select box ================================== */
+
+		FRA_APPRGN_HGT=TOGGLE_HGT+SFRAME_1SDB_HGT_LABOVE+INTER_WIDGET_SPACE*3+BUTTON_DEFAULT_HGT
+
+		fra_appregion=ui_frame_create(form_id,"", @
+								 FRAME_X_LOC_COL1, @
+								 yloc_main, @
+								 FRAME_WID_SINGLE+0.1, @
+								 FRA_APPRGN_HGT, @
+								 "Application Region")
+
+		/* =============== element group LIST =================================================== */
+		yloc_appregion = FRAME_T_MARGIN
+
+		fra_sltelm=ui_selectframe_create(fra_appregion,"ADD_cb", @
+										 SFRAME_X_LOC_COL1, @
+										 yloc_appregion, @
+										 SFRAME_WID_SINGLE, @
+										 SFRAME_1SDB_HGT_LABOVE, @
+										 "Auto Execute", @
+										 false)
+
+		sdbox_elm= ui_selectdatabox_create(fra_sltelm,"", @
+										   SFRAME_L_MARGIN, @
+										   0, @
+										   SDBOX_LABEL_LEN_SINGLE, @
+										   SDBOX_WID_SINGLE, @
+										   "Select Element Group",@
+										   "",true, @
+										   "elem2d", "" )
+
+		yloc_appregion += TOGGLE_HGT + SFRAME_1SDB_HGT_LABOVE + INTER_WIDGET_SPACE
+
+		/* ================ add & cancel button ================================================ */
+		ui_button_create(fra_appregion, @
+						"ADD_cb", @
+						 BUTTON_HALF_X_LOC1, @
+						 yloc_appregion, @
+						 BUTTON_WID_HALF, @
+						 BUTTON_DEFAULT_HGT, @
+						 "Add", @
+						 true,false)
+
+		ui_button_create(fra_appregion,"remove_cb", @
+									   BUTTON_HALF_X_LOC2, @
+									   yloc_appregion, @
+									   BUTTON_WID_HALF, @
+									   BUTTON_DEFAULT_HGT, @
+									   "Remove", @
+									   true,false)
+
+        yloc_main += FRA_APPRGN_HGT + INTER_WIDGET_SPACE
+
+		ui_separator_create(/* patrent  */  form_id, @
+							/* callback */  "",@
+							/* x        */  0, @
+							/* y        */  yloc_main, @
+							/* width    */  FORM_WID_SML, @
+											true)
+
+		$ selected element group
+
+		yloc_main += LABEL_HGT+FRA_APPRGN_HGT+INTER_WIDGET_SPACE
+
+		ui_button_create(form_id,"APPLY_CB", @
+									   BUTTON_HALF_X_LOC1, @
+									   yloc_main, @
+									   BUTTON_WID_HALF, @
+									   BUTTON_DEFAULT_HGT, @
+									   "Apply", @
+									   true,false)
+
+		ui_button_create(form_id,"CANCEL_CB", @
+									  BUTTON_HALF_X_LOC2, @
+									  yloc_main, @
+									  BUTTON_WID_HALF, @
+									  BUTTON_DEFAULT_HGT, @
+									  "Cancel", @
+									  true,false)
+
+		sys_allocate_array(r_sigf,1,1)
+		sys_allocate_array(r_tk,1,1)
+		sys_allocate_array(s_elem_list,1,1)
+		sys_allocate_array(r_span,1,1)
+		sys_allocate_array(r_space,1,1)
+
+	END FUNCTION
+	$ End
+
+	$ Start
+	FUNCTION display()
+
+		ui_form_display(CLASSNAME_STR)
+
+	END FUNCTION
+	$ End
+
+	$ Start
+	FUNCTION Action_cb(s_action_item)
+	string s_action_item[]
+
+	END FUNCTION
+	$ End 
+
+	$ Start
+	FUNCTION CANCEL_CB()
+
+	   ids=0
+	   ui_form_hide(CLASSNAME_STR)
+
+	END FUNCTION
+	$ End
+
+	$ Start
+	FUNCTION ADD_cb()
+	STRING select_elm_list_item[1000]
+$	INTEGER i_be_node(4)
+$	REAL span, space
+
+		ids += 1
+
+$			sys_reallocate_array(r_sigf,1,ids)
+$			sys_reallocate_array(r_span,1,ids)
+$			sys_reallocate_array(r_space,1,ids)
+			sys_reallocate_array(s_elem_list,1,ids)
+
+$			ui_wid_get(dbox_sigf,"value",r_sigf(ids))
+$			ui_wid_get(dbox_span,"value",span)
+$			ui_wid_get(dbox_space,"value",space)
+
+			ui_wid_get(sdbox_elm,"value",s_elem_list(ids))
+			select_elm_list_item="No."// str_from_integer(ids) //" :"//s_elem_list(ids)
+			ui_writec("%s",select_elm_list_item)
+
+	END FUNCTION
+	$ End
+
+	/* =======================================
+			remove button callback fuction
+	   ======================================= */
+
+	$ Start
+	FUNCTION remove_cb()
+
+	s_elem_list(ids)=""
+
+	ui_writec("No. %d is deleted",ids)
+
+	ids -= 1
+
+	END FUNCTION
+	$ End
+
+	/* ====================================================
+		apply button callback
+	  ====================================================== */
+
+	$ Start
+FUNCTION APPLY_CB()
+
+	STRING action[20]
+    logical log_thk, log_mat, log_area, log_loc
+
+    ui_wid_get(tgl_thk,"VALUE", log_thk)
+    ui_wid_get(tgl_mat, "VALUE", log_mat)
+    ui_wid_get(tgl_area, "VALUE", log_area)
+
+    integer fid
+    text_open("default.inp", "NOWV",0,0,fid)
+
+    integer i, nElem, ia_ElemId(virtual), status, i_dat(1)
+    string s_dat[32](1), format[64]
+    real r_dat(virtual), r_areas(virtual)
+    integer idx = 0
+
+    for(i=1 to ids)
+        s_dat(1) = s_elem_list(i)
+
+        nElem = fem_u_count_id_list(LP_SUBLIST_ELEMENT, s_elem_list(i), false, status)
+     	sys_allocate_array(ia_ElemId, 1, nElem)
+        fem_u_get_id_list(LP_SUBLIST_ELEMENT, s_elem_list(i), nElem, TRUE, ia_ElemId)
+
+        sys_allocate_array(r_dat, 1, 1)
+
+        if(log_thk == TRUE) then
+            idx += 1
+            sys_reallocate_array(r_dat, 1, idx)
+            r_dat(idx) = panel.thickness(nElem, ia_ElemId)
+        end if
+
+        if(log_mat == TRUE) then
+            idx += 1
+            sys_reallocate_array(r_dat, 1, idx)
+            r_dat(idx) = panel.material_yield(nElem, ia_ElemId)
+        end if
+
+        if(log_area == TRUE) then
+            idx += 1
+            sys_reallocate_array(r_dat, 1, idx)
+            r_dat(idx) = panel.areas(nElem, ia_ElemId, r_areas)
+        end if
+
+        if(log_loc == TRUE) then
+$            idx += 1
+$            sys_reallocate_array(r_dat, 1, idx)
+$            r_dat(idx) = panel.material_yield(nElem, ia_ElemId)
+        end if
+
+        text_write_string(fid, s_elem_list(i))
+        format = "%" // str_from_integer(idx) // "F18.3%"
+        text_write(fid,format,i_dat,r_dat,"")
+
+        sys_free_array(r_areas)
+        idx = 0
+    end for
+
+	ids = 0
+
+    text_close(fid,"")
+END FUNCTION
+	$ End
+
+END CLASS
+$ End 

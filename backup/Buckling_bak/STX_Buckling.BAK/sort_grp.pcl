@@ -1,0 +1,112 @@
+FUNCTION sort_grp(grp_name, PLANE)
+   
+   STRING  grp_name[]
+   STRING  elm_members[VIRTUAL]
+   STRING  PLANE[]
+   STRING  lista[VIRTUAL], listb[VIRTUAL]
+   STRING  curGrpName[64]
+   
+   INTEGER elm_count, elm_ids(VIRTUAL),  nodes(4)
+   INTEGER elm_id(1), i, buffer_count
+   
+   
+   REAL      ncoord(3) ,  coord_limits(6),  tol_xyz(3)
+   REAL      chk_val(VIRTUAL), buffer_val(VIRTUAL)
+   
+   uil_entity_group_members_get ( grp_name,      124,   elm_members )
+   get_ids_from_entity_list ( elm_members, "elem", elm_count, elm_ids )
+   
+   $DUMP elm_count   
+   buffer_count =1
+   
+   SYS_ALLOCATE_ARRAY( chk_val, 1 , elm_count,1,2 )
+   SYS_ALLOCATE_ARRAY( buffer_val, 1 , 1 )      
+      
+   FOR ( i =1 TO elm_count ) 
+     
+        elm_id(1) = elm_ids(i)
+        db_get_nodes_for_elems(1,4,elm_id,nodes)
+        
+        db_get_node(nodes(1), ncoord)
+        
+        SWITCH( PLANE )
+         
+          CASE ( "PLAN" )
+            chk_val(i,1) = mth_round( ncoord(3), 0 ) 
+            	   
+          CASE ( "SECT" )
+            chk_val(i,1) = mth_round( ncoord(1), 0 )    
+          CASE ( "ELEV" )
+            chk_val(i,1) = mth_round( ncoord(2), 0 )    
+          DEFAULT
+                         
+         END SWITCH
+         
+       $ assign elm info TO chk_val(*,2)
+       chk_val(i,2) = elm_id(1)   
+                  
+   END FOR
+   
+   $ sorting 
+   mth_sort_column(chk_val,1,TRUE)
+   
+   buffer_val(1) = chk_val(1,1)
+   
+   
+   FOR ( i =1 TO elm_count )
+   	
+   	elm_ids(i) = chk_val(i,2)
+   	
+   END FOR
+   	
+   
+$   curGrpName =	PLANE//"@"//str_from_real(chk_val(1,1))
+   curGrpName =	PLANE//"@"//setSigFig(chk_val(1,1))
+   ga_group_create( curGrpName )	
+   ga_group_entity_add( curGrpName, "Elm "//str_from_integer(elm_ids(1)) )
+   
+   FOR ( i =2 TO elm_count ) 
+      
+      IF ( chk_val(i,1) != chk_val(i-1,1)   ) THEN
+         
+         buffer_count += 1   
+         
+$         curGrpName =	PLANE//"@"//str_from_real(chk_val(i,1))
+         curGrpName =	PLANE//"@"//setSigFig(chk_val(i,1))		
+         ga_group_create( curGrpName )	
+         ga_group_entity_add( curGrpName, "Elm "//str_from_integer(elm_ids(i)) )
+         
+      END IF
+     
+         ga_group_entity_add( curGrpName, "Elm "//str_from_integer(elm_ids(i)) ) 	
+         
+   END FOR
+
+END FUNCTION
+
+FUNCTION setSigFig(r_crdVal)
+   REAL     r_crdVal
+   INTEGER  i_crdVal, i_strLength
+   STRING   s_crdVal[32], s_index[5](6)
+   
+   s_index(1)="000000"
+   s_index(2)="00000"
+   s_index(3)="0000"
+   s_index(4)="000"
+   s_index(5)="00"
+   s_index(6)="0"
+   
+   i_crdVal = r_crdVal
+   s_crdVal = str_from_integer(i_crdVal)
+   i_strLength = str_length(s_crdVal)
+   
+   IF( i_crdVal < 0 ) THEN 
+    i_strLength = i_strLength -1
+    s_crdVal = str_from_integer(i_crdVal*-1)
+    s_crdVal = "-"//s_index(i_strLength)//s_crdVal
+   ELSE 
+    s_crdVal = s_index(i_strLength)//s_crdVal
+   END IF 	 
+   RETURN s_crdVal
+
+END FUNCTION

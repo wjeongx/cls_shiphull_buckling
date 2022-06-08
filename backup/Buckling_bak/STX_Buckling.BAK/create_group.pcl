@@ -1,0 +1,195 @@
+#include "appforms.p"
+
+CLASS create_group
+
+/* Classwide Variables */
+   CLASSWIDE WIDGET form_id, listbox_01, datbox_01, selfrm_01
+   CLASSWIDE WIDGET seldbox_01, button_01, button_02
+
+FUNCTION init()
+      REAL yloc_main
+      REAL yloc_selfrm_01=0.
+
+      form_id=ui_form_create(                      @
+      /* callback */         "",                   @
+      /*     x    */         FORM_X_LOC_SML,       @
+      /*     y    */         FORM_Y_LOC,           @
+      /* position */         "UL",                 @
+      /*   width  */         FORM_WID_SML,         @
+      /*  height  */         FORM_HGT_HALF,        @
+      /*   label  */         "Create group list",  @
+      /*  unused  */         "")
+
+      yloc_main = FORM_T_MARGIN
+
+      listbox_01=ui_listbox_create(                  @
+      /*     parent     */         form_id,          @
+      /*    callback    */         "post_group",     @
+      /*        x       */         FORM_L_MARGIN,    @
+      /*        y       */         yloc_main,        @
+      /*      width     */         LBOX_WID_SINGLE,  @
+      /*    num_rows    */         7,                @
+      /*      label     */         "Group list",     @
+      /* selection_type */         "EXTEND",       @
+      /*      sort      */         FALSE)
+
+      yloc_main += LBOX_5L_HGT_NO_LABOVE          + @
+                   (7-5)*LBOX_HGT_NO_LABOVE_INCR  + @
+                   INTER_WIDGET_SPACE
+                 /*  LBOX_3L_HGT_LABOVE  + @
+                   INTER_WIDGET_SPACE      */
+
+   		
+
+
+      datbox_01=ui_databox_create(                   @
+      /*    parent    */               form_id,           @
+      /*   callback   */               "",                @
+      /*       x      */               FORM_L_MARGIN,     @
+      /*       y      */               yloc_main,         @
+      /* label_length */               0.0,               @
+      /*  box_length  */               DBOX_WID_SINGLE,   @
+      /*     label    */               "New group name",  @
+      /*     value    */               "",                @
+      /*  label_above */               TRUE,              @
+      /*   datatype   */               "STRING",          @
+      /*   num_vals   */               1)
+
+      yloc_main += DBOX_HGT_LABOVE     + @
+                   INTER_WIDGET_SPACE
+
+      selfrm_01=ui_selectframe_create(                    @
+      /*  parent  */                  form_id,            @
+      /* callback */                  "",                 @
+      /*     x    */                  FORM_L_MARGIN,      @
+      /*     y    */                  yloc_main,          @
+      /*   width  */                  SFRAME_WID_SINGLE,  @
+      /*  height  */                  1.0,                @
+      /*   label  */                  "",                 @
+      /*  recycle */                  FALSE)
+
+      yloc_selfrm_01 = SFRAME_T_MARGIN
+
+      seldbox_01=ui_selectdatabox_create(                   @
+      /*    parent    */                       selfrm_01,         @
+      /*   callback   */                       "",      @
+      /*       x      */                       FORM_L_MARGIN,     @
+      /*       y      */                       yloc_selfrm_01,    @
+      /* label_length */                       0.0,               @
+      /*  box_length  */                       SDBOX_WID_SINGLE,  @
+      /*     label    */                       "Entities",        @
+      /*     value    */                       "",                @
+      /*  label_above */                       TRUE,              @
+      /*   datatype   */                       "ANY",             @
+      /*    prompt    */                       "")
+
+      yloc_selfrm_01 += SDBOX_HGT_LABOVE    + @
+                        INTER_WIDGET_SPACE
+
+      ui_wid_set(selfrm_01,"HEIGHT",yloc_selfrm_01)
+
+      yloc_main += SFRAME_2EDGE        + @
+                   INTER_WIDGET_SPACE  + @
+                   yloc_selfrm_01
+
+      button_01=ui_button_create(                     @
+      /*   parent  */                    form_id,             @
+      /*  callback */                    "create_grp",        @
+      /*     x     */                    BUTTON_HALF_X_LOC1,  @
+      /*     y     */                    yloc_main,           @
+      /*   width   */                    BUTTON_WID_HALF,     @
+      /*   height  */                    BUTTON_DEFAULT_HGT,  @
+      /*   label   */                    "Create Group",      @
+      /*    TRUE   */                    TRUE,                @
+      /* highlight */                    FALSE)
+
+   /*   yloc_main += BUTTON_DEFAULT_HGT  + @
+                   INTER_WIDGET_SPACE            */
+
+      button_02=ui_button_create(                     @
+      /*   parent  */                form_id,             @
+      /*  callback */                "cancel",            @
+      /*     x     */                BUTTON_HALF_X_LOC2,  @
+      /*     y     */                yloc_main,           @
+      /*   width   */                BUTTON_WID_HALF,     @
+      /*   height  */                BUTTON_DEFAULT_HGT,  @
+      /*   label   */                "Cancel",            @
+      /*    TRUE   */                TRUE,                @
+      /* highlight */                FALSE)
+
+      yloc_main += BUTTON_DEFAULT_HGT  + @
+                   INTER_WIDGET_SPACE              
+
+		create_group.grp_item()	
+		
+   END FUNCTION /* init */
+
+FUNCTION display()
+   	
+      ui_form_display("create_group")
+  
+   END FUNCTION /* display */
+
+FUNCTION post_group(number,label)
+/*
+ * This is a callback for the listbox named listbox_01
+ */
+      INTEGER number
+      STRING  label[]()
+      
+      uil_viewport_post_groups.posted_groups( "default_viewport", number, label )
+      	
+		
+   END FUNCTION /* post_group */
+
+
+FUNCTION create_grp()
+/*
+ * This is a callback for the button named button_01
+ */
+ 
+ 	STRING grp_name[32]
+   	STRING grp_entity[virtual]
+  
+			
+   	ui_wid_get( datbox_01, "VALUE", grp_name )
+$   	ui_wid_get( seldbox_01, "VALUE", grp_entity )
+        ui_wid_get_vstring(seldbox_01, "VALUE", grp_entity )
+	
+        ga_group_create( grp_name )
+	ga_group_entity_add( grp_name, grp_entity )	
+		
+	create_group.grp_item()	
+		
+	
+
+   END FUNCTION /* create_grp */
+
+FUNCTION cancel()
+/*
+ * This is a callback for the button named button_02
+ */
+ 
+		ui_wid_restore( "create_group" )
+		ui_form_hide ( "create_group" )
+
+   END FUNCTION /* cancel */
+
+FUNCTION  grp_item()	
+			
+			WIDGET wid_array(VIRTUAL)
+			STRING  grpList[50](VIRTUAL)
+			INTEGER numGrp
+	
+			ga_group_ngroups_get( numGrp )   
+  			sys_allocate_array( grpList, 1, numGrp)
+   		sys_allocate_array( wid_array, 1, numGrp)
+   		ga_group_groups_get( grpList )
+	
+			ui_listbox_items_delete (listbox_01)
+			ui_listbox_items_create (listbox_01, grpList, grpList, numGrp, wid_array)		
+
+			
+	END FUNCTION	
+
+END CLASS /* create_group */

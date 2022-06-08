@@ -1,0 +1,958 @@
+#include "appforms.p"
+#define CLASSNAME         STX_buckling_fringe
+#define CLASSNAME_QUOTED "STX_buckling_fringe"
+
+CLASS CLASSNAME
+
+/* Classwide Variables */
+   CLASSWIDE WIDGET form_id, listbox_0,listbox_01, listbox_02, sep_01, button_01
+   CLASSWIDE WIDGET button_02, button_03, button_04, sep_02, sep_03,sep_04
+   CLASSWIDE WIDGET label_01, button_05, button_06, button_07, button_08, button_09
+   CLASSWIDE WIDGET toggle_01, datbox_01, datbox_02, datbox_03, button_10, button_11
+   CLASSWIDE STRING  loadcase_title[80], frg_title[160]
+   CLASSWIDE INTEGER i_loadcase_title 
+   
+FUNCTION init()
+ 
+      REAL yloc_main
+      REAL box_length=0.0
+      
+      form_id=ui_form_create(                    @
+      /* callback */         "",                 @
+      /*     x    */         FORM_X_LOC_SML,     @
+      /*     y    */         FORM_Y_LOC,         @
+      /* position */         "UL",               @
+      /*   width  */         FORM_WID_SML,       @
+      /*  height  */         FORM_HGT_TALL,      @
+      /*   label  */         "Buckling Assessment",  @
+      /*  unused  */         "")
+
+      yloc_main = FORM_T_MARGIN
+      
+      button_11=ui_button_create(                     @
+      /*   parent  */            form_id,             @
+      /*  callback */            "cb_calculate",      @
+      /*     x     */            BUTTON_FULL_X_LOC1,  @
+      /*     y     */            yloc_main,           @
+      /*   width   */            BUTTON_WID_FULL,     @
+      /*   height  */            BUTTON_DEFAULT_HGT,  @
+      /*   label   */            "Calculate!",   @
+      /*    TRUE   */            TRUE,                @
+      /* highlight */            FALSE)
+
+      yloc_main += BUTTON_DEFAULT_HGT  + @
+                   INTER_WIDGET_SPACE
+
+        sep_04=ui_separator_create(               @
+      /*   parent   */           form_id,       @
+      /*    name    */           "",            @
+      /*      x     */           0.0,           @
+      /*      y     */           yloc_main,     @
+      /*   length   */           FORM_WID_SML,  @
+      /* horizontal */           TRUE)
+
+      yloc_main += 5*PIXEL_HGT             - @
+                   0.5*INTER_WIDGET_SPACE  + @
+                   INTER_WIDGET_SPACE
+      
+
+      label_01=ui_label_create(                @
+      /*  parent  */           form_id,        @
+      /* callback */           "",             @
+      /*     x    */           FORM_L_MARGIN,  @
+      /*     y    */           yloc_main,      @
+      /*   label  */           "Buckling Result Case")
+
+      button_05=ui_button_create(                     @
+      /*   parent  */            form_id,             @
+      /*  callback */            "cd_delete",         @
+      /*     x     */            BUTTON_HALF_X_LOC2,  @
+      /*     y     */            yloc_main,           @
+      /*   width   */            BUTTON_WID_HALF,     @
+      /*   height  */            BUTTON_DEFAULT_HGT,  @
+      /*   label   */            "Delete",         @
+      /*    TRUE   */            TRUE,                @
+      /* highlight */            FALSE)
+
+      yloc_main += BUTTON_DEFAULT_HGT  + @
+                   INTER_WIDGET_SPACE*0.5
+
+      listbox_0= ui_listbox_create(                         @
+      /*     parent     */         form_id,                 @
+      /*    callback    */         "cb_lc2",                 @
+      /*        x       */         FORM_L_MARGIN,           @
+      /*        y       */         yloc_main,               @
+      /*      width     */         LBOX_WID_SINGLE,         @
+      /*    num_rows    */         5,                      @
+      /*      label     */         "",  @
+      /* selection_type */         "EXTEND",                @
+      /*      sort      */         FALSE)
+
+      yloc_main += LBOX_4L_HGT_LABOVE           + @
+                   INTER_WIDGET_SPACE
+
+
+      listbox_01=ui_listbox_create(                         @
+      /*     parent     */         form_id,                 @
+      /*    callback    */         "cb_lc",                 @
+      /*        x       */         FORM_L_MARGIN,           @
+      /*        y       */         yloc_main,               @
+      /*      width     */         LBOX_WID_SINGLE,         @
+      /*    num_rows    */         5,                       @
+      /*      label     */         "Select Loadcase",       @
+      /* selection_type */         "EXTEND",                @
+      /*      sort      */         FALSE)
+
+      yloc_main += LBOX_5L_HGT_LABOVE           + @
+                   INTER_WIDGET_SPACE
+
+      listbox_02=ui_listbox_create(                         @
+      /*     parent     */         form_id,                 @
+      /*    callback    */         "cb_resfrg",             @
+      /*        x       */         FORM_L_MARGIN,           @
+      /*        y       */         yloc_main,               @
+      /*      width     */         LBOX_WID_SINGLE,         @
+      /*    num_rows    */         5,                       @
+      /*      label     */         "Select Fringe Result",  @
+      /* selection_type */         "SINGLE",                @
+      /*      sort      */         FALSE)
+
+      yloc_main += LBOX_5L_HGT_LABOVE  + @
+                   INTER_WIDGET_SPACE
+
+
+      button_01=ui_button_create(                     @
+      /*   parent  */            form_id,             @
+      /*  callback */            "cb_fringe",         @
+      /*     x     */            BUTTON_HALF_X_LOC1,  @
+      /*     y     */            yloc_main,           @
+      /*   width   */            BUTTON_WID_HALF,     @
+      /*   height  */            BUTTON_DEFAULT_HGT,  @
+      /*   label   */            "Fringe",             @
+      /*    TRUE   */            TRUE,                @
+      /* highlight */            FALSE)
+
+      button_02=ui_button_create(                     @
+      /*   parent  */            form_id,             @
+      /*  callback */            "cb_spectrum",         @
+      /*     x     */            BUTTON_HALF_X_LOC2,  @
+      /*     y     */            yloc_main,           @
+      /*   width   */            BUTTON_WID_HALF,     @
+      /*   height  */            BUTTON_DEFAULT_HGT,  @
+      /*   label   */            "Spectrum Range",            @
+      /*    TRUE   */            TRUE,                @
+      /* highlight */            FALSE)
+
+      yloc_main += BUTTON_DEFAULT_HGT  + @
+                   INTER_WIDGET_SPACE
+
+      button_06=ui_button_create(                     @
+      /*   parent  */            form_id,             @
+      /*  callback */            "cb_clear",         @
+      /*     x     */            BUTTON_HALF_X_LOC1,  @
+      /*     y     */            yloc_main,           @
+      /*   width   */            BUTTON_WID_HALF,     @
+      /*   height  */            BUTTON_DEFAULT_HGT,  @
+      /*   label   */            "Clear Panel",             @
+      /*    TRUE   */            TRUE,                @
+      /* highlight */            FALSE)
+
+      button_07=ui_button_create(                     @
+      /*   parent  */            form_id,             @
+      /*  callback */            "cb_dispPnl",         @
+      /*     x     */            BUTTON_HALF_X_LOC2,  @
+      /*     y     */            yloc_main,           @
+      /*   width   */            BUTTON_WID_HALF,     @
+      /*   height  */            BUTTON_DEFAULT_HGT,  @
+      /*   label   */            "Display panel",            @
+      /*    TRUE   */            TRUE,                @
+      /* highlight */            FALSE)
+
+      yloc_main += BUTTON_DEFAULT_HGT  + @
+                   INTER_WIDGET_SPACE
+
+      box_length = DBOX_WID_SINGLE*0.5  - @
+                   0.
+
+      datbox_03=ui_databox_create(                @
+      /*    parent    */          form_id,        @
+      /*   callback   */          "",             @
+      /*       x      */          BUTTON_HALF_X_LOC1,  @
+      /*       y      */          yloc_main,      @
+      /* label_length */          0.,             @
+      /*  box_length  */          box_length,     @
+      /*     label    */          "",             @
+      /*     value    */          "",             @
+      /*  label_above */          FALSE,          @
+      /*   datatype   */          "STRING",       @
+      /*   num_vals   */          1)
+
+$      yloc_main += DBOX_HGT_NO_LABOVE  + @
+$                   INTER_WIDGET_SPACE
+
+      button_09=ui_button_create(                     @
+      /*   parent  */            form_id,             @
+      /*  callback */            "cb_img",                  @
+      /*     x     */            BUTTON_HALF_X_LOC2,  @
+      /*     y     */            yloc_main,           @
+      /*   width   */            BUTTON_WID_HALF,     @
+      /*   height  */            BUTTON_DEFAULT_HGT,  @
+      /*   label   */            "Image",                @
+      /*    TRUE   */            TRUE,                @
+      /* highlight */            FALSE)
+
+      yloc_main += BUTTON_DEFAULT_HGT  + @
+                   INTER_WIDGET_SPACE
+                   
+      sep_01=ui_separator_create(               @
+      /*   parent   */           form_id,       @
+      /*    name    */           "",            @
+      /*      x     */           0.0,           @
+      /*      y     */           yloc_main,     @
+      /*   length   */           FORM_WID_SML,  @
+      /* horizontal */           TRUE)
+
+      yloc_main += 5*PIXEL_HGT             - @
+                   0.5*INTER_WIDGET_SPACE  + @
+                   INTER_WIDGET_SPACE
+                   
+      toggle_01=ui_toggle_create(                @
+      /*  parent  */             form_id,        @
+      /* callback */             "cb_range",     @
+      /*     x    */             FORM_L_MARGIN,  @
+      /*     y    */             yloc_main,      @
+      /*   label  */             "F.O.S Range(Safety Range)")
+
+      yloc_main += TOGGLE_HGT          + @
+                   INTER_WIDGET_SPACE
+
+      box_length = DBOX_WID_SINGLE*0.5  - @
+                   0.1
+
+      datbox_01=ui_databox_create(                @
+      /*    parent    */          form_id,        @
+      /*   callback   */          "",             @
+      /*       x      */          FORM_L_MARGIN,  @
+      /*       y      */          yloc_main,      @
+      /* label_length */          0.,             @
+      /*  box_length  */          box_length,     @
+      /*     label    */          "",             @
+      /*     value    */          0.,             @
+      /*  label_above */          FALSE,          @
+      /*   datatype   */          "REAL",         @
+      /*   num_vals   */          1)
+
+$      yloc_main += DBOX_HGT_NO_LABOVE  + @
+$                   INTER_WIDGET_SPACE
+
+      box_length = DBOX_WID_SINGLE*0.5  - @
+                   0.1
+
+      datbox_02=ui_databox_create(                @
+      /*    parent    */          form_id,        @
+      /*   callback   */          "",             @
+      /*       x      */          FORM_L_MARGIN*20,  @
+      /*       y      */          yloc_main,      @
+      /* label_length */          0.1,            @
+      /*  box_length  */          box_length,     @
+      /*     label    */          "~",            @
+      /*     value    */          0.,             @
+      /*  label_above */          FALSE,          @
+      /*   datatype   */          "REAL",         @
+      /*   num_vals   */          1)
+
+      yloc_main += DBOX_HGT_NO_LABOVE  + @
+                   INTER_WIDGET_SPACE
+                   
+      sep_02=ui_separator_create(               @
+      /*   parent   */           form_id,       @
+      /*    name    */           "",            @
+      /*      x     */           0.0,           @
+      /*      y     */           yloc_main,     @
+      /*   length   */           FORM_WID_SML,  @
+      /* horizontal */           TRUE)
+
+      yloc_main += 5*PIXEL_HGT             - @
+                   0.5*INTER_WIDGET_SPACE  + @
+                   INTER_WIDGET_SPACE
+
+      button_03=ui_button_create(                     @
+      /*   parent  */            fnRm_idL             @
+      /*  callback */       `    #cb_shw_Result",       @
+      /*     x    0*/            BUT‘ON_FU\L_X_LOC1,  @
+      /*     9    †*/  (         yloc_main,(      †  !@
+      /* $!width   */`   0       BUTTON_◊ID_FULL,   0 B
+      /*   height  */  "         BUTP_N_DEFAULV_hG,  @
+      /*   lcbel   */     ¢      "S`/w Re3ulp TaBLe",`  @
+      /"    TRUM   */            TRuE,        (     ` @
+      /* highlight */       "    FALSE)
+
+     "yloc_maIn += BUTTO^_DEFAULT_HgT  + @
+               "   INTER_WIDGET_SPACE
+
+   $  button_10=ıi_Button_creaTeh  0   $     0  `     P
+Ä $   /*  †parent  */$   $$"     form_id,            !@
+      /*$ callbacc */           !"cb_chjResu|t",( !    @
+ †    /*    1x"$   */   $   (    BUTTON_FULL_X_LOC1,  @
+    A /*     y     *+            ylocW}cin$           @
+      /*   width   */      (0    bUTTON_WIE_FULL,     @
+      /j   height  */    0 $"    BUTTON_DEF@]LT_HGT,  @
+  † ` /*   label ! */            "Check Resumt",   @
+      *  ( TRUE  †*/   $ $      TRe, !`           † @
+      /* highligjt 
+/            FAL”)*
+      yloc_iain += BUTTOJ_DEFAULT_HeT  + @
+0              $"  INTER_WIDGET_SPAC
+      sdP_03=}i_separator_czeate(          (    H
+      /.   parenv   *'     `     fo2m_id, $     @
+      /*    name   `*/            ",            @
+      /*     †x     */       "0  0.0,†     `    @
+ 0    /*      y   ` */           ˘loc_maan, `   @
+      /+   leogth   */   `   `   FOSM_WID_SÕL,  @
+      /* horizontal */         (!TRUE)
+
+     (yfoc_main†+= 5*PIXEL_HCT          †  - @	
+ `  `              2.5*INTER_WIDGET_SPACE  + @
+                   ITER_WIDGE_SPACD
+          a    † ` 
+  "   button_∞4=ıi_but$on_create0   ¢          "     D
+      /*  †perent† */0           fori_id,"       ( $  @
+      /*  callBacK */  0       "`"cb_alose",        @M
+      /*     x  `` */(           BUPDON_THIRD_Z_LOC2,` @
+      /*     y     */            ydociain,          $@
+      /*   width   */ 0          BUTtON_WID_HALF,     @
+      /+   height  */(           BUTTON_DEFQULT_»CTl  @
+(   † /* 4 label   
+/     `      ™Clse",          † @
+      * `  TRUE   
+/"           TRUE,   (`    `0     @
+      /* highlight */    (   !0  FALSE)
+
+  !   ylOc_main += BUToN_DEFAULT_HGT  + H            "  0   INTER_WIDGET_SPaCE
+                   
+      ei_wy$_set(form]id,¢HEIGHT",y`kc_miin)
+ 
+$    † CLSSNAME.lc_items()
+   "  
+
+END FUNCTION /* iNit "/
+
+FUNCTION display(	
+      um_form_display(CLAQSNAME_QUOTED)
+   $  CLASSNAME.lc_itels3()
+    ! uy_wid_ret ( datboxN01, bENABLE", FALSE ) 
+      ui_wid_set ( lat"ox_02, "ENABLE", FALSE ) 
+END FUNCTION!/*"display */
+
+FENCTION cb_calculate()
+  $
+   YNTGER i`_test(VIRTUAN)J   REaL    ra_tesv(VIRTUAL) 
+   
+   IF( fiÏe_exi{ts_local`( "input.dat" ) == falsE ( THN 
+     
+     vrit%("=?= The2e is NO anpuT.dat! }=& )	
+     RETURN -1
+     
+   END HFâ
+   
+   UTL_dbViriab|e.init()
+   
+   KF ( STX_bugkling.gÌtClass() == "lRb) THEN      RTX_buckling_lloyt.m!i.()
+   ELSE IF ( SPX_bucjling.getClasc() ==  DNV") THEN      STH_bucjling_dnv.mman(!   ELSE
+      STXbwckling_rina.main() 0  /* RINA */
+   UND IF	 		 		   
+   file_delete("input.dat")
+$   film_copy®"output.dat","reporu.dat")
+   
+$   CLSSNAME>lc_items()
+   CLASSNA]A.lc_items2()	
+$   UTL_dbVasiable.getﬂdbVar_resdata(11!11, iatest, ra_tesT)ä`  
+
+END FUNCTION
+
+
+
+FUNCTION cb_lc(number,la‚el)
+`     INTEGER nu-ber
+      STRING  |abel[]()	!$    *      WIDGET  whd_array(VIRTUAl)
+"(    
+      INTEGER"jk_Ïcid(1-
+      iNTEGER(subils(VHRTUQL), nSub2
+   `  …NTEGER nzes, prim`ri_id(VIRTtAL), secondary_yd(VIRTUAL) 
+   $  STRING  primary_title[128](TIRTUAM)¨ sekn~dary_ta4lm12x]8VIRTUAL)
+      RTRING  fvmÓgd_title[056](VIRTUIL	
+      IFVEGEB i, i_nwmç*      STRIG  s_grpName[80](1)
+ !    
+ (    IF( numbep!> 3 ) THEN RETURN 0
+$`     loadcase_tit,e0= s|r_toke.(labal(1),"_",1)
+&    0 ga_group_current_get ( group_name )  (  
+
+      str_find_char_lum(str_token(label(1),":",39,"_",i_num)
+$dUMP`  str_token(stR_tokenLabed(1)":",3)¨"_",i_num)
+    
+      s_grpNeme(1) = str_tocun(str_t/ken®label(1),":",3),"_",)
+  "   IF( y_num > 1 )$THEN
+     $  FOR i=0TO i_num)	
+           s_grpName(1)0= s_grpName(1)//"]"//stz_tokeo(str_Token(la`el(1),"8"<3),"_",i)
+"     0 END FOR
+(     END IF	
+     h	ä     !}iÏ_viewport_pos|_groups.posted_grous( "de&ault_viewport", 1, sOgbpname )
+    	
+      str_fimd_cjar_num<label(1),"_b,i]num)J
+      loadcase_title = str_toKEn(Ïabel(±),"_",9)
+      FOR (i=2 TO i_num)
+$        ladcase_title = lo`dcase_|itlm//"_¢+?str_tmkek(label(1),_",i)
+   `  END FOR    † h_loadcase_title= str_tÔ_intEger( stb_toke>(label(1),"_",iWnwm+1) )
+      
+     (db_get_loa‰_case_id$ loadcasE_titlu, jk_lcid(1) )
+         res_utl_get_subbases(bk_lcid(1), .3ub2, subids)
+ !    res_u|l_get_resu|t_ids+ 1, bk_lcid,0subids, @
+                       )      nresl  primary_id , sgcondary_id) 
+      
+      S[S_ALLOCATE_ArRAY ( priMary_titme, 1, nres )
+      SYS_A\LOCATE[AR“AY  Secondary_tit|e, 1, nres )	
+      SYS_ALLOCATE_ARRCY ( frijge_tidle, 1, nres !	
+      FOR( i=1 TO jres )
+†         db_get_primar9_res_lebelrrimasy_id(i),primarx_title(y))-
+   (      db_get_secondary_res_label(primar9_id(ii<secondary_id(i),seco.dary_title(i))
+         "nringe_title(i) = primary_title(i!//"."//seaondaRy_title(i)
+`     END FOR
+    † 
+      ui_listbop_itemsﬂdelete (listbo|_02)
+      ty_listbox_item{_cpeate (lastbox_02,$frHnge^titlel fÚinge_TitlE,0nres, wid_arsay)      	
+  0   
+/**+*********** display rEsult$rotton *********/
+$      ui_wyd_wet(cutTon_03, "DNABLE"( FALSE ).$    $ uiﬂwMd_set(buttoN_10, "EFABLE",(FALSE )	
+
+      CLASSNAmE.display_result(a_loadcase_title,loadcase_title)
+
+************** get img PItle *********/M
+ `   †ui]wiD_set ( datbox_03,†"VALUE", str_tokej,label ),":",1) ) 	
+     †
+END FUNCTION /* cb_lc */
+
+
+
+UNSTIO cb_lc2(number, label)
+    $ 
+      INUEGER number, i_c|ass, ha_la"el(FIRTUAL), i, i_cnt, i_label
+!     REAL    r_cnt(1)
+      STRINg  nabel[] ), sa_rdsCase[80](VIRTUAM+, s_lcTitle[80]hVIRTVL), s_alass[32]
+      WIDGET  wid_array(VIRTUAL)l optMeou
+      	
+      IF ( number >1 	 THEF RETU“n 0
+      m_class = 5
+      UTL_dbVariable.get_`jVar_resLabel(i_class-Èa_label,r_cnt,sc_resCase)
+      
+ (    i_cnt = sys]array_h`ound(sa_resAase,1)
+      
+d(   `
+"!$   FOR(i<1 TO i_cnt)
+   ` †  †IF( sA_recCaSe(i) == lafel(1) )THEN 
+     $    i_l!beÏ= ia_label(i)
+         END HF
+     !END FOR
+     $
+      UPL_drVariable.gÂt_dcVar_resLabel)ilabel,ia_labÂl,r_cot,sa_resCare)
+     !
+      i_cot!=r_c.t(1)
+
+      IF ( i_kÓt == 1 ( THEN
+      	”YS_ALLOCATE_ARRAY(s_lcTitle,1,1)
+ %    	db_get_load_case_title(ia_label(1),s_lcTitle(1)i    
+(  "  	s_lcTitle(1) = 	{_lcDithu(1)//"_"//Str^froM_ilteger(ia_labed)2))  
+ 
+  0   ElSE $   !	SYS_ALLOCATE_RRAY(s_lcTitle,1¨i_cnt)
+   `  	FOR ( i=1 To i_cŒt ) (    	  db_get_load_caSe_title(ia_l!belhi),r_lcTitle(a))
+(     	  S_lcTitle(i) = s_lcT)tlÂ(i)//b_"//str_from[integer(ia_l!bel(i+i_cnt))( 
+      	END FOR 
+      END IF	
+ç
+"`    ui_listbx_ktems_delete (lhstbox_03)
+      ui_listbox_itemq_cpeate (distfox03l s_lcTitle, s_lcTitlm, iMsnt, wid_array)
+      
+      
+      s_cÏasq = str_token(libel(1)l"/",1)
+      optMenu < sys_cla3s_g%t("SX_buckling2,"optmenu_0±")	
+     "ui_7id_set(optMenu,"VALUE",s_claqs)
+      STX_bucklIng.cb_class(q_„lass)
+      †
+ENE FUNCTIONç
+
+FUNCTION cb_resfrg(number,dabel)
+
+      INDEGER numrer
+     !STRMNG  label[]()	$  	
+!    frg_Title = habel(1)
+	   
+END FUNTIN
+
+FUNCION(c`_fringe®)
+
+      plotFrifge()
+
+END F’NCTIKN /: cb_frinGe */ä
+FUNCTION bb_spec|rum(!
+	
+      ui_exec_functaon("ui,_imaging_ranges","display")
+
+GND(FUNCTION /+ cb_sdctrum`*/
+
+FUNCUION`cb_clear()
+	
+ 0    UTL_drawCleCr()
+  !0  d`splay_cleanup8(
+END FUNCTION0o* cb_cle`r */
+
+FNCTIOF"cb^dmsplay8©
+
+$      STXsetPanel.init(0)
+      STX_bucKling.cc_chk_Panel()
+
+END FUNCTION +* cb_‰isplay*/
+
+FUCTION cB_img))
+	   
+	   S‘RIOG imgTlt[50]
+	0  
+      ui_wid_get(datbox_03, "VALUE", imgTLt)
+§(  ! gM_wrjte_ieage( "PNG", im'Tlt//"/png",("Overwritm", 5., 0., 1., 5., 0 )
+
+END FQOCTIoN o* cb^km'y*/
+
+F]OCTIOL cb_range(onoff9
+
+      LOGICÅN onoffè
+ `          IF (/Noff == TUE ) THEN
+     0	ui_wi‰_seu ( datboxﬂ01, "ENABLE", TRUE ) 
+  ! ( 	qi_wad_set * datbox_02, "ENABLA , TRTE )(
+   `  LSA*      	ui_sid_set ( deÙbo8_01, &ENALE , FALSE )°ä       0 ui_wid_rep ( datbnx_02, "ENABLE*, FALRE -
+!   !          END 	F		
+END FUNGTIKN /* cb[ranÊe *Ø
+
+FUNCTION cb_shw_Result()
+!
+      ÃOGIC@L chkra~ge
+ `   `REAL   (rcnge1, 2ange2
+  †  †STRING ({_resCasE[80](1), s_lc[80](VIRDUAL) 
+      IN\EWES i_cntSemList, i_status, i, ka_lcIDs(VIRTUAL)      
+ (    ui_wid_oet$( listbox_0 , "NWEÃECTEƒ", i_cjtSElLIsu )J      IF( i_cntSelList > r ) THEN RETURN -1
+      
+      ui_id_get ( listbox_11 , "NSELECTED", i_#ntSelList )
+®     ID( i_cnTQelLisu$== 0 ) THEN RETURN(-2
+     !	
+  †0  SYSˇAHLOCATE_ARRAY(s_lc,1,i_cntSelList)
+     `SYS_ALLOCAE_ARRAY(ia_lcIDc<1.i_cntSel\ist)
+     0ä   `  ui_wal_get ( listbox_01, "VALUE", s_lc )	
+-
+†     FOR ( k=1†TO i_cntSelLiSt	
+        db◊get_load_case_id ( 3tr_tocen®s_lc(i),""l2), ia_lcIDs(I) )
+      END FOR
+      		
+     $uiWwid_get ( to'gle_01, "VALUE",$chkranfm )
+ 0    w)_wid_get"( listcox_0!, "VILUE", sﬂresCase )
+` ( ` *      STX_panel[resujt.readResult(sYresCasu(1))
+ †    SDX_palel_resulT.filterReswlt()a_lcIDs(	
+ †    
+      
+      m_stctus =0
+      IF (chkrangg == TRUE) THEN
+        ui_gid_Get ( dat‚ox_01, "VA\UE",$range1")0
+      	ui_wid_get ( datbkx_02, "VALQE", range )
+$      	STXOpanel_result.readRsult(s_resCise(1))	
+      	i_status = StX[panel_result.ranggResult(b`*ge1,range2)	
+    †   /
+      END`IF
+
+"     IF(( i_wtatur != -1 )%DHGN SX_panel_REsılt.shwResult(()
+
+END FUNCTHON /* cb[shs_Result */
+
+
+
+FUNCTION cbdispPnl((J
+      REA\`   r`nge1, pange2
+      STRING  s_resCase[8∞] 1), sﬂlc[80](VIRTUAL) 
+  0   INDEGER h_cntSelList, istatus, i, ia_lcIDs(VIRTUAL)
+   $  
+      ui_wid_get ( listbOx0 , "NSELDCTED2 i_cntSelNicT )
+      	F( i_cnpSelLis| > 2 ) THEN PETURN -1
+ (    
+      qi_wid_get ( dÈstbox_01 , "NSELECTED#,2i_cnt[elList )
+  (   IF( i_cntSelList == 0 i THGN RETURN -2      	
+ ("  0SYS_ALLOCATE_@RRAY(s_lc,1,i_cntSelList)
+   "  SYS_ELLOCATE_ARRAY(ia_lcIEs,1<i_cntSulList)    ("
+      ui[wid_cet`( listbox_01,("VALUE"º`s_lc )	
+
+  †  0DOR ( i=1 TO i_cntSeÏList)
+"       d‚_get_,o·d_case_id ( str_token(s_lc(i)l":",2), ia_lcIDs(i) )
+      ENE FOR
+    $ 		
+ $ †$ ui_wid_get ( nistbox_0 ,`*VALEE", s_rewCase†)      
+"     UDL^drawCnear()$      disl·y_cmeanup()    † 	
+      [TX_pa.el_rdsult.readBesult(s}sesCase(1))ç
+      STY_panel_result.filterRÂsU,t,i`_lcIDs)
+ "    WTX[pAnel_result.dmspPnl()ä
+END†FUNCUION
+
+
+
+
+
+
+FJCTION cb_chkRusult()
+-
+    % LOGICAL chk2anoe
+    ( REIL    range1, range2
+      SDRING  s_resCase[∏0](1), q_nc[80](VIRtUAL) 
+  $   INTEGER i_cntSelList,$I_s4atus, j, ia_lcIDs(VIRTU@L)
+0     
+      ui_~id_get ( listbOxW0 , "NSELECtED, i_cntSelL)st )
+   "  IF( i[#jtSedList > 2 © THEN RAURN -1
+  `   *   ! `w)_wif_get ( lIstbox[02 , "NSELESTET"¨ i_cnvSelList )!     IF( i_cnt”eÏList == 0 i THEN 
+     0	writg("== PLe`se select Fr)ngu Result! ===")
+      	RETURN %3	
+$     END IF		       
+      ei_wid_#et ( listbox_01 , "NSELDCTED", i_c~tSelList )
+     	D( iOcntselList == 0 ) T»EN RETU“N -3
+§     IF( i^cntSelL)st >±   ) THEN 
+$  †   	write("===(PlEAse sdlect ONlQ 1 loadc`se! =<<")
+$      	RETUVN†-3	
+$      END IFI	ä(     
+      SYS_ALLOCATE_ARRAY(slc,    q,i_cntSemList)
+     (SYS_ALLOCATE_ARRAY(ia_lc…Ds$q,i_cn|SÂmList)
+   † 0
+    ` ui_wid_get ( liwtbox_01,0 VALUE", c_l„ )	
+
+      FOR ( i<1`TO i_cltSelLisT)
+  !     db_get_load_ccse_id ( str_tokeÓ(slc(i),":"-2), iaOlcIDs(i9 )
+      E^D GORä(     		
+      ui_wi`_get ( tggle_01, "VALUE", chkrangE )ç
+      ui7id_get h listbox_0 , "VAMUE", s_resCase )
+      
+      STX_panel_r%qult.peatResult(s_resC`se(1))
+ 0 0  STX_panul_r%sult.filterResult(ia_lcIDs)	
+      
+      i_staTus =0
+  (   IF *chkrance -= TPUE) THEN
+ (      ui_wid_get ( datbox_01.$"VALUE"$ rangu1 ) 
+    $ 	ui_wid_eÂt ( datbox_02, "VALUE#, rangÂ2 )
+    $ 	i_st`Tus = STXpanel?resqlt.rangeResult(range1,range2i	
+  (   ELSE
+%      	file_delete(brebort.dat"	
+$        file_copy("output*tat"2report.dat")	
+      EJD IF(     IF ( i_status != -1 ) tHDN 
+        CÃASSNAME.cb_clear()
+ 0    ` SVX_pane,_resuLt.chow_resultData()
+      EœD IF	
+
+ENd FUcVION
+
+
+
+
+
+
+
+FUNCTI[N cb_clkResult_org()`  0  LOGICEL chkrange
+  `   REaL ranwu9- range2
+ † `  STRING! s_resCese[82](1)
+ !    iKTEGER i_cntSelList, i_status
+  (   
+      ui_wId_get ( listbox_0 , "NSELECTD", i[cntSelList )
+   `  IF( icntSelList > 2 ) THEN RETURN -1
+      
+      qiWwid_get!( li”tbmx_0± , "NSALECTD", i_cntSelLiÛt )
+0 $   IF( i_cNtSelLiRd == 0 i \HEN REVURN %2
+      
+      		
+      ıi_wid_get ( tggle_01, "VALUE", chkrajge )*      ui_wid_get ( listbox_0 l "VALUE", 3_resCase )	ç
+!   ` 
+ 
+   `  sTx_paoel_result.readResult({_re3Case)1)!
+      
+  0   ui_wid_get ( 4oggle_01, "VALUE", chkrangE )      
+      IF (ch;range ==0TRUE9 tHEN
+        5i_wit_get ( datbox_ 1, "VALUE", raoge1 ) 
+      	ui_widOget!( datbox_02% "QLUE", range2 )
+$      	SPX_anel_result.readResult()
+      	STX_panel_reqUht.rangmResult(range1-range2)	
+      ELSE
+      	file_delete("beport.dat")
+  !`    file_copy("kutput.dat,"report.dit")
+$  `     STX_Qanel_rgsult.readResult(i
+      eNF I∆				
+
+      CLASSNAMA.#b_chear()
+DUMP "####£########"   `$ 	
+  (   STX_panel_sesu|t.slnwRasultData()
+END DUNA‘ION /*(cb_chkReÛult */
+
+JFUNCTIN cb_cLOse()
+    
+      ui_form_d%letm("STx_buckling_fringe")
+
+END FUNCTION /* cb]close */
+
+FUNCTION bd_telete()
+    
+` $   STRING  geT_lc[129](V…RTUL), lc_title[12(›, sa[resCase{x0](VHRTUAL), sa_dummy[80]8VIRTUAL)
+      INTUGU subcaSe_ nsuc2, subids(VIRTUAL), ia_label(VIRTQAL), i_label,!iaﬂids(VIRTUAL), ia_dummy(VIPTUAL©
+      INTEgER bk_lcid ,(subit(VIRTUAL) i_num, i j, k, i_cntSel, y_cntResCkse, i_sntLc, i_status
+(     RDAL    za]cnt(1)
+ !0 0 ä `    
+      ui_rid_get ( l)qtro¯_0,!"NiTEMQ", i_nuÌ )
+      IF( i_num == 0 ) TJEN RMTURN 0	
+   ! (CXSALLOCATD_ARPAY(get_lc,`1( i^num )
+      ui_wieWget ( lis4box_0, "NSELECTGD , i_cntSel )
+      IF( i_covSel =< 0 ) THEN RETURN 0		
+      SYS_ALMOCATE_RRAY(suBid,  1,"i_cntSel )		
+      ui_wif_get ( listbox_0,`"VALUE", gmt_lc )
+  !  †      
+      i_|abel = 1
+      i_s4atus$=$EVL_dbVariable.gatO`bV!r_resLabel(i_label,ia_labe,,ra_cnt,Ûq_resCese)
+      IF(i_cTatus =="-)!THEN RGTURN -1
+      iﬂcntResCawe = syscrrai_hbÔUnd(sa_resCase,1)
+      
+      FOR(i=1 DO È_cn|Seli
+        DOR(j<1 UO i_cntRercare)    
+  ` `@    IF( get_lg(i) == Si_resCase(j! ) THEN
+           UTL_dbVariable&get^d`Var_tesLabel(ia_label(j) ,Ia_ids,ra_cntsa_dummy)           i_cjtLa = ra_#.t(1)-
+        !  file_delete®sa_resCa3e(j)//".dÒt")	
+           sa_resCaca(j)=""
+          `db_deLute_cliÂnt_DaTa(ia_label(j)*
+           res_db]cdeleteresbasus ( i_cntLc, ia_ids(i_cntLc/1:i_antLc*2) )
+$DUMP ia_ids , ra_cnt        0 
+     "    DnD IBè        GND FOR
+      END FOR
+    4 
+ `    	
+      k- i_bndResCase -(iOcntSel
+      IF ( { }= 0 ) THEN 
+        db_delete_clieot_dad)(1)
+  "     CMASSNAME&lc_itaMs2()
+    `   RETURn 8	
+     "END IF	
+0$    
+      ”YW_ALMOCATE_ARRAY( sa_dummy, 1, k )d   ( SYS_ALLOCATE_ARRQY( ia_dummy- 1( k )
+$  $( 
+    ! k=1
+      FORh i=1 TO`i_cnÙResCase )
+        	F(sa_resCasehi) !="") \HEN
+        ( sa_dummy(k)=saResGaSe(i)
+          ia_dummy(k)=ia_lafel(i+J          k +9 1
+        EJD IF
+      END FOR
+      
+      UTM^dbqriable.set_dbVar_sesLc"el (i_label!1,ia_dummy, ia_dummy,sa_dummy)
+      UTL_dbVariable.geP_dbVar_resLabel(i_lab%l,ia_du}my.ra_cnp,Sa_dummy) )
+   0 `
+$† †   
+$    $"GOR (!k 1`TO i_cnt )
+$         $$$$$ $$(   $      "       M
+$       ( str[findWchar_nTm(get_lc*o),"_",i_num)   0      0    `   $          *$  `      lc_Title= s~r[Token('et_lC(k),"_",1)                               `
+$      "        0                 $              !                            
+$         FOR (i=2 TO i_num)                                                  
+$            lc_title = lc_title//"_"//str_token(get_lc(k),"_",i)             
+$         END FOR                                                             
+$                                                                             
+$         $$$$$$$$$                                                           
+$         	                                                            
+$         subcase_= str_to_integer( str_token(get_lc(k),"_",i_num+1) )        
+$                                                                             
+$$         db_get_load_case_id ( lc_title, bk_lcid )                          
+$$         res_utl_get_subcases(bk_lcid, nsub2, subids)                       
+$$         subid(1) = subids(subcase_)                                        
+$                                                                             
+$         subid(k) = subcase_                                                 
+$      END FOR
+$      
+$
+$     res_db_cdeleterescases ( i_cnt, subid )
+
+     CLASSNAME.lc_items2()
+      
+END FUNCTION /* cd_delete */
+
+FUNCTION lc_items()
+      
+      WIDGET wid_array(VIRTUAL)
+      INTEGER  ncases, lcids(VIRTUAL), nsub(VIRTUAL) 
+      STRING   title[128](VIRTUAL), pk_title[80](VIRTUAL)
+      STRING   bk_title[80](VIRTUAL),sub_title[80](VIRTUAL)
+      STRING   rescase_title[80](VIRTUAL)
+      INTEGER  nsub2, subids(VIRTUAL),bk_lcids(VIRTUAL), subid
+      INTEGER  i, count, j, cnt, ia_dbLabel(VIRTUAL), ia_dbLabel2(VIRTUAL)
+      
+      res_utl_get_loadcases(ncases, lcids, nsub)
+      
+      SYS_ALLOCATE_ARRAY ( title, 1, ncases )
+      SYS_ALLOCATE_ARRAY ( pk_title, 1, ncases )		
+      count = 0
+      cnt = 0
+      FOR( i=1 TO ncases )   
+         db_get_load_case_title( lcids(i), title(i) )
+         pk_title(i) = str_token(title(i), "(", 1)
+         IF (pk_title(i) == "Buckling" ) THEN
+         	count += 1
+         	SYS_REALLOCATE_ARRAY (bk_title, 1, count )
+         	SYS_REALLOCATE_ARRAY (bk_lcids, 1, count )
+                SYS_REALLOCATE_ARRAY (sub_title, 1, count )
+         		
+         	bk_title( count ) = title(i)
+         	db_get_load_case_id (bk_title(count),bk_lcids(count))
+         	res_utl_get_subcases(bk_lcids(count), nsub2, subids)
+         	
+         	FOR ( j=1 TO nsub2 )
+         	   cnt += 1	
+         	   SYS_REALLOCATE_ARRAY (rescase_title, 1, cnt )
+         	   rescase_title(cnt) = 	bk_title(count)//"_"//str_from_integer(subids(j))
+            END FOR
+         END IF
+      END FOR
+      
+$      IF( cnt != 0 ) THEN
+$       
+$      IF ( UTL_dbVariable.chk_dbVar(22222) == 0 ) THEN 
+$         SYS_ALLOCATE_ARRAY(ia_dbLabel,1,cnt)
+$         UTL_dbVariable.set_dbVar_resLabel (22222, ia_dbLabel,rescase_title)
+$      ELSE
+$      	 SYS_ALLOCATE_ARRAY(ia_dbLabel,1,cnt)
+$      	 UTL_dbVariable.get_dbVar_resLabel(22222,ia_dbLabel2,title) 
+$      	 count = sys_array_hbound(title,1)
+$      	 
+$      	 FOR( i=1 TO cnt )
+$      	    FOR( j=1 TO count )
+$      	       IF( rescase_title(i)== title(j) ) THEN
+$      	          ia_dbLabel(i) = ia_dbLabel2(j)
+$      	       END IF 
+$      	    END FOR 
+$      	 END FOR
+$
+$         UTL_dbVariable.set_dbVar_resLabel (22222, ia_dbLabel,rescase_title)
+$      	 	
+$      END IF	
+$      
+$      ELSE   
+$      	db_delete_client_data(22222) /* cnt == 0 */
+$      END IF	
+
+	   ui_listbox_items_delete (listbox_01)
+	   ui_listbox_items_create (listbox_01, rescase_title, rescase_title, cnt, wid_array)
+        
+       			
+END FUNCTION
+
+FUNCTION lc_items2()
+
+   WIDGET  wid_array(VIRTUAL)
+   INTEGER i_class, ia_label(VIRTUAL),  i_cnt, i_status
+   REAL    r_cnt(1) 
+   STRING  sa_resCase[80](VIRTUAL)
+
+   
+   
+   i_class=1
+   i_status=UTL_dbVariable.chk_dbVar(i_class)
+   IF(i_status == 0) THEN 
+   	ui_listbox_items_delete (listbox_0)
+   	ui_listbox_items_delete (listbox_01)
+   	ui_listbox_items_delete (listbox_02)
+   	RETURN 0
+   END IF
+   UTL_dbVariable.get_dbVar_resLabel(i_class,ia_label,r_cnt,sa_resCase) 
+   
+   
+   i_cnt=sys_array_hbound(sa_resCase,1)   
+   ui_listbox_items_delete (listbox_0)
+   ui_listbox_items_create (listbox_0, sa_resCase, sa_resCase, i_cnt, wid_array)   
+   
+   
+END FUNCTION
+
+FUNCTION display_result(i_lc_title,lc_title)
+
+      STRING  lc_title[]
+      INTEGER bk_lcid
+      INTEGER i_lc_title,nsub2, subids(VIRTUAL)
+      INTEGER i, i_lcNum
+      STRING   s_resTitle[64](VIRTUAL)
+        
+      IF (STX_buckling.getClass() == "LR" ) THEN
+      	i_lcNum = STX_buckling_lloyd.getLcNum()
+      	IF( i_lcNum == 0 ) THEN RETURN -1
+      	SYS_ALLOCATE_ARRAY( s_resTitle, 1, i_lcNum )	
+      	s_resTitle = STX_buckling_lloyd.getResTitle()
+        
+      ELSE IF (STX_buckling.getClass() == "DNV" ) THEN
+        i_lcNum = STX_buckling_dnv.getLcNum()
+        IF( i_lcNum == 0 ) THEN RETURN -1	
+      	SYS_ALLOCATE_ARRAY( s_resTitle, 1, i_lcNum )	
+        s_resTitle = STX_buckling_dnv.getResTitle()
+      
+      ELSE
+      	i_lcNum = STX_buckling_rina.getLcNum()
+      	IF( i_lcNum == 0 ) THEN RETURN -1	
+      	SYS_ALLOCATE_ARRAY( s_resTitle, 1, i_lcNum )	
+      	s_resTitle = STX_buckling_rina.getResTitle()
+      END IF
+
+$      lc_title = str_token(label(1),"_",1)
+$      subcase_= str_to_integer( str_token(label(1),"_",2) )	
+
+      db_get_load_case_id ( lc_title, bk_lcid )
+      res_utl_get_subcases(bk_lcid, nsub2, subids)
+      
+
+      FOR (i=1 TO i_lcNum)
+         IF (lc_title == s_resTitle(i) && i_lc_title== nsub2 ) THEN
+           ui_wid_set(	button_03, "ENABLE", TRUE ) 
+           ui_wid_set(	button_10, "ENABLE", TRUE )	
+         END IF	 
+      END FOR
+
+	
+END FUNCTION
+
+FUNCTION delete_lc()
+
+      INTEGER  ncases, lcids(VIRTUAL), nsub(VIRTUAL), bk_lcids(VIRTUAL)
+      STRING   title[80](VIRTUAL), pk_title[80](VIRTUAL), bk_title[80](VIRTUAL)
+      INTEGER  nsub2, subids(VIRTUAL), subid(VIRTUAL)
+      INTEGER  i, count
+     
+      res_utl_get_loadcases(ncases, lcids, nsub)
+      
+      SYS_ALLOCATE_ARRAY ( title, 1, ncases )
+      SYS_ALLOCATE_ARRAY ( pk_title, 1, ncases )		
+      count = 0
+      FOR( i=1 TO ncases )   
+         db_get_load_case_title( lcids(i), title(i) )
+         pk_title(i) = str_token(title(i), ":", 1)
+         IF (pk_title(i) == "Buckling" ) THEN
+         	count += 1
+         	SYS_REALLOCATE_ARRAY (bk_title, 1, count )
+         	SYS_REALLOCATE_ARRAY (bk_lcids, 1, count )
+         	SYS_REALLOCATE_ARRAY (subid, 1, count )		
+         	bk_title(count) = title(i)
+         	db_get_load_case_id (bk_title(count),bk_lcids(count))
+         	res_utl_get_subcases(bk_lcids(count), nsub2, subids)
+         	subid(count) = subids(1)	
+         END IF	
+      END FOR
+      res_db_cdeleterescases ( count, subid )
+      	
+END FUNCTION 
+
+FUNCTION get_loadcase_title()
+      RETURN loadcase_title
+END FUNCTION
+
+FUNCTION get_i_loadcase_title()
+      RETURN i_loadcase_title
+END FUNCTION
+FUNCTION get_frg_title()
+      RETURN frg_title
+END FUNCTION 
+
+END CLASS /* STX_buckling_fringe */

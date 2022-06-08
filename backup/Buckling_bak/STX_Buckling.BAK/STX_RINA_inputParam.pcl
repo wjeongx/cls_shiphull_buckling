@@ -1,0 +1,492 @@
+#include "appforms.p"
+
+CLASS STX_RINA_inputParam
+
+/* Classwide Variables */
+   CLASSWIDE WIDGET form_id, label_01, optmenu_01,sep_01
+   CLASSWIDE WIDGET label_02, datbox_01, sep_02, label_03, datbox_02
+   CLASSWIDE WIDGET sep_03, label_04, datbox_03, datbox_04, sep_04
+   CLASSWIDE WIDGET label_05, datbox_05, sep_05, button_01, button_02
+   CLASSWIDE WIDGET label_06, label_07, datbox_06, datbox_07, sep_06, sep_07
+   CLASSWIDE WIDGET item_01, item_02, item_03, item_04
+   CLASSWIDE WIDGET optmenu_02, item_05, item_06, item_07, item_08, item_09
+   CLASSWIDE WIDGET optmenu_03, item_10, item_11
+   CLASSWIDE REAL usr_inform(7)
+
+FUNCTION init()
+      REAL box_length=0.0
+      REAL yloc_main
+
+      form_id=ui_form_create(                    @
+      /* callback */         "",                 @
+      /*     x    */         FORM_X_LOC_SML,     @
+      /*     y    */         FORM_Y_LOC,         @
+      /* position */         "UL",               @
+      /*   width  */         FORM_WID_SML,       @
+      /*  height  */         FORM_HGT_TALL,      @
+      /*   label  */         "Input Parameter",  @
+      /*  unused  */         "")
+
+      yloc_main = FORM_T_MARGIN
+
+      label_01=ui_label_create(                            @
+      /*  parent  */           form_id,                    @
+      /* callback */           "",                         @
+      /*     x    */           FORM_L_MARGIN,              @
+      /*     y    */           yloc_main,                  @
+      /*   label  */           "Yield Stress [Mpa]")
+
+      yloc_main += LABEL_HGT           + @
+                   INTER_WIDGET_SPACE
+
+      optmenu_02=ui_optionmenu_create(                @
+      /*    parent    */              form_id,        @
+      /*   callback   */              "cb_sigmay",    @
+      /*       x      */              FORM_L_MARGIN * 3.0,  @
+      /*       y      */              yloc_main,      @
+      /* label_length */              0.6,             @
+      /*     label    */              "Sigma_y =",    @
+      /*  label_above */              FALSE)
+
+      yloc_main += OPT_MENU_HGT_NO_LABOVE  + @
+                   INTER_WIDGET_SPACE
+
+      item_05=ui_item_create(             @
+      /*   parent   */       optmenu_02,  @
+      /*    name    */       "235",         @
+      /*    label   */       "235",       @
+      /* toggleable */       TRUE)
+
+      item_06=ui_item_create(             @
+      /*   parent   */       optmenu_02,  @
+      /*    name    */       "265",         @
+      /*    label   */       "265",       @
+      /* toggleable */       TRUE)
+
+      item_07=ui_item_create(             @
+      /*   parent   */       optmenu_02,  @
+      /*    name    */       "315",         @
+      /*    label   */       "315",       @
+      /* toggleable */       TRUE)
+
+      item_08=ui_item_create(             @
+      /*   parent   */       optmenu_02,  @
+      /*    name    */       "355",         @
+      /*    label   */       "355",       @
+      /* toggleable */       TRUE)
+
+      item_09=ui_item_create(             @
+      /*   parent   */       optmenu_02,  @
+      /*    name    */       "390",         @
+      /*    label   */       "390",       @
+      /* toggleable */       TRUE)
+ 
+$      box_length = DBOX_WID_SINGLE  - @
+$                   0.5
+
+$      datbox_01=ui_databox_create(                @
+$      /*    parent    */          form_id,        @
+$      /*   callback   */          "",             @
+$      /*       x      */          FORM_L_MARGIN * 3.0,  @
+$      /*       y      */          yloc_main,      @
+$      /* label_length */          0.45,            @
+$      /*  box_length  */          box_length,     @
+$      /*     label    */          "Sigma_y = ",        @
+$      /*     value    */          235.,             @
+$      /*  label_above */          FALSE,          @
+$      /*   datatype   */          "REAL",         @
+$      /*   num_vals   */          1)
+$
+$
+$      yloc_main += DBOX_HGT_NO_LABOVE  + @
+$                   INTER_WIDGET_SPACE
+
+      sep_01=ui_separator_create(               @
+      /*   parent   */           form_id,       @
+      /*    name    */           "",            @
+      /*      x     */           0.0,           @
+      /*      y     */           yloc_main,     @
+      /*   length   */           FORM_WID_SML,  @
+      /* horizontal */           TRUE)
+
+      yloc_main += 5*PIXEL_HGT             - @
+                   0.5*INTER_WIDGET_SPACE  + @
+                   INTER_WIDGET_SPACE
+
+      label_02=ui_label_create(                 @
+      /*  parent  */           form_id,         @
+      /* callback */           "",              @
+      /*     x    */           FORM_L_MARGIN,   @
+      /*     y    */           yloc_main,       @
+      /*   label  */           "Young's Modulus [Mpa]")
+
+      yloc_main += LABEL_HGT           + @
+                   INTER_WIDGET_SPACE
+
+      optmenu_03=ui_optionmenu_create(                @
+      /*    parent    */              form_id,        @
+      /*   callback   */              "cb_e",         @
+      /*       x      */              FORM_L_MARGIN * 3.0,  @
+      /*       y      */              yloc_main,      @
+      /* label_length */              0.4,     @
+      /*     label    */              "E  =",         @
+      /*  label_above */              FALSE)
+
+      yloc_main += OPT_MENU_HGT_NO_LABOVE  + @
+                   INTER_WIDGET_SPACE
+
+      item_10=ui_item_create(             @
+      /*   parent   */       optmenu_03,  @
+      /*    name    */       "206000",         @
+      /*    label   */       "206000",    @
+      /* toggleable */       TRUE)
+
+      item_11=ui_item_create(             @
+      /*   parent   */       optmenu_03,  @
+      /*    name    */       "69000",         @
+      /*    label   */       "69000",     @
+      /* toggleable */       TRUE)
+
+$      box_length = DBOX_WID_SINGLE  - @
+$                   0.5
+$
+$      datbox_02=ui_databox_create(                @
+$      /*    parent    */          form_id,        @
+$      /*   callback   */          "",             @
+$      /*       x      */          FORM_L_MARGIN * 3.0,  @
+$      /*       y      */          yloc_main,      @
+$      /* label_length */          0.45,            @
+$      /*  box_length  */          box_length,     @
+$      /*     label    */          "E = ",   @
+$      /*     value    */          206000.,             @
+$      /*  label_above */          FALSE,          @
+$      /*   datatype   */          "REAL",         @
+$      /*   num_vals   */          1)
+$
+$      yloc_main += DBOX_HGT_NO_LABOVE  + @
+$                   INTER_WIDGET_SPACE
+
+      sep_02=ui_separator_create(               @
+      /*   parent   */           form_id,       @
+      /*    name    */           "",            @
+      /*      x     */           0.0,           @
+      /*      y     */           yloc_main,     @
+      /*   length   */           FORM_WID_SML,  @
+      /* horizontal */           TRUE)
+
+      yloc_main += 5*PIXEL_HGT             - @
+                   0.5*INTER_WIDGET_SPACE  + @
+                   INTER_WIDGET_SPACE
+      
+      label_03=ui_label_create(                 @
+      /*  parent  */           form_id,         @
+      /* callback */           "",              @
+      /*     x    */           FORM_L_MARGIN,   @
+      /*     y    */           yloc_main,       @
+      /*   label  */           "Plate boundary stiffening")
+
+      yloc_main += LABEL_HGT           + @
+                   INTER_WIDGET_SPACE
+
+      optmenu_01=ui_optionmenu_create(                @
+      /*    parent    */              form_id,        @
+      /*   callback   */              "cb_stiff",     @
+      /*       x      */              FORM_L_MARGIN * 3.0,  @
+      /*       y      */              yloc_main,      @
+      /* label_length */              0.,             @
+      /*     label    */              "",             @
+      /*  label_above */              FALSE)
+
+      yloc_main += OPT_MENU_HGT_NO_LABOVE  + @
+                   INTER_WIDGET_SPACE
+
+      item_01=ui_item_create(             @
+      /*   parent   */       optmenu_01,  @
+      /*    name    */       "1",         @
+      /*    label   */       "Flat bar",  @
+      /* toggleable */       TRUE)
+
+      item_02=ui_item_create(                 @
+      /*   parent   */       optmenu_01,      @
+      /*    name    */       "2",             @
+      /*    label   */       "Bulb section",  @
+      /* toggleable */       TRUE)
+
+      item_03=ui_item_create(                @
+      /*   parent   */       optmenu_01,     @
+      /*    name    */       "3",            @
+      /*    label   */       "Angle or T-section",  @
+      /* toggleable */       TRUE)
+
+      item_04=ui_item_create(                 @
+      /*   parent   */       optmenu_01,      @
+      /*    name    */       "4",             @
+      /*    label   */       "Primary supporting members",  @
+      /* toggleable */       TRUE)
+
+      
+$      box_length = DBOX_WID_SINGLE  - @
+$                   0.5
+$
+$      datbox_03=ui_databox_create(                @
+$      /*    parent    */          form_id,        @
+$      /*   callback   */          "",             @
+$      /*       x      */          FORM_L_MARGIN * 3.0,  @
+$      /*       y      */          yloc_main,      @
+$      /* label_length */          0.45,            @
+$      /*  box_length  */          box_length,     @
+$      /*     label    */          "E.C = ",   @
+$      /*     value    */          1.,             @
+$      /*  label_above */          FALSE,          @
+$      /*   datatype   */          "REAL",         @
+$      /*   num_vals   */          1)
+$
+$      yloc_main += DBOX_HGT_NO_LABOVE  + @
+$                   INTER_WIDGET_SPACE
+
+      sep_03=ui_separator_create(               @
+      /*   parent   */           form_id,       @
+      /*    name    */           "",            @
+      /*      x     */           0.0,           @
+      /*      y     */           yloc_main,     @
+      /*   length   */           FORM_WID_SML,  @
+      /* horizontal */           TRUE)
+
+      yloc_main += 5*PIXEL_HGT             - @
+                   0.5*INTER_WIDGET_SPACE  + @
+                   INTER_WIDGET_SPACE
+
+      label_04=ui_label_create(                 @
+      /*  parent  */           form_id,         @
+      /* callback */           "",              @
+      /*     x    */           FORM_L_MARGIN,   @
+      /*     y    */           yloc_main,       @
+      /*   label  */           "corrosion margin")
+
+      yloc_main += LABEL_HGT           + @
+                   INTER_WIDGET_SPACE
+
+      box_length = DBOX_WID_SINGLE  - @
+                   0.5
+
+      datbox_04=ui_databox_create(                @
+      /*    parent    */          form_id,        @
+      /*   callback   */          "",             @
+      /*       x      */          FORM_L_MARGIN * 3.0,  @
+      /*       y      */          yloc_main,      @
+      /* label_length */          0.45,            @
+      /*  box_length  */          box_length,     @
+      /*     label    */          "Tc = ",   @
+      /*     value    */          0.,             @
+      /*  label_above */          FALSE,          @
+      /*   datatype   */          "REAL",         @
+      /*   num_vals   */          1)
+
+      yloc_main += DBOX_HGT_NO_LABOVE  + @
+                   INTER_WIDGET_SPACE
+
+      sep_04=ui_separator_create(               @
+      /*   parent   */           form_id,       @
+      /*    name    */           "",            @
+      /*      x     */           0.0,           @
+      /*      y     */           yloc_main,     @
+      /*   length   */           FORM_WID_SML,  @
+      /* horizontal */           TRUE)
+
+      yloc_main += 5*PIXEL_HGT             - @
+                   0.5*INTER_WIDGET_SPACE  + @
+                   INTER_WIDGET_SPACE             
+                   
+      label_05=ui_label_create(                 @
+      /*  parent  */           form_id,         @
+      /* callback */           "",              @
+      /*     x    */           FORM_L_MARGIN,   @
+      /*     y    */           yloc_main,       @
+      /*   label  */           "Partial safety factor(Material)")
+
+      yloc_main += LABEL_HGT           + @
+                   INTER_WIDGET_SPACE
+
+      box_length = DBOX_WID_SINGLE  - @
+                   0.5
+
+      datbox_05=ui_databox_create(                @
+      /*    parent    */          form_id,        @
+      /*   callback   */          "",             @
+      /*       x      */          FORM_L_MARGIN * 3.0,  @
+      /*       y      */          yloc_main,      @
+      /* label_length */          0.45,            @
+      /*  box_length  */          box_length,     @
+      /*     label    */          "SF1=",   @
+      /*     value    */          1.02,             @
+      /*  label_above */          FALSE,          @
+      /*   datatype   */          "REAL",         @
+      /*   num_vals   */          1)
+
+      yloc_main += DBOX_HGT_NO_LABOVE  + @
+                   INTER_WIDGET_SPACE
+
+      sep_05=ui_separator_create(               @
+      /*   parent   */           form_id,       @
+      /*    name    */           "",            @
+      /*      x     */           0.0,           @
+      /*      y     */           yloc_main,     @
+      /*   length   */           FORM_WID_SML,  @
+      /* horizontal */           TRUE)
+
+      yloc_main += 5*PIXEL_HGT             - @
+                   0.5*INTER_WIDGET_SPACE  + @
+                   INTER_WIDGET_SPACE
+                   
+      label_06=ui_label_create(                 @
+      /*  parent  */           form_id,         @
+      /* callback */           "",              @
+      /*     x    */           FORM_L_MARGIN,   @
+      /*     y    */           yloc_main,       @
+      /*   label  */           "Partial safety factor(Resistance)")
+
+      yloc_main += LABEL_HGT           + @
+                   INTER_WIDGET_SPACE
+
+      box_length = DBOX_WID_SINGLE  - @
+                   0.5
+
+      datbox_06=ui_databox_create(                @
+      /*    parent    */          form_id,        @
+      /*   callback   */          "",             @
+      /*       x      */          FORM_L_MARGIN * 3.0,  @
+      /*       y      */          yloc_main,      @
+      /* label_length */          0.45,            @
+      /*  box_length  */          box_length,     @
+      /*     label    */          "SF2 = ",   @
+      /*     value    */          1.10,             @
+      /*  label_above */          FALSE,          @
+      /*   datatype   */          "REAL",         @
+      /*   num_vals   */          1)
+
+      yloc_main += DBOX_HGT_NO_LABOVE  + @
+                   INTER_WIDGET_SPACE
+
+      sep_06=ui_separator_create(               @
+      /*   parent   */           form_id,       @
+      /*    name    */           "",            @
+      /*      x     */           0.0,           @
+      /*      y     */           yloc_main,     @
+      /*   length   */           FORM_WID_SML,  @
+      /* horizontal */           TRUE)
+
+      yloc_main += 5*PIXEL_HGT             - @
+                   0.5*INTER_WIDGET_SPACE  + @
+                   INTER_WIDGET_SPACE                                      
+      
+      label_07=ui_label_create(                 @
+      /*  parent  */           form_id,         @
+      /* callback */           "",              @
+      /*     x    */           FORM_L_MARGIN,   @
+      /*     y    */           yloc_main,       @
+      /*   label  */           "Iteration Factor")
+
+      yloc_main += LABEL_HGT           + @
+                   INTER_WIDGET_SPACE
+
+      box_length = DBOX_WID_SINGLE  - @
+                   0.65
+
+      datbox_07=ui_databox_create(                @
+      /*    parent    */          form_id,        @
+      /*   callback   */          "",             @
+      /*       x      */          FORM_L_MARGIN * 3.0,  @
+      /*       y      */          yloc_main,      @
+      /* label_length */          0.6,            @
+      /*  box_length  */          box_length,     @
+      /*     label    */          "safety factor = ",   @
+      /*     value    */          1.10,             @
+      /*  label_above */          FALSE,          @
+      /*   datatype   */          "REAL",         @
+      /*   num_vals   */          1)
+
+      yloc_main += DBOX_HGT_NO_LABOVE  + @
+                   INTER_WIDGET_SPACE
+
+      sep_07=ui_separator_create(               @
+      /*   parent   */           form_id,       @
+      /*    name    */           "",            @
+      /*      x     */           0.0,           @
+      /*      y     */           yloc_main,     @
+      /*   length   */           FORM_WID_SML,  @
+      /* horizontal */           TRUE)
+
+      yloc_main += 5*PIXEL_HGT             - @
+                   0.5*INTER_WIDGET_SPACE  + @
+                   INTER_WIDGET_SPACE  
+      
+      
+      
+ 
+ 
+                   
+      button_01=ui_button_create(                     @
+      /*   parent  */            form_id,             @
+      /*  callback */            "cd_apply",          @
+      /*     x     */            BUTTON_HALF_X_LOC1,  @
+      /*     y     */            yloc_main,           @
+      /*   width   */            BUTTON_WID_HALF,     @
+      /*   height  */            BUTTON_DEFAULT_HGT,  @
+      /*   label   */            "Apply",             @
+      /*    TRUE   */            TRUE,                @
+      /* highlight */            FALSE)
+
+      button_02=ui_button_create(                     @
+      /*   parent  */            form_id,             @
+      /*  callback */            "cb_cancel",         @
+      /*     x     */            BUTTON_HALF_X_LOC2,  @
+      /*     y     */            yloc_main,           @
+      /*   width   */            BUTTON_WID_HALF,     @
+      /*   height  */            BUTTON_DEFAULT_HGT,  @
+      /*   label   */            "Cancel",            @
+      /*    TRUE   */            TRUE,                @
+      /* highlight */            FALSE)
+
+      yloc_main += BUTTON_DEFAULT_HGT  + @
+                   INTER_WIDGET_SPACE
+
+      ui_wid_set(form_id,"HEIGHT",yloc_main)
+
+END FUNCTION /* init */
+
+FUNCTION display()
+      ui_form_display("STX_RINA_inputParam")
+END FUNCTION /* display */
+
+FUNCTION cd_apply()
+
+    STRING s_buff[32]
+
+    ui_wid_get(optmenu_02,"value", s_buff)
+    usr_inform(1) = str_to_real(s_buff)
+$    ui_wid_get( datbox_01, "VALUE", usr_inform(1) )
+$    ui_wid_get( datbox_02, "VALUE", usr_inform(2) )
+    ui_wid_get(optmenu_03,"value", s_buff)
+    usr_inform(2) = str_to_real(s_buff)
+    ui_wid_get(optmenu_01,"value", s_buff)
+    usr_inform(3) = str_to_real(s_buff)
+$    ui_wid_get( datbox_03, "VALUE", usr_inform(3) )
+    ui_wid_get( datbox_04, "VALUE", usr_inform(4) )
+    ui_wid_get( datbox_05, "VALUE", usr_inform(5) )
+    ui_wid_get( datbox_06, "VALUE", usr_inform(6) )
+    ui_wid_get( datbox_07, "VALUE", usr_inform(7) )
+
+    ui_form_hide("STX_RINA_inputParam")
+END FUNCTION /* cd_apply */
+
+FUNCTION getUsrInfo()
+	
+   return usr_inform
+   
+END FUNCTION
+FUNCTION cb_cancel()
+
+     ui_form_hide("STX_RINA_inputParam")
+END FUNCTION /* cb_cancel */
+
+END CLASS /* STX_input_param */

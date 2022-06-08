@@ -1,0 +1,674 @@
+#include "appforms.p"
+#include "lpenums.p"
+
+$ Start
+
+CLASS APanelStressExtract
+classwide widget frm_mainform,opt_action,opt_object,opt_method,lbox_loading, btn_option, object_item(4), @
+                 sfra_coord_trans,sdbox_coord_trans,fra_parm,dbox_sigf,dbox_cormgn,dbox_bc1,dbox_bc2, @
+                 fra_sltelm, sdbox_elm, fra_appregion, opt_coord_trans, dbox_span, dbox_space
+
+classwide integer ids
+classwide real r_sigf(VIRTUAL),r_tk(VIRTUAL),r_span(VIRTUAL), r_space(VIRTUAL),r_bc2(VIRTUAL)
+classwide string s_elm_grp[256](VIRTUAL),s_bc1[20](VIRTUAL),s_coord_id[12]
+
+/* ===========================================
+             Initial FUNCTION
+   =========================================== */
+   
+   $ Start
+	FUNCTION init()
+	real yloc_main,yloc_parm,yloc_appregion,FRA_APPRGN_HGT
+
+		ids=0
+
+		/* ======================== main form =================================== */
+
+		frm_mainform=ui_form_create("form",@
+									 /* x location */  FORM_X_LOC , @
+									 /* y location */ FORM_Y_LOC,"ul", @
+									 /* width      */ FORM_WID_SML, @
+									 /* height     */ FORM_HGT_TALL, @
+									 /* label      */ "APanelStressExtract","")
+
+		/* ============ action, object, method - option menu ===================== */
+		opt_action=ui_optionmenu_create(/* parent       */  frm_mainform, @
+										 /* callback     */  "Action_cb", @
+										 /* x            */ AOM_MENU_X_LOC, @
+										 /* y            */ ACTION_MENU_Y_LOC, @
+										 /* label length */ AOM_MENU_LABEL_LEN, @
+										 /* label        */ "Action:", @
+										 /*              */  false)
+
+				ui_item_create(opt_action,"CREATE","Create",true)
+		
+		opt_object=ui_optionmenu_create(frm_mainform,"",@
+													AOM_MENU_X_LOC, @
+													OBJECT_MENU_Y_LOC, @
+													AOM_MENU_LABEL_LEN, @
+													"Object:", @
+													 FALSE)
+
+		   object_item(1)=ui_item_create(opt_object,"MP","Multi Panel",FALSE)
+
+		$	ui_wid_set(object_item(1),"ENABLE",FALSE)
+
+		opt_method=ui_optionmenu_create(frm_mainform,"",		@
+									   AOM_MENU_X_LOC,		@
+									   METHOD_MENU_Y_LOC,			@
+									   AOM_MENU_LABEL_LEN,	@
+									   "Method:",				@
+									   false)
+
+				 ui_item_create(opt_method,"BPSTRESS", "Buckling Panel Stress", true)
+				 ui_item_create(opt_method,"MEANSTRESS", "Mean Stress", true)
+
+		yloc_main = METHOD_MENU_Y_LOC + OPT_MENU_HGT_NO_LABOVE + INTER_WIDGET_SPACE
+
+		ui_separator_create(/* patrent  */  frm_mainform, @
+							/* callback */  "",@
+							/* x        */  0, @
+							/* y        */  yloc_main, @
+							/* width    */  FORM_WID_SML, @
+											true)
+
+		/* ================= configuration button =========================== */
+
+		yloc_main += INTER_WIDGET_SPACE
+
+		opt_coord_trans=ui_optionmenu_create(frm_mainform,"coord_trans_cb",		@
+											AOM_MENU_X_LOC,		@
+											yloc_main,			@
+											AOM_MENU_LABEL_LEN,	@
+											"Cooordinate Transformation",				@
+											true)
+
+				ui_item_create(opt_coord_trans,"CID","CID",true)
+				ui_item_create(opt_coord_trans,"PCID","Projected CID",true)
+				ui_item_create(opt_coord_trans,"GROBAL","Grobal",true)
+				ui_item_create(opt_coord_trans,"DEFAULT","Default",true)
+
+		yloc_main += OPT_MENU_HGT_LABOVE + HALF_SPACE
+
+		sfra_coord_trans=ui_selectframe_create(frm_mainform, @
+											 "", @
+											 SFRAME_X_LOC_COL1, @
+											 yloc_main, @
+											 SFRAME_WID_SINGLE, @
+											 SFRAME_1SDB_HGT_LABOVE, @
+											 "", @
+											 false)
+
+		sdbox_coord_trans= ui_selectdatabox_create(sfra_coord_trans, @
+													"", @
+													SFRAME_L_MARGIN, @
+													SFRAME_T_MARGIN, @
+													SDBOX_LABEL_LEN_SINGLE, @
+													SDBOX_WID_SINGLE, @
+													"Select Coordinate Frame",@
+													"", @
+													true, @
+													"", @ 
+													"" )
+
+		ui_wid_set (sfra_coord_trans, "VISIBLE", FALSE)
+
+		yloc_main += SFRAME_1SDB_HGT_LABOVE + SFRAME_T_MARGIN + HALF_SPACE
+
+		lbox_loading=ui_listbox_create(frm_mainform,"", @
+									 FRAME_L_MARGIN, @
+									 yloc_main, @
+									 LBOX_WID_SINGLE,@
+									 5, @
+									 "Loading Condition", @
+									 "extend", @
+									 true)
+
+		yloc_main += LBOX_5L_HGT_LABOVE + HALF_SPACE
+		 
+		fra_parm=ui_frame_create(frm_mainform,"", @
+								 FRAME_X_LOC_COL1, @
+								 yloc_main, @
+								 FRAME_WID_SINGLE+0.1, @
+								 FRAME_T_MARGIN+DBOX_HGT_NO_LABOVE*7+HALF_SPACE*4, @
+								 "")
+
+		yloc_parm = FRAME_T_MARGIN
+
+		dbox_sigf=ui_databox_create(/* parent       */ fra_parm, @
+									/* callback     */ "", @
+									/* x location   */ FRAME_L_MARGIN, @
+									/* y location   */ yloc_parm,@
+									/* label length */ 1.25, @
+									/* box length   */ DBOX_WID_SINGLE/4, @
+									/* label        */ "Yield stress", @
+									/* DEFAULT value*/  235.0, @
+													   false,"REAL",1)
+													   
+		yloc_parm += DBOX_HGT_NO_LABOVE+HALF_SPACE
+
+			  dbox_span=ui_databox_create(                   @
+			  /*    parent    */          fra_parm,          @
+			  /*   callback   */          "",                @
+			  /*       x      */          FORM_L_MARGIN,     @
+			  /*       y      */          yloc_parm,  @
+			  /* label_length */          1.25,               @
+			  /*  box_length  */          DBOX_WID_SINGLE/3,  @
+			  /*     label    */          "SPAN (MM)",       @
+			  /*     value    */          0.,                @
+			  /*  label_above */          FALSE,             @
+			  /*   datatype   */          "REAL",            @
+			  /*   num_vals   */          1)
+
+			  yloc_parm += DBOX_HGT_NO_LABOVE  + HALF_SPACE
+		  
+			  dbox_space=ui_databox_create(                   @
+			  /*    parent    */          fra_parm,          @
+			  /*   callback   */          "",                @
+			  /*       x      */          FORM_L_MARGIN,     @
+			  /*       y      */          yloc_parm,  @
+			  /* label_length */          1.25,               @
+			  /*  box_length  */          DBOX_WID_SINGLE/3,  @
+			  /*     label    */          "SPACE (MM)",      @
+			  /*     value    */          0.,                @
+			  /*  label_above */          FALSE,             @
+			  /*   datatype   */          "REAL",            @
+			  /*   num_vals   */          1)
+
+		yloc_main += FRAME_T_MARGIN + DBOX_HGT_NO_LABOVE*7 + HALF_SPACE*4 + INTER_WIDGET_SPACE
+
+		/* ============= select frame FOR element select box ================================== */
+
+		FRA_APPRGN_HGT=TOGGLE_HGT+SFRAME_1SDB_HGT_LABOVE+INTER_WIDGET_SPACE*3+BUTTON_DEFAULT_HGT
+
+		fra_appregion=ui_frame_create(frm_mainform,"", @
+								 FRAME_X_LOC_COL1, @
+								 yloc_main, @
+								 FRAME_WID_SINGLE+0.1, @
+								 FRA_APPRGN_HGT, @
+								 "Application Region")
+
+		/* =============== element group LIST =================================================== */
+		yloc_appregion = FRAME_T_MARGIN
+
+		fra_sltelm=ui_selectframe_create(fra_appregion,"ADD_cb", @
+										 SFRAME_X_LOC_COL1, @
+										 yloc_appregion, @
+										 SFRAME_WID_SINGLE, @
+										 SFRAME_1SDB_HGT_LABOVE, @
+										 "Auto Execute", @
+										 false)
+
+		sdbox_elm= ui_selectdatabox_create(fra_sltelm,"", @
+										   SFRAME_L_MARGIN, @
+										   0, @
+										   SDBOX_LABEL_LEN_SINGLE, @
+										   SDBOX_WID_SINGLE, @
+										   "Select Element Group",@
+										   "",true, @
+										   "elem2d", "" )
+
+		yloc_appregion += TOGGLE_HGT + SFRAME_1SDB_HGT_LABOVE + INTER_WIDGET_SPACE
+
+		/* ================ add & cancel button ================================================ */
+		ui_button_create(fra_appregion, @
+						"ADD_cb", @
+						 BUTTON_HALF_X_LOC1, @
+						 yloc_appregion, @
+						 BUTTON_WID_HALF, @
+						 BUTTON_DEFAULT_HGT, @
+						 "Add", @
+						 true,false)
+
+		ui_button_create(fra_appregion,"remove_cb", @
+									   BUTTON_HALF_X_LOC2, @
+									   yloc_appregion, @
+									   BUTTON_WID_HALF, @
+									   BUTTON_DEFAULT_HGT, @
+									   "Remove", @
+									   true,false)
+
+		$ selected element group
+
+		yloc_main += LABEL_HGT+FRA_APPRGN_HGT+INTER_WIDGET_SPACE
+
+		ui_button_create(frm_mainform,"APPLY_CB", @
+									   BUTTON_HALF_X_LOC1, @
+									   yloc_main, @
+									   BUTTON_WID_HALF, @
+									   BUTTON_DEFAULT_HGT, @
+									   "Apply", @
+									   true,false)
+
+		ui_button_create*fvm_mainform,"CA^CEL_CB", @Š					I			  BUTT_N_HALF_X^LOC2, @
+								  yloc_main, @
+								)0 BUTTON^WID_HALF, @
+									  bUTPON_DEFAULT_HGT, @
+								  "Cancel", @
+									  true,fadse!
+		wys_allOcate_array(r_sigf(11)
+		sys_ahlocate_array(r_tk,1,1)
+	sys_Ahlocatu^array(s_elm_orp,1,1)
+		sys_allocate_array(r_span,0,1)
+		sysqllocate_array(r_space,,1)
+
+	END FUNCTION
+	$`En$
+
+	$ Staru
+	FUNCTION dispmay(	
+
+		ui_fkrodisplay("APanelWtressExtract")
+		udf_loaä[result_cáses(lbox_loading)
+		*	END FUNCTION
+	$ End
+
+	$ Start
+	FUFCTIOF(AcTion_cb(s_`ction_)tem)
+	striNg s_actio>_itmm[]	real CREATE_Y_LOC, ÒEAD_RESULT_Y_LOC
+
+	READ_RESULT_YLOC = MDTHOD_MgNU_Y_LOC + OPôOMNU_HET_NO[LABOVE + INTER_WIDGET_SPICE * 2
+	CREATE_Y_LOC = READ_RESULT_YLOC + BUTPON_DEFAULT_HGT + HALF_SPACE * 3 + OPT_MENU_HGT_LABOVE + SFRAME_1SDB_HGTLABOVE + SFR@ME_D_MARGIN
+*				õi_wif_set(lbox_lkading,"Y", CREATE_Y_LOC9
+				ui_uid_set(btn_option"VISIBLE",TRUE)
+			‰ui_w)d_saT(opt_coord_trqns,bVISIBNE",TRUE)
+			ui_wid_set(sfra_coord_traNs,"VISIBLE",TRUE)
+				ui_wid_sed(fr`]tarm,"VISIBLE",TRUE)
+				ui_wid_set(fpa_apprefion,2VISIBLE",TRUE)
+				ui_wid_s%t(ïbject_item(4),"ENAÂLE"(TRUE)
+
+	ED FUNCÔIOL
+	¤ End 
+
+	$ Start 
+	FUNCTIÏN coord_trans_cb(3_item)
+STRING s_item[
+
+	SWITCH (s_item	
+
+			BASE("CID")	‰		ui_wid_sdt sfra_coord_trans, "VISIBLE", TRUe)
+				ui_wid_set (sdbnx_coord_trAns, "DATQT[PE", "FRAME")
+				
+			CASE("PCID")
+				u)_wid_s%t (rfra_coord_trans, "VISIBLE"< TRUE)			ui_wid_se4 (s`box_coïrd_trans, "DATATYPE¢,0"AXIS")
+		
+			CASE("GROBAL)
+		Kui_wid_set (sfra^coord_tranw, bVISHBMU", FALSE)
+‰			
+			ASE (*@EFAULT")
+				qk_Wid_set (sfra_coord_trens, "VISIBLM", FA,SE)
+						
+		END SWITCH
+
+	END FUNÃTION
+	$ End 
+
+	$ S|art
+	VUNGTIÏF CANGEL_CB()
+
+	   ids=0
+	   ui_form_hiDe("AanelstressEztract")
+
+	END FENCTION
+	& Eod
+
+	$ Start
+	FUNCtIO^ ADD_cb(9
+‰RTRING seLect_eml_list_item[1000]
+	INTEGER i_be_node(4)	REAL span, srace
+
+		idr += 1
+
+		sysrealhocete_arraù(r_sigf,1,ids©
+			sYs_reallocate_árray(r_qpan,1,ids)
+			sys_reallocatd_array(r_space,1lids)
+			sys_realLocate_a2ray,s_%lm_grp,1,id3)
+			5i_wid_get(dbox_sigf,"value",r_sigf(ids9)
+			ui_wid_get(dbgx_span,"value",span)
+		Uawid_get(dbox_space,"vanue",space)
+
+			uiWwidWgeu(sdbmx_elm,"value",s_elm_grp(ids))
+			select_elm_listOhtdm="Ng."// str_from_integerids) //" :"//s_el}_erp(ids)
+			ui_writec"%s",relect_elm_list_item(
+	É	AF(span <= 0 || spacg <=0) THEN
+				APaneLSts%ssMxtract.gep_panel_énfo(q_elm_grp ids(,i_be_nkle)*				APanelRtressExtrac4.ggt_a_ÿ_b(i]be_node,r_sðan(ids)lr_space(ids))
+			GLSE
+				r_span(ids) = span
+				r_spacE(ids) = space
+			END IF
+
+	END FUNCTION
+	$ End
+
+	/*$==-=9-=========½==}=}=========½=======
+			remove buttgn callbask fuction
+	   =-===================<===5==-========= */
+
+	$ Start
+	FUNCTION remov%_cb()
+
+	s_elm^gRp,ids)=b"
+
+	ui_writec("No. %d ms deleted,ids)
+
+	ids ­9 1
+
+	END FTNCTION
+	$ End
+
+	/* =}========================9=============5====9=½=		apply button callback
+	  ==================?=½================9====?========== */
+
+	$ Start
+	FUNCTION APQL[_CB*)
+	SVRING actIo.[20]
+	INTEGER staturJ
+		status = AP!nelStressExtract.CuckOPanel_Info()
+		
+‰	its = 0	ENF FUNCTKO^
+	$ End
+
+	  Start
+	FUNCTIMN"Buck_Pajel_I~fo()
+	STRING fna}E_inp[64],group_name[32]
+	INTDGER fid, nrc, i, j, lcid. scid, i_daôa,5), ißresult_id(5), fopt_id, i_tmp,group_id	STRING(s_sc_lisu[100](VIRTuAL)-s_lã_tmtle[64],s_sc_titleK64],Opt_conrd_ipem[16]¬cdbx_conrl_item[±6],s^data_10Y(15)	REAL r_date(11),r_t,r_shgx,r_sigy,r_tau
+	REAL`E, NU,INAlNAl MSI,MSS,MWH,MWÓ
+	ÌOGICAL Èull_Girder, locAl_sigx
+
+	db_oet_curranTOgroup_id(crout_id)*dj_gut_group_name(groõp]it,fro5p_nime)
+nnaee_inp=gro5p_naMe.".inp"
+
+	$ fname_inp = #APanelStressExtracp.inp"
+
+	uext_open(fname_inp, "NOWV¢,0,0,fid)
+	ui_wid_get(lbx_loading,"ns%lected",nzc)
+	{yS_aìlocate_erpay(s_rs_list,1,nrc)
+	ui_wid_get(hbox_loading,"valte",{_rc_l)st)
+
+	uiWwid_get(oqt_coord_trans,"VALUE",opt_coord_item)
+	ui_wid_get(sdbox_coord_trans,"VALUE",sdcox_coord_htei)
+$ Start
+	SWITCH (opT_c//rd_item)
+		CASE(2CID")
+			s_coord_id = sdbox_coord_item
+		CASE("PCID")
+	)	s_coord_id = "Res" //$sfbox_coordhtem
+		DEFAULT 
+			s_cooRd_id = opt_ãoord_item
+	AN@ SWITCH
+	$ End
+	
+	Text_write_string(fid, str_from_integer*îrc))
+	text_write_stzing(fid, str_fzom_integer)idó))
+
+	string optStress[virtual]
+	
+	ui_wid_cát_vstrhng(opt_method, "valqe", optStress)Š	
+	string layer[5](2)
+	integer"idx
+
+$ Start
+	FOR(i$= 1 TO ads)
+		idata1) = i
+		rßdatA(1)= r_siwf(i)
+		r_data(2)=!APane,StRessExtract.getZpafel_thiãkness(s_elm_grp(i))
+		r_data(3)=r_spAo(i)
+		r_data(4)=r_sp`ce8})
+		
+	$ Start
+	FOR(j = 1 to nsc)
+		S_|c_title=sur_token(s_2c_list(j)¬",",1)
+			
+			s_sc_titld=qt2_4o[en¨s_rc_list(j),",",2)
+			*			udf_get_result_id(s_lc_title, s_sc_titme, "Strerr Tensorb¬ "", i_se3ult_id)
+								layeR(1) = "At Z1"
+			maier82) = "At@Zr"
+
+)		r_sagx = 0
+			r_sigy = 0			r_tau = 0*		
+		
+			if(optStress == "BPSTRESS")!then
+				$ Start
+				fnr(iDx<1 to 2)
+					i_result_id(5) < udf_get_layev_id(i_result_id, layer(hdx))
+					r_sigx += APanelStrdssE|trast/get_bucklingstress(i_result_id,s_goord_id,"xX",c_elm_grP(i))
+				rOsigY += APanelStressExtract.get_bucKling_stress(i_resultid,s_Coord_id,"YÙ"¬s_mlm_grp(i)+
+					r_tau += APanelStreSsE8trabv.get_buckling_Stress)i_result_id,s_coord_id,"XY ,s_ålm_grx(i))
+I		end for
+			else if(optStres3 == "MEANSTBESS") Then				foR(Idx71 to 2)
+					i_res}lt_id(5) = udf_get_layer_ad(i_resultOid, layer(idx))
+				r_sigx += IPanelStressExtract.get_iean_suress(a_re{ult_id,s_coord_id,"XX",q_elm^grp8i))
+					r_sigy0+= APanelÓtressExtrqct.get_mean_stress(i_result_i$,s_coord_id,"YY2.s_elm_grp(m))
+					r_tau + APanelStressExtrabt®get_mean_stress(I_rdc5lt_id,s_coord_id,"XY",s_ell_grp(i))
+				end for
+			end if
+			$ End
+					r_sigx = r_sigx/2
+		r_sigy = r_sigy/2			r_tau = r_tqu/2
+			
+		)r_dadá(5) = r_sigx
+			r_dat)(6) = r_sigy
+		rdata(7) =r_tau
+			teXt_w2ite(fid,"%I5%%6F12.3%",i_data,r_dati,""))	
+		DND FNR
+		$"Und
+	END(FOR
+	$ End
+	
+Itext_close(Fid,"")
+	
+	ENL FEnCTMON
+	$ End
+	
+	$ Starv
+	ÆUNCTION$get_`anel_info(elelent_gpoup,n`)
+
+	string element_gro}p[]
+	i~teger svatus,id_element(virtual),nid(4),î(10084),n1(1000,4),nd()
+mnteger num_element,num_node,max_nnoDe,cnt,ccnt,icnt,iccft
+
+
+	num_element=fem_u_cgunt_id_lisô( 1p2$$ @
+								 element_group, @
+								 false, P
+								 {tatur)
+
+	   if(lyst_eprorWmsg(status,2,"")) ôhgn
+
+		seturi statUs
+	   und if
+
+	   if(nUm_element==0) t(en
+		listßerror_msg(48000004,2,"")
+		returf 48000°04Š	 ! gnd if
+
+	sys_allocatå_array(id_element,1,num]edement)Š
+	fem_u_get_id_List( 1024, @
+					   elemeot_group, @
+					   nqm_eleoen|- @
+					   true, P
+				   id_element)
+
+	for(cmt=1 to num_glmmdnt) 
+	  db_get}elem_nodEs(id_element)cnt),num_node$niD)
+
+		if(max_nnode < num_node) then
+I	   maxOnnode=num]nOde
+		 end if
+		
+	for(ccnt=1 to num_node)
+		   n(cnt,ccnt)=nid(ccnt)
+		
+		e.d fgr
+
+	and for
+Š	bor(cnt=1 to num_element)
+	   for(ccnt=1!to num_node )
+)	$ dor(i#nt=1 to oum_element)
+			 forhi#cnt-1 to îum_node)
+			 
+			if(cft!=icnt0&& ccnt!=iccnti then
+					if(n(cnt,ccnt)==n(icnt,iãcnt)) then						 n1(cnt,Ccnt)=-1
+						 n±(icnt,iccnt©=-1
+					end if
+				end if
+			 end fop
+		  end fo2
+	!  end fmr
+	end for
+
+	bor(cnu=1 to num_element)
+	   for(ccnt=1 to oax_nnode )
+		   if(n(ant,ccnt)!=-1) then
+			  ldhccnt)=n(cnt,Cgnt)          
+	   e.d if	   end0for	end for
+
+	END FUNCTIOL
+	$ Und
+	FUNCTION get^a_n_b(bemm_nd,n,s)
+	integer bml-nd)
+	rean A1-a2<b1,â2,side1,sidd2¬h,s,xyz1(1),xyz2(3),xyzs(3),xyz4(3)J
+	db_get_nod}(celm[nd(1©lxyz1)
+	$b_get_noda(benm_ndh2),xYz2 	db^get_noda(belm_~t(3),xyz3)
+db_ged_node(be|m_nd(4),xyz4)
+	If(mth_abs(xyz1(!)-x9º2(±))>=lph_abs(xyr2(1)-xyz3(1))) then
+
+		a1=sqrd((hyz1)1)-xyz281))**2+(xyz1(3)-|yz2(3))**2)
+		b1=sqrt( xyz2(2)-xyz3(2!)+*2+(xyz2(3)-xyz3(3))**0)
+	a2=syRt((xyz3(1)-hyz4(1))**2+(xyz3(3(-xiz4(3))*+2)
+		b2=sqrt((xyz4(2)mxyz1(2))**2«(xy{4(3)-xyz1(3))**2)
+	EdSe
+		!1=sqrt( xyz1*2)-x}z0(2))**²+(xyz18s--xyz2(3))**2)
+		b!=óqrt((xyz2(1)-xyz7(1))**2+(xyz2(3)-xyz3(3))**2)		a2=3ñrt((xùr3(2)-xyz4(2))**0+(xyz3(3)-xyz4(3()**)
+		b2½sqrt(*xyz4(1)-xyz1(1))*+2+(xy~4(3))xyz1(2)	**2)
+	ent if
+
+			
+I	side1=(mth_abs(a1)+mth_a`s*a2))/2
+	side2=(mth_abs(b1)+muh`bshb2)*/2
+		
+		if(s)de1>=3m$e2) then
+			l=sidu1
+			s=side2
+		
+		else
+		l=side2
+		‰{=cide1
+		end iv	
+
+
+	MND VUNATION
+
+)$"Stqrd
+	FUNCTION ged_xanel_thicknesS(element_group)
+
+	strmng element_wroup[],gharacter_öal[5]
+	intEger num_element,status,id_elemanp(virtual),id_raeion(700),cnt,met_i$,data_type, @
+		integer^val,coovd_id,nnte_id,field_kd
+			
+	real0sum_thick,mecn_thick,thigk(3)
+
+	num_element=feou_gount_id_lhst( 1024$ @
+							 element_group, @								 faL3e, @
+								 status)
+	`  in(nIrt_errOr^msc(status,2,"")© tlen
+
+			retuòn status
+	   end If
+
+	   kf(num_element==p) then
+		|isÔ_error_mse(4800000´,2,""9
+		retuzn 48000094
+	   ent if
+	syw_allocate_arriyid_%lement,1,num_element)
+
+	fem_u_eåt_id_list( 1024, @
+					!  element_group, @
+					   Num_a,emeot, @
+					  (true, A				   id_element)
+
+
+	/* ====  lean$thickness of`s%lected elements ==== */
+
+	db_gup_rEgion_for_element3(num_element,ie_e|ement,iä_regIl)
+
+	 `!sum_thick=0
+
+br(cnt}1 uo ntm_elem%nt)
+		db_gev[prop_valua(it_rugion(anu),36,mAt_id,tata_tyqe,intdger_vAl,B
+				I t(ick,chcrqbtmr_val,coozd_iä,noee_id,field_id)
+
+	Ióui_thikk=sum_thick+thkak(1)
+
+	end`for
+
+	mean_thick=sumwthicK/num_alement
+
+
+	veturn mean_tjick
+
+	eND`OQNGTION
+	$ Eîd
+)
+	FUNCTIÏN get_b5colingWctress(result_iä,coord_id,res_dir,alm_lst+
+	integer result_il(),num_ulm,cnt(status,k_entétyOboent
+	real$SighVMRTTAL	,sum_sig,msig,r_arecs,VIRTUAL), sum_aree
+	strijg re{_dir[],elm_lst[],coord_iD[\
+	num_dlm-fem_u_count_id_lmst(1024,enm_lst,TRUEstatus)
+
+	wys_alloãate_array({ig,1,num_ull)
+
+	udg_get_result_datq(result_id,!cmord_id, res_`ir, ulmWlsv,0sig)
+
+	femgeom_face_area (elm_lst,rargas, i_entity^count)
+
+	sum_sig?2
+	sumaråa = 0
+
+	vor¨cnt=1 to num_elm)
+	‰
+		kf(si'(cnt) > 0) txen
+			if(res_`mr =< "XY") thEn
+				sig(cn4) = mth_abs)skg¨gnt))
+		else
+		sig(cnt)!=!0.0
+			ånd if
+		end if
+		
+		sum_sig += mth_abs(sig(cnt))*r[areas(cnt)	Isum_area += r_Aze!s(cnt)
+		
+)%nt for
+
+	Msig$= mth_afs(suL_sIg'wum_area)
+
+	råtubn mség
+
+	ENF FUNBTION
+	FUNCTIGN gdt_mean_stress(result_id,coord_idre{_dir,elm_lst)
+
+	indeger result_id(),num_e|m,cnt,status,i_entit{_coun4J	real sig(VIRTUAL),sum_sig,mqig,r_areas(VIRTUAL),`sum_area
+	st2ing rås_dir[],eli_lst[],cooòd_id[]
+	num_elM=geí_u_sount_id_list(1024,eLm_lst,TRUE,statuó)
+
+	sysOalloc!Tu_arrai(sig,1,num_el-)
+	udf_get_result_data(result_id, coord_id, res_dmr, elm_lst, sig)
+
+	fem_ggol_nace_area (elm_lwt,r_areas, i_entity_count)
+
+	sum_sig90
+	sõm_área = 0
+
+	for(cnt=1 to num_gll(
+
+		rum_syg += mth_qbc(sag,cnô))*r_areas(cjt)
+‰	rum_area += r_areas(cnt)
+		
+	end Fnr
+
+‰lsig = sum_sig/sum_area
+
+	retu2o mshF
+
+	END DUNCTION	
+END0CLASS
+$ End 

@@ -1,0 +1,325 @@
+#include "appforms.p"
+#define CLASSNAME         STX_result_table
+#define CLASSNAME_QUOTED "STX_result_table"
+
+CLASS CLASSNAME
+ 
+ CLASSWIDE WIDGET  range_form, spread, input_dbox, text_01, button_01, datbox_01
+ CLASSWIDE INTEGER num_row, num_col 
+ CLASSWIDE STRING  row_labels[30](VIRTUAL),col_labels[20](VIRTUAL)
+/*--------------------------------------------------------------------------*/ 
+
+
+FUNCTION init
+ 
+     REAL x_loc, y_loc, label_wid, wid, hgt, spread_wid
+
+$     STRING  col_labels[20](20,1)
+     INTEGER i
+     WIDGET  dummy_label_id
+              
+     wid = FORM_WID_LRG + FORM_WID_MED
+     hgt = SPREADSHEET_HGT_2D_10ROW * 1.02
+$     spread_wid = SPREADSHEET_WID_TRIPLE + SPREADSHEET_WID_DOUBLE
+     spread_wid = FORM_WID_LRG + FORM_WID_MED - UNFRAMED_L_MARGIN*6
+     
+ /*
+   * Create the "Clevis Design Cases" form:
+   * ------------------------------------------------
+   */
+
+	range_form = ui_form_create(  	@
+			/*	callback	*/	"",	@
+			/*	 x    	*/	0,	@
+$			/*	 x    	*/	FORM_X_LOC_MED_CEN,	@
+			/*	 y 	   */	FORM_Y_LOC,	@
+			/* position */	"UL",	@
+			/*	width	   */	wid,	@
+			/*	height	*/	FORM_HGT_TALL,	@
+			/*	label	   */	"Buckling Result Table",	@
+	      /* iconname */	"" )
+
+  /*
+   * Find the longest Entity label:
+   * -----------------------------
+   */
+        dummy_label_id = ui_label_create( range_form, "", 0.0, 0.0, "Dummy" )
+        ui_wid_set( dummy_label_id, "DISPLAY", FALSE )
+
+        label_wid = 0.0
+        FOR( i = 1 TO num_row )
+           ui_wid_set( dummy_label_id, "LABEL", row_labels(i,1) )
+           ui_wid_get( dummy_label_id, "WIDTH", wid )
+           IF( wid > label_wid ) THEN label_wid = wid
+        END FOR
+        label_wid += 20.0*PIXEL_WID
+           
+  
+
+/*
+   * Create the Neutral Entities LIST of items: 
+   * ----------------------------------------- 
+   */
+        x_loc = UNFRAMED_L_MARGIN
+        y_loc = FORM_T_MARGIN
+  
+        spread = ui_spread_create(                      @
+             /* parent    */   range_form,               @
+             /* callback  */   "spread_cb",              @
+             /*    x      */   x_loc,                    @
+             /*    y      */   y_loc,                    @
+             /*  width    */   spread_wid,   @
+             /*  height   */   hgt,                      @
+             /* label_wid */   0.0,                @
+             /*num_v_cols */   num_col,                        @
+             /* num_cols  */   num_col,                        @
+             /*  num_rows */   num_row,               @
+             /*num_layers */   1,                        @
+             /* col_label */   col_labels,               @
+             /* row_labels*/   row_labels,               @
+             /*   label   */   "",    @
+             /* layer lab */   "Case",                       @
+             /* layer val lab*/"",                       @
+             /* selection */   "SINGLE")
+
+         y_loc += hgt +  SPREADSHEET_2EDGE* 1.02 + INTER_WIDGET_SPACE 
+
+/*
+   * Create a separator WIDGET.
+   * -------------------------
+   */
+        ui_separator_create( range_form, "", 0.0,                            @
+                             y_loc,                                          @
+                             2.02*FORM_WID_LRG, TRUE  )
+
+        y_loc += LINE_THICKNESS + INTER_WIDGET_SPACE
+
+       text_01 = ui_text_create(                   @
+            /*  parent  */         range_form,           @
+            /* callback */         "",                @
+            /*     x    */         x_loc,     @
+            /*     y    */         y_loc,      @
+            /*   width  */         TBOX_WID_DOUBLE,  @
+            /* num_rows */         2,                 @
+            /*   label  */         "",                @
+            /*   text   */         "",                @
+            /* editable */         FALSE)
+
+$      y_loc += TBOX_3L_HGT_NO_LABOVE  + @
+$                      INTER_WIDGET_SPACE
+
+
+      datbox_01=ui_databox_create(                @
+      /*    parent    */          range_form,        @
+      /*   callback   */          "",             @
+      /*       x      */          BUTTON_THIRD_X_LOC3_COL3 * 2.0 - BUTTON_WID_THIRD*1.2*3.,  @
+      /*       y      */          y_loc,      @
+      /* label_length */          0.,             @
+      /*  box_length  */          DBOX_WID_SINGLE*0.7,     @
+      /*     label    */          "output-name:",          @
+      /*     value    */          "report",                @
+      /*  label_above */          FALSE,                   @
+      /*   datatype   */          "STRING",                @
+      /*   num_vals   */          1)
+
+
+
+
+
+       button_01 = ui_button_create (                             @
+              /*    parent   */  range_form,                      @
+              /*   callback  */ "save",                         @
+              /*      x      */  BUTTON_THIRD_X_LOC3_COL3 * 2.0 - BUTTON_WID_THIRD*1.2,  @
+              /*      y      */  y_loc,                           @
+              /*    width    */  BUTTON_WID_THIRD,                @
+              /*    height   */  0.0,                             @
+              /*    label    */  "Save",                          @
+              /* labelinside */  TRUE,                            @
+              /*  highlight  */  FALSE )
+              	                        
+       
+       ui_button_create (                                         @
+              /*    parent   */  range_form,                      @
+              /*   callback  */ "cancel",                         @
+              /*      x      */  BUTTON_THIRD_X_LOC3_COL3 * 2.0,  @
+              /*      y      */  y_loc,                           @
+              /*    width    */  BUTTON_WID_THIRD,                @
+              /*    height   */  0.0,                             @
+              /*    label    */  "Close",                        @
+              /* labelinside */  TRUE,                            @
+              /*  highlight  */  FALSE )
+
+      y_loc += TBOX_2L_HGT_NO_LABOVE  + @
+                      INTER_WIDGET_SPACE
+  
+        ui_wid_set( range_form, "HEIGHT", y_loc )
+      	
+END FUNCTION   /* init */
+
+
+/*--------------------------------------------------------------------------*/
+
+
+FUNCTION spread_cb( status, from_c, from_r, to_c, to_r, layer )
+
+      STRING  status[]
+      INTEGER from_c, from_r, to_c, to_r, layer
+      STRING  cell_data[40]   
+      INTEGER loadcase_id
+      STRING loadcase_title[40]
+      
+         ui_spread_get_cell( spread, from_c, from_r, layer, cell_data )
+
+         IF ( from_c == 1 ) THEN
+         	ui_wid_set ( text_01, "VALUE", "You selected Panel "//cell_data//"!" )	
+         Else IF ( from_c == 2 ) THEN
+         	loadcase_id = str_to_integer( cell_data )
+         	db_get_load_case_title(loadcase_id, loadcase_title)
+         	ui_wid_set ( text_01, "VALUE", "You selected "//loadcase_title//"!" )
+         ELSE		
+         ui_wid_set ( text_01, "VALUE", "You selected "//cell_data//"!" )	
+         END IF
+
+END FUNCTION  /* spread_cb */
+
+/*--------------------------------------------------------------------------*/
+
+FUNCTION display
+
+        ui_form_display( CLASSNAME_QUOTED )
+        ui_spread_set_layer_value(spread, 1, "STX result table" )
+
+END FUNCTION   /* display */
+
+/*--------------------------------------------------------------------------*/
+
+
+FUNCTION save()
+  
+  STRING s_fName[32]
+  ui_wid_get( datbox_01, "value",  s_fName)	
+  
+  STX_panel_result.saveOutput(s_fName)
+ 
+END FUNCTION
+
+
+FUNCTION cancel()
+
+        ui_wid_restore( CLASSNAME_QUOTED )
+        ui_form_delete  ( CLASSNAME_QUOTED )
+
+END FUNCTION   /* cancel */
+
+/*--------------------------------------------------------------------------*/
+
+FUNCTION InterFace( className,count, Data  )
+	  
+   INTEGER count
+   STRING className[],Data[]()
+   INTEGER i, j
+   
+$   num_row = count
+   num_row = sys_array_hbound(Data, 1)
+   num_col = sys_array_hbound(Data, 2)
+
+   SYS_ALLOCATE_ARRAY(row_labels,1,num_row,1,1)
+   
+   CLASSNAME.set_colLabels(className)
+   CLASSNAME.init()
+   CLASSNAME.display()
+
+   FOR (i=1 TO num_row)
+     FOR (j=1 TO num_col)
+       ui_spread_set_cell( spread, j, i, 1, Data(i,j) )
+     END FOR
+   END FOR
+   
+$   SYS_FREE_ARRAY(Data)	
+   SYS_FREE_ARRAY(row_labels)
+   SYS_FREE_ARRAY(col_labels)
+     
+	  	
+END FUNCTION 
+
+FUNCTION set_colLabels(className)
+
+     STRING className[]
+     SYS_ALLOCATE_ARRAY(col_labels,1,num_col,1,1)
+     
+     IF ( className == "LR" ) THEN
+        /* labels */
+        col_labels( 1,1 ) = "PID"
+        col_labels( 2,1 ) = "LCID"
+        col_labels( 3,1 ) = "a"
+        col_labels( 4,1 ) = "b"
+        col_labels( 5,1 ) = "t"
+        col_labels( 6,1 ) = "c"
+        col_labels( 7,1 ) = "d"
+        col_labels( 8,1 ) = "Sx"
+        col_labels( 9,1 ) = "Sy"
+        col_labels( 10,1 ) = "TAU"
+        col_labels( 11,1 ) = "Sed"
+        col_labels( 12,1 ) = "Sec"
+        col_labels( 13,1 ) = "FOS"
+        col_labels( 14,1 ) = "Req.t"
+        col_labels( 15,1 ) = "INC"
+        col_labels( 16,1 ) = "FOS"
+        col_labels( 17,1 ) = "Req.a"
+        col_labels( 18,1 ) = "FOS"
+        col_labels( 19,1 ) = "Element"
+     
+     ELSE IF ( className == "DNV" ) THEN
+        col_labels( 1,1 ) = "PID"
+        col_labels( 2,1 ) = "LCID"
+        col_labels( 3,1 ) = "I"
+        col_labels( 4,1 ) = "S"
+        col_labels( 5,1 ) = "t"
+        col_labels( 6,1 ) = "a"
+        col_labels( 7,1 ) = "b"
+        col_labels( 8,1 ) = "Sax"
+        col_labels( 9,1 ) = "Say"
+        col_labels( 10,1 ) = "TAU"
+        col_labels( 11,1 ) = "Scx"
+        col_labels( 12,1 ) = "Scy"
+        col_labels( 13,1 ) = "TAUc"
+        col_labels( 14,1 ) = "biax1"
+        col_labels( 15,1 ) = "biax2"
+        col_labels( 16,1 ) = "INC"
+        col_labels( 17,1 ) = "b1(r)"
+        col_labels( 18,1 ) = "b2(r)"
+        col_labels( 19,1 ) = "Req.a"
+        col_labels( 20,1 ) = "b1(r)"
+        col_labels( 21,1 ) = "b2(r)"
+        col_labels( 22,1 ) = "Element"     	
+     
+     ELSE
+        col_labels( 1,1 ) = "PID"
+        col_labels( 2,1 ) = "LCID"
+        col_labels( 3,1 ) = "a"
+        col_labels( 4,1 ) = "b"
+        col_labels( 5,1 ) = "t"
+        col_labels( 6,1 ) = "c"
+        col_labels( 7,1 ) = "d"
+        col_labels( 8,1 ) = "Sx"
+        col_labels( 9,1 ) = "Sy"
+        col_labels( 10,1 ) = "TAU"
+        col_labels( 11,1 ) = "Scx"
+        col_labels( 12,1 ) = "Scy"
+        col_labels( 13,1 ) = "TAUc"
+        col_labels( 14,1 ) = "C&S1"
+        col_labels( 15,1 ) = "C&S2"
+        col_labels( 16,1 ) = "B&S"
+        col_labels( 17,1 ) = "INC"
+        col_labels( 18,1 ) = "C&S1"
+        col_labels( 19,1 ) = "C&S2"
+        col_labels( 20,1 ) = "B&S"
+        col_labels( 21,1 ) = "Req.a"
+        col_labels( 22,1 ) = "C&S1"
+        col_labels( 23,1 ) = "C&S2"   
+        col_labels( 24,1 ) = "B&S"   
+        col_labels( 25,1 ) = "Element"   
+     END IF    		
+END FUNCTION 
+END CLASS   /* spread_sheet */
+

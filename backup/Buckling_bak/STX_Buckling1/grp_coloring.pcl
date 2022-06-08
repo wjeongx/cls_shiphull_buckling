@@ -1,0 +1,19 @@
+FUNCTION grp_coloring()
+
+	STRING  grpList[50](VIRTUAL)
+	INTEGER numGrp, i,j
+
+	ga_group_ngroups_get( numGrp )   
+	sys_allocate_array( grpList, 1, numGrp)
+	ga_group_groups_get( grpList )
+   
+   j=0
+   FOR ( i=1 to numGrp )
+     j += 1
+     IF ( j == 16 ) THEN j=1
+     ga_group_color_set( grpList(i), j ) 
+   END FOR
+   
+   coloring_method( 2 )
+
+END FUNCTION

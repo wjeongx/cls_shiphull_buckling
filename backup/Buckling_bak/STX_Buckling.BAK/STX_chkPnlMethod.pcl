@@ -1,0 +1,121 @@
+#include "appforms.p"
+
+#define CLASSNAME         STX_chkPnlMethod
+#define CLASSNAME_QUOTED "STX_chkPnlMethod"
+
+#define AUTO             "STX_chkPnlAuto"
+#define MANUAL           "STX_chkPnlManual"
+#define SEMI             "STX_chkPnlArea"
+
+CLASS CLASSNAME
+$STX_chkPnlMeth
+
+/* Classwide Variables */
+   CLASSWIDE WIDGET form_id, optmenu_01, item_01, item_02, item_03
+   CLASSWIDE STRING previous_action[40] ,current_loadcase[32]
+   CLASSWIDE WIDGET frame_01, button_loadcase,  label_02, label_03
+   CLASSWIDE WIDGET sep_01
+   CLASSWIDE REAL max_y_loc
+   
+
+   FUNCTION init()
+      REAL yloc_main
+      previous_action = SEMI   /* initial */
+      REAL yloc_frame_01=0.
+      
+      form_id=ui_form_create(                         @
+      /* callback */         "",                      @
+      /*     x    */         FORM_X_LOC_SML,          @
+      /*     y    */         FORM_Y_LOC,              @
+      /* position */         "UL",                    @
+      /*   width  */         FORM_WID_SML,            @
+      /*  height  */         FORM_HGT_FULL,           @
+      /*   label  */         "Check Panel",  @
+      /*  unused  */         "")
+
+      yloc_main = FORM_T_MARGIN
+
+
+      optmenu_01=ui_optionmenu_create(                @
+      /*    parent    */              form_id,        @
+      /*   callback   */              "On_Action",    @
+      /*       x      */              FORM_L_MARGIN,  @
+      /*       y      */              yloc_main,      @
+      /* label_length */              0.69999999,     @
+      /*     label    */              "Method:",      @
+      /*  label_above */              FALSE)
+
+      yloc_main += OPT_MENU_HGT_NO_LABOVE  + @
+                   INTER_WIDGET_SPACE
+
+      item_02=ui_item_create(               @
+      /*   parent   */       optmenu_01,    @
+      /*    name    */       SEMI,  @
+      /*    label   */       "Semi Auto-Panel",      @
+      /* toggleable */       TRUE)
+      
+      item_01=ui_item_create(             @
+      /*   parent   */       optmenu_01,  @
+      /*    name    */       AUTO,  @
+      /*    label   */       "Auto-Panel",      @
+      /* toggleable */       TRUE)
+
+      
+      
+      item_03=ui_item_create(               @
+      /*   parent   */       optmenu_01,    @
+      /*    name    */       MANUAL,  @
+      /*    label   */       "Manual-Panel",      @
+      /* toggleable */       TRUE)
+
+      ui_wid_set( form_id, "HEIGHT", FORM_HGT_FULL )
+      
+      max_y_loc = yloc_main
+
+   END FUNCTION /* init */
+
+FUNCTION display()
+      ui_form_display(CLASSNAME_QUOTED)
+      CLASSNAME.On_Action(previous_action)
+END FUNCTION /* display */
+
+FUNCTION On_Action(name)
+/*
+ * This is a callback for the optionmenu named optmenu_01
+ */
+      STRING  name[]
+      
+
+      IF( name != previous_action ) THEN
+         ui_exec_function( previous_action, "exit")
+         
+      END IF
+      ui_exec_function( name, "display")
+      previous_action = name
+      
+
+END FUNCTION /* On_Action */
+
+
+   FUNCTION get_yloc_main()
+
+       return max_y_loc
+
+   END FUNCTION /* get_yloc_main */
+
+
+
+   FUNCTION get_form_id()
+   
+/*
+ * Return the widget id for the form
+ */
+
+      RETURN form_id
+
+   END FUNCTION
+   
+   
+  
+
+END CLASS /* action */

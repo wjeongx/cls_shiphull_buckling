@@ -1,0 +1,284 @@
+#define cell_hgt 0.453
+#include "appforms.p"
+
+CLASS UI_InputDataView
+
+classwide widget mform, ss_id, btn_Apply, btn_Exit, Input_dbox
+        
+FUNCTION init()
+
+real y_loc = 0.
+
+mform = ui_form_create(	      /* callback */		"",							@
+						      /*     x    */		FORM_X_LOC_MED,			@
+							/*     y    */		FORM_Y_LOC_HALF_CEN,		@
+							/* position */		"UL",						@
+							/*   width  */         FORM_WID_MED * 1.02*1.5,		@
+							/*  height  */         FORM_HGT_TALL,			@
+							/*   label  */         "Load Combination Factor",		@
+							/*  unused  */         "")						
+
+y_loc += FORM_T_MARGIN
+
+      Input_dbox =ui_databox_create(                    @
+      /*    parent    */                    mform,        @
+      /*   callback   */                    "input_box",                 @
+      /*       x      */                    FORM_L_MARGIN,      @
+      /*       y      */                    y_loc,   @
+      /* label_length */                    0.0,                 @
+      /*  box_length  */                   DBOX_WID_SINGLE,         @
+      /*     label    */                    "Input New Value",  @
+      /*     value    */                    "",              @
+      /*  label_above */                    FALSE,              @
+      /*   datatype   */                    "STRING",           @
+      /*   num_vals   */                    1)
+
+
+y_loc += DBOX_HGT_NO_LABOVE + @
+              INTER_WIDGET_SPACE
+
+
+y_loc += SPREADSHEET_LABEL_HGT + @
+		 cell_hgt * 20 + @
+              INTER_WIDGET_SPACE
+
+       btn_Apply = ui_button_create(               @
+      /* parent         */  mform,                   @
+      /* callback       */  "cb_Apply",            @
+      /* x position     */  BUTTON_HALF_X_LOC1,          @
+      /* y position     */  y_loc,                       @
+      /* width          */  BUTTON_WID_HALF,             @
+      /* auto size      */  0,                           @
+      /* label          */  "Apply",       @
+      /* label inside   */  TRUE,                        @
+      /* default        */  FALSE )
+
+        btn_Exit           = ui_button_create(               @
+      /* parent         */  mform,                   @
+      /* callback       */  "cb_exit",            @
+      /* x position     */  BUTTON_HALF_X_LOC2,          @
+      /* y position     */  y_loc,                       @
+      /* width          */  BUTTON_WID_HALF,             @
+      /* auto size      */  0,                           @
+      /* label          */  "Exit",       @
+      /* label inside   */  TRUE,                        @
+      /* default        */  FALSE )
+      
+y_loc += BUTTON_DEFAULT_HGT +  @
+              INTER_WIDGET_SPACE
+
+$ wid = FORM_L_MARGIN + SPREADSHEET_WID_DOUBLE + FORM_R_MARGIN
+
+      ui_wid_set(mform, "HEIGHT", y_loc)
+     
+END FUNCTION
+
+FUNCTION display()
+
+    ui_form_display("UI_InputDataView")
+    UI_InputDataView.Read_Input_Data()
+        
+END FUNCTION
+
+FUNCTION cb_exit()
+
+    ui_form_hide("UI_InputDataView")
+    ui_form_delete("UI_InputDataView")
+
+END FUNCTION
+
+FUNCTION Read_Input_Data()
+    
+    	integer f_id, i_tmp
+        real r_tmp
+        string s_tmp[7]
+        string fname[64]
+
+        widget dbox
+        dbox = sys_class_get("Buckling","dbox_file")
+        ui_wid_get(dbox, "VALUE", fname)
+    	text_open( fname, "or", 0, 0, f_id)
+    	
+    	integer npanel, nloadcase
+    	
+        text_read(f_id, "%I%", npanel, r_tmp, s_tmp)
+        text_read(f_id, "%I%", nloadcase, r_tmp, s_tmp)
+        
+        integer cols = 13
+        integer rows
+        
+        rows = npanel*nloadcase
+         
+        integer i_value(virtual)
+        sys_allocate_array(i_value, 1, rows, 1, 2)
+        
+        real r_value(virtual)
+        sys_allocate_array(r_value, 1, rows, 1, 11)
+        
+        string ElementList[2048](virtual)
+        sys_allocate_array(ElementList, 1, rows)
+        
+        string row_labels[11](virtual)
+        sys_allocate_array(row_labels, 1, rows)
+        
+        string col_labels[11](13)
+ 
+        col_labels(1) = "LID"
+        col_labels(2) = "span-l"
+        col_labels(3) = "space-s"
+        col_labels(4) = "yield"
+        col_labels(5) = "thick."
+        col_labels(6) = "t_cor."
+        col_labels(7) = "hole-a"
+        col_labels(8) = "hole-b"
+        col_labels(9) = "sig_xx"
+        col_labels(10) = "sig_yy"
+        col_labels(11) = "tau_xy"
+        col_labels(12) = "SIGMA_H"
+        col_labels(13) = "Elements"
+        
+    	integer count = 0
+        integer idx, idz, string_length
+        
+        string BucklingInput[2048](virtual)
+        sys_allocate_array(BucklingInput,1,13,1,rows)
+                                        
+        for(idx=1 to npanel)
+            for(idz=1 to nloadcase)
+                count +=1
+    			text_read(f_id, "%2I%%11F%", i_value(count,1:2), r_value(count,1:11), s_tmp)
+                text_read_string(f_id, ElementList(count), string_length)
+                
+                row_labels(count) =  str_from_integer(i_value(count, 1))
+                
+                BucklingInput(1, count) = str_from_integer(i_value(count,2))
+                BucklingInput(2, count) = str_from_real(r_value(count,1))
+                BucklingInput(3, count) = str_from_real(r_value(count,2))
+                BucklingInput(4,count) = str_from_real(r_value(count,3))
+                BucklingInput(5,count) = str_from_real(r_value(count,4))
+                BucklingInput(6,count) = str_from_real(r_value(count,5))
+                BucklingInput(7,count) = str_from_real(r_value(count,6))
+                BucklingInput(8,count) = str_from_real(r_value(count,7))
+                BucklingInput(9,count) = str_from_real(r_value(count,8))
+                BucklingInput(10,count) = str_from_real(r_value(count,9))
+                BucklingInput(11,count) = str_from_real(r_value(count,10))
+                BucklingInput(12,count) = str_from_real(r_value(count,11))
+                BucklingInput(13,count) = ElementList(count)
+    		end for
+        end for
+
+    	text_close(f_id, "")
+        
+        integer sheet_height
+        
+        sheet_height = cell_hgt * 20
+            
+        ss_id = ui_spread_create( /* parent       */  mform,						@
+						      /* callback       */	"spread_cb",							@
+						      /* x position     */	FORM_L_MARGIN,			@
+						      /* y position     */	DBOX_HGT_NO_LABOVE + INTER_WIDGET_SPACE,						@
+						      /* width          */	SPREADSHEET_WID_DOUBLE*1.5,	@
+						      /* height         */	sheet_height,			@
+						      /* label_width    */	80. * PIXEL_WID,							@
+						      /* num_vis_cols   */	cols,						@
+						      /* num_cols       */	cols,						@
+						      /* num_rows       */	rows,						@
+						      /* num_layers     */	1,							@
+						      /* col_labels     */	col_labels,					@
+						      /* row_labels     */	row_labels,					@
+						      /* label          */  "Buckling Input Data",		@
+						      /* layer_label    */  "",							@
+						      /* layer_val_label*/  "",							@
+						      /* selection_type */  "EXTEND" )
+                              
+        ui_spread_set_cells(ss_id, 1, 1, 13, rows, 1, BucklingInput )
+
+END FUNCTION
+
+/*    
+FUNCTION Read_Input_Data()
+
+	integer f_id, i_tmp
+    real r_tmp
+    string s_tmp[7]
+    
+	text_open( "input.dat", "or", 0, 0, f_id)
+	
+	integer npanel, nloadcase
+	
+    text_read(f_id, "%I%", npanel, r_tmp, s_tmp)
+    text_read(f_id, "%I%", nloadcase, r_tmp, s_tmp)
+    
+    integer idx, idz, i_value(2), string_length
+    real r_value(9)
+    string ElementList[2048]
+            
+	integer count = 0
+    for(idx=1 to npanel)
+        for(idz=1 to nloadcase)
+			text_read(f_id, "%2I%%9F%", i_value, r_value, s_tmp)
+            text_read_string(f_id, ElementList, string_length)
+            count +=1
+            ui_spread_row_create(ss_id, str_from_integer(i_value(1)))
+
+            ui_spread_set_cell(ss_id, 1 ,count, 1, str_from_integer(i_value(2)))
+            ui_spread_set_cell(ss_id, 2 ,count, 1, str_from_real(r_value(1)))
+            ui_spre!d_set_cell8ssid,(3 ,cou~t, 1, str_from_rual(r_value(2)))
+            ui_stread_se|_cell(ssWid, 4 ,gount, 1< str_&romWreal(r_v`lue(3)))
+ !          ui_spread_set_ce,l(ss_it, 5 ,coq~t, 1,$str_fòomreal*r_vAlue(4)	i
+            ui_spread_set_cell(ss_id, 6 ¬count, 1, str_frgm_òeal(r_val}e(5)))
+            ui_vtraad_set_cell ss_id, 7 ,count, 1, str_from_real(r]valUe(6))9
+            ui_spreadOset_cell(ss]id, 8 ,count, 5, str_vrom_rdal(r_value(7))k
+           (ui_spread_set_cell(ss_id, 9 ,count 1, strWfrom_real(r_value(8)))
+  `         ui_spread_set_cel|¨ws_id, 10 ,ckunt, 1, str^fòom_real(r_válwe(9)))Š          ( ui_sqvead_sat_cEll,ss_id, 11 (counô, 1, AlementListi
+		end"fr
+ 0! end for
+		M
+	text_close(f_id, " )
+		
+DFD BUCTION
+*/
+
+FUNCTION spread]cb(státus, from_C, &rom_r, tm_c< to_r,$layer)
+	{tri.g statusK]
+	integer &romßc, from_r, to_c< to_r, laqer
+	string bell_data[40]
+	
+	iæ( (f2om_c == to_c)"&& hfrom_r == to_r)) then
+		ui_spread]get_cellss_id, fromOc, from_r, 1, celn_tata)
+		ui_widset(input_dbox, "öalue", cåll_data)
+	else
+		ui_wad_set(input_dboh, "value", " ")	end if
+	
+ÅND FUNCTION /* spread_cb */
+FUNCTYON input_box(falue)
+sôring vanuí[intewer i, j
+$stri.g"data
+strinG cell_da|a[40]
+ildegmr0from_coì, from_row, to_col¬ 4o_row, laxer
+õé_sprea$_get^celected(ss_id, fro-_bol, from_row, to_col<$to_rOw, layer)
+
+if¨value == "GB"	 th%n
+	uiwid_get(inptt_djoy, "Value", cell_data)
+	$celm_data = stR_from_real(data)
+	$cel|_data  data
+	for¨ i= from_col to$to_col)
+		fnr( j = &rom_row to to_row)
+			ui_spread_set_cell(ss_id, i, j, layer,!cell_data)
+		end for
+	e.d forŠend ib
+
+END!FUNCTIO^ /* input box */
+
+
+FÕNCTION cb_Apply()
+
+wi^form_hide("UI_InputDauaVIewB)
+ui_form^delete("UI_MnputDataView")
+    
+ELD FUCTION  /* cbßapply */
+*FUNCTION Write_Inxut_Data(!
+
+END FUNCTION
+
+END"ALASS

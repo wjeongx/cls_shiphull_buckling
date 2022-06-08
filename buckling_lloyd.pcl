@@ -1,0 +1,1061 @@
+/*
+ usr_inform(1) = 1.0      edge a constraint
+ usr_inform(2) = 1.0      edge b constraint
+ usr_inform(3) = 0.       corrosion margin
+ usr_inform(4) = 235.     yield stress
+ usr_inform(5) = 0.       hole factor : c
+ usr_inform(6) = 0.       hole factor : d
+ usr_inform(7) = 0.       hull girder stress
+ usr_inform(8) = 999.     safety factor TO be
+ usr_inform(9) = 1.       corrosion margin
+
+ pnl_inform(i,1)  = 1      panel id
+ pnl_inform(i,2)  = 10.    load CASE id
+ pnl_inform(i,3)  = 4060.  a
+ pnl_inform(i,4)  = 1000.  b
+ pnl_inform(i,5)  = 0.     thickness
+ pnl_inform(i,6)  = 0.     c
+ pnl_inform(i,7)  = 0.     d
+ pnl_inform(i,8)  = 0.     sigma x
+ pnl_inform(i,9)  = 0.     sigma y
+ pnl_inform(i,10) = 0.     TAU
+ pnl_inform(i,11) = 0.     SIGMA_H
+
+ buckling_results(i,1) = sigma ed
+ buckling_results(i,2) = sigma ec
+ buckling_results(i,3) = safety factor
+ buckling_results(i,4) = req. t
+ buckling_results(i,5) = ratio
+ buckling_results(i,6) = safety factor recalculated
+*/
+
+CLASS STX_buckling_lloyd
+ CLASSWIDE REAL     usr_inform(9), pnl_inform(VIRTUAL)
+ CLASSWIDE INTEGER  pnl_count, loadcase_count, org_pnl_count
+ CLASSWIDE STRING   elm_list[2048](VIRTUAL)
+ CLASSWIDE REAL     a, b, thickness, bc_fac_a, bc_fac_b, coa, SIGMA_o, c, d, SIGMA_H
+ CLASSWIDE REAL     SIGMA_x, SIGMA_xb, SIGMA_y, SIGMA_yb, TAU
+ CLASSWIDE REAL     SIGMA_ed, SIGMA_ec, safety_factor, buckling_results(VIRTUAL)
+ CLASSWIDE REAL     alpha
+ CLASSWIDE INTEGER  status
+ CLASSWIDE STRING   s_resTitle[64](VIRTUAL)
+
+
+FUNCTION main()
+
+ INTEGER i
+ REAL    t_tobe
+ INTEGER r_count = 1
+ REAL    req_a, ini_a
+
+
+ status = STX_buckling_lloyd.read_data()
+
+ IF ( status != 0 ) THEN
+      RETURN
+ END IF
+
+ SYS_ALLOCATE_ARRAY( buckling_results, 1, pnl_count, 1, 8)
+
+ FOR ( i=1 TO pnl_count )
+
+      ui_writec( "Buckling calculation Status : %d/%d",i,pnl_count)
+
+      a         = pnl_inform(i,3)
+      b         = pnl_inform(i,4)
+      thickness = pnl_inform(i,5)
+
+      bc_fac_a  = usr_inform(1)
+      bc_fac_b  = usr_inform(2)
+      coa       = usr_inform(3)
+      SIGMA_o   = usr_inform(4)
+      c         = pnl_inform(i,6)
+      d         = pnl_inform(i,7)
+
+      SIGMA_x   = pnl_inform(i,8)
+      SIGMA_xb  = 0.
+      SIGMA_y   = pnl_inform(i,9)
+      SIGMA_yb  = 0.
+      TAU       = pnl_inform(i,10)
+      SIGMA_H   = pnl_inform(i,11)
+
+      SIGMA_ed      = 0.
+      SIGMA_ec      = 0.
+      safety_factor = 0.
+      t_tobe        = 0.
+
+      status = STX_buckling_lloyd.calculation()
+
+      IF ( status != 0 ) THEN
+           write("WARNING : Buckling calculation (panel "//str_from_integer(i)//")")
+      ELSE
+
+           buckling_results(i, 1) = SIGMA_ed
+           buckling_results(i, 2) = SIGMA_ec
+           buckling_results(i, 3) = safety_factor
+
+           IF ( usr_inform(5) != 0. ) THEN
+
+                IF ( usr_inform(5) > safety_factor ) THEN
+
+                    $ increase thickness
+                     status = STX_buckling_lloyd.iteration(i, t_tobe)
+                     IF ( status != 0 ) THEN
+                          write("WARNING : Iteration (panel "//str_from_integer(i)//")")
+                     ELSE
+                          buckling_results(i, 4) = t_tobe
+                          buckling_results(i, 5) = t_tobe - pnl_inform(i,5) + usr_inform(3)
+
+                          status = STX_buckling_lloyd.recalculation(i, t_tobe)
+                          IF ( status != 0 ) THEN
+                               write("WARNING : Buckling recalculation (panel "//str_from_integer(i)//")")
+                          END IF
+
+                          buckling_results(i, 6) = safety_factor
+                     END IF
+
+                    $ reduce a
+                     ini_a = a
+                     r_count = 1
+
+                     REPEAT
+                          req_a = ini_a/(r_count+1.)
+                          a = req_a
+                          b         = pnl_inform(i,4)
+                          thickness = pnl_inform(i,5)
+
+                          bc_fac_a  = usr_inform(1)
+                          bc_fac_b  = usr_inform(2)
+                          coa       = usr_inform(3)
+                          SIGMA_o   = usr_inform(4)
+                          c         = pnl_inform(i,6)
+                          d         = pnl_inform(i,7)
+
+                          SIGMA_x   = pnl_inform(i,8)
+                          SIGMA_xb  = 0.
+                          SIGMA_y   = pnl_inform(i,9)
+                          SIGMA_yb  = 0.
+                          TAU       = pnl_inform(i,10)
+                          SIGMA_H   = pnl_inform(i,11)
+
+                          STX_buckling_lloyd.calculation()
+
+                          r_count += 1
+
+                          IF ( r_count > 20 ) THEN
+                               write("WARNING : Dimishing a (panel "//str_from_integer(i)//")")
+                               BREAK
+                          END IF
+
+                     UNTIL  ( usr_inform(5) < safety_factor )
+
+                     buckling_results(i, 7) = req_a
+                     buckling_results(i, 8) = safety_factor
+
+                END IF
+
+           END IF
+
+      END IF
+
+ END FOR
+
+ status = STX_buckling_lloyd.write_data()
+ IF ( status != 0 ) THEN
+      write("WARNING : Write output file.")
+      RETURN
+ END IF
+
+
+ status = STX_buckling_lloyd.write_template_import()
+ IF ( status != 0 ) THEN
+      write("WARNING : Write output template file.")
+      RETURN
+ END IF
+
+ write("Buckling Assessment is completed successfully.")
+
+ RETURN 0
+END FUNCTION
+
+FUNCTION recalculation(i, t_tobe)
+ INTEGER i
+ REAL    t_tobe
+
+ SIGMA_x = pnl_inform(i,8) * pnl_inform(i,5)/t_tobe
+ SIGMA_y = pnl_inform(i,9) * pnl_inform(i,5)/t_tobe
+ TAU     = pnl_inform(i,10)* pnl_inform(i,5)/t_tobe
+
+ thickness = t_tobe
+ status = STX_buckling_lloyd.calculation()
+
+ IF ( status != 0 ) THEN RETURN -1
+
+ RETURN 0
+
+END FUNCTION
+
+
+FUNCTION iteration(j, tcroot)
+ REAL     safety_factor_tobe, coa_tobe
+ REAL     ini_t, ini_coa, ini_sigx, ini_sigxb, ini_sigy, ini_sigyb, ini_tau
+ REAL     ini_thick, fos1, sec_t, coa2, fos2, dx, tcroot, coaroot, fosroot
+ REAL     tc
+ INTEGER  i, j, maxit
+
+ safety_factor      = buckling_results(j,3)
+ safety_factor_tobe = usr_inform(5)
+ coa_tobe           = usr_inform(3)
+
+ alpha = a/b
+
+
+ $secant algorithm
+ maxit = 10000
+ tc = pnl_inform(j,5)
+
+ ini_thick = tc
+ ini_coa   = usr_inform(3)
+ ini_sigx  = pnl_inform(j,8)
+ ini_sigxb = SIGMA_xb
+ ini_sigy  = pnl_inform(j,9)
+ ini_sigyb = SIGMA_yb
+ ini_tau   = pnl_inform(j,10)
+
+$initial value
+$attention---iteration depend on initial value.
+ ini_t = 3.
+
+ SIGMA_x  = ini_sigx  * (ini_thick) / (ini_t)
+ SIGMA_xb = ini_sigxb * (ini_thick) / (ini_t)
+ SIGMA_y  = ini_sigy  * (ini_thick) / (ini_t)
+ SIGMA_yb = ini_sigyb * (ini_thick) / (ini_t)
+ TAU      = ini_tau   * (ini_thick) / (ini_t)
+
+ thickness = ini_t
+ coa       = coa_tobe
+
+ status = STX_buckling_lloyd.calculation()
+ IF ( status != 0 ) THEN RETURN -1
+ fos1  = safety_factor
+ fos1 -= safety_factor_tobe
+
+ sec_t = tc
+ coa2  = ini_coa
+ fos2  = buckling_results(j,3) - safety_factor_tobe
+
+ FOR ( i = 1 TO maxit ) loop_b
+
+      IF (mth_abs(fos2 - fos1) < mth_abs(fos2) * 0.000001) Then
+           $DUMP "Flat spot in curve"
+           RETURN -1
+      ELSE
+
+           dx = (sec_t - ini_t) * fos2 / (fos2 - fos1)
+           tc = sec_t - dx
+
+           IF (mth_abs(dx) < mth_abs(sec_t) * 0.00001) Then
+                BREAK loop_b
+           ELSE
+
+              ini_t = sec_t
+              sec_t = tc
+
+              SIGMA_x  = ini_sigx  * (ini_thick) / (sec_t)
+              SIGMA_xb = ini_sigxb * (ini_thick) / (sec_t)
+              SIGMA_y  = ini_sigy  * (ini_thick) / (sec_t)
+              SIGMA_yb = ini_sigyb * (ini_thick) / (sec_t)
+              TAU      = ini_tau   * (ini_thick) / (sec_t)
+
+              fos1 = fos2
+
+              thickness = sec_t
+              coa       = coa_tobe
+
+              status = STX_buckling_lloyd.calculation()
+              IF ( status != 0 ) THEN RETURN -1
+
+              fos2 = safety_factor
+              fos2 -= safety_factor_tobe
+
+           END IF
+
+      END IF
+
+      IF (i == maxit) THEN
+           DUMP "i=imax"
+      END IF
+
+ END FOR
+
+ tcroot  = tc
+ coaroot = coa_tobe
+
+ SIGMA_x  = ini_sigx  * (ini_thick) / (tcroot)
+ SIGMA_xb = ini_sigxb * (ini_thick) / (tcroot)
+ SIGMA_y  = ini_sigy  * (ini_thick) / (tcroot)
+ SIGMA_yb = ini_sigyb * (ini_thick) / (tcroot)
+ TAU      = ini_tau   * (ini_thick) / (tcroot)
+
+ thickness = tcroot
+ coa       = coaroot
+ status = STX_buckling_lloyd.calculation()
+ IF (status != 0 ) THEN RETURN -1
+ fosroot = safety_factor
+
+ RETURN 0
+
+END FUNCTION
+
+
+
+
+FUNCTION calculation()
+
+ REAL     R_x, R_xb, R_y, R_yb, R_s
+ REAL     p
+ INTEGER  j = 0, nmax, i
+ REAL     K1, K2, X1, X2, ER, Fx, DFx
+ INTEGER  opt
+ REAL     tmp
+
+ alpha = a/b
+
+ IF ( coa > 0 ) THEN
+      STX_buckling_lloyd.consider_corrosion_margine()
+ END IF
+
+ SIGMA_x += SIGMA_H
+
+$ Get Rx, Rxb, Ry, Ryb, Rs
+ status = STX_buckling_lloyd.get_R( SIGMA_x, 1, R_x )
+ IF ( status != 0 ) THEN
+      DUMP "error in Rx"
+      RETURN -1
+ END IF
+
+ status = STX_buckling_lloyd.get_Rb( SIGMA_xb, 1, R_xb )
+ IF ( status != 0 ) THEN
+      DUMP "error in Rxb"
+      RETURN -1
+ END IF
+
+ status = STX_buckling_lloyd.get_R( SIGMA_y, 2, R_y )
+ IF ( status != 0 ) THEN
+      DUMP "error in Ry"
+      RETURN -1
+ END IF
+
+ status = STX_buckling_lloyd.get_Rb( SIGMA_yb, 2, R_yb )
+ IF ( status != 0 ) THEN
+      DUMP "error in Ryb"
+      RETURN -1
+ END IF
+
+ status = STX_buckling_lloyd.get_R( TAU,     3, R_s )
+ IF ( status != 0 ) THEN
+      DUMP "error in Rs"
+      RETURN -1
+ END IF
+
+ SIGMA_x += SIGMA_xb
+ SIGMA_y += SIGMA_yb
+ STX_buckling_lloyd.get_sigma_ed()
+
+ STX_buckling_lloyd.get_p( p )
+
+ IF ( SIGMA_x != 0. &&  SIGMA_y != 0 && TAU != 0. ) THEN opt = 1
+ IF ( SIGMA_x != 0. &&  SIGMA_y != 0 && TAU == 0. ) THEN opt = 2
+ IF ( SIGMA_x == 0. &&  SIGMA_y == 0 && TAU != 0. ) THEN opt = 3
+ IF ( SIGMA_x != 0. &&  SIGMA_y == 0 && TAU != 0. ) THEN opt = 4
+ IF ( SIGMA_x == 0. &&  SIGMA_y != 0 && TAU != 0. ) THEN opt = 5
+$ DUMP SIGMA_x
+$ DUMP R_x
+$ DUMP SIGMA_y
+$ DUMP R_y
+$ DUMP TAU
+$ DUMP R_s
+ SWITCH ( opt )
+      CASE (1)
+           $DUMP "CASE 1"
+           IF ( alpha < 0.3 || alpha >= 3.5 ) THEN
+                tmp = ( R_x**2. + R_xb**2. + R_y**2. + R_yb**2. + R_s**2.)**(1./2.)
+                IF ( tmp != 0 ) THEN
+                     SIGMA_ec = SIGMA_ed / tmp
+                ELSE
+                     RETURN -1
+                END IF
+           ELSE
+                IF ( R_x  < 0. && mth_mod(p, 1.) != 0. ) THEN RETURN -1
+                IF ( R_y  < 0. && mth_mod(p, 1.) != 0. ) THEN RETURN -1
+
+               $ Newton-Rapson Method
+                nmax = 50
+                K1 = R_xb**2. + R_yb**2. + R_s**2.
+                K2 = R_x**p + R_y**p
+                X1 = 1
+                j = 0
+
+                REPEAT
+                     j += 1
+                     Fx  = K1*(X1**2.) + K2*(X1**p) - 1.
+                     DFx = 2.*K1*X1 + p*K2*(X1**(p-1.))
+                     X2 = X1 - Fx / DFx
+                     ER = mth_abs( X2/X1 - 1. )
+                     X1 = X2
+                UNTIL ( ER <= 0.0001 || j >= nmax )
+
+                SIGMA_ec = SIGMA_ed * X2
+
+           END IF
+      CASE (2)
+           $DUMP "CASE 2"
+           SIGMA_ec = SIGMA_ed / ( R_x**p + R_y**p )**(1./p)
+      CASE (3)
+           $DUMP "CASE 3"
+           SIGMA_ec = SIGMA_ed / ( R_xb**2. + R_yb**2. + R_s**2.)**(1./2.)
+      CASE (4)
+           $DUMP "CASE 4"
+           SIGMA_ec = SIGMA_ed * ( ( -R_x + mth_sqrt( R_x**2.+4.*(R_xb**2.+R_s**2.) ) ) / (2.*(R_xb**2.+R_s**2.)) )
+      CASE (5)
+           $DUMP "CASE 5"
+           SIGMA_ec = SIGMA_ed * ( ( -R_y + mth_sqrt( R_y**2.+4.*(R_yb**2.+R_s**2.) ) ) / (2.*(R_yb**2.+R_s**2.)) )
+ END SWITCH
+
+ IF ( SIGMA_ec > 0.5*SIGMA_o ) THEN
+      SIGMA_ec = SIGMA_o * ( 1. - SIGMA_o/(4*SIGMA_ec) )
+ END IF
+
+ safety_factor = SIGMA_ec / SIGMA_ed
+
+ RETURN 0
+
+END FUNCTION
+
+FUNCTION write_template_import()
+ STRING  fname[1024]
+ INTEGER fids(VIRTUAL), i_data(2), nwidth
+ REAL    r_data(9)
+ INTEGER elem_count
+ INTEGER elem_ids(VIRTUAL)
+ INTEGER i, j, k, l,nid(VIRTUAL)
+ INTEGER loadcase_ids(VIRTUAL)
+ STRING  loadcase_lbs[80](VIRTUAL)
+ STRING  lc_lb[80]
+ STRING  group_name[80]
+
+ SYS_ALLOCATE_ARRAY( loadcase_ids, 1, pnl_count )
+
+ FOR ( i=1 TO pnl_count )
+      loadcase_ids(i) = pnl_inform(i,2)
+ END FOR
+ ga_group_current_get ( group_name )
+
+ mth_sort(loadcase_ids, TRUE, loadcase_count)
+ SYS_ALLOCATE_ARRAY( loadcase_lbs, 1, loadcase_count )
+ SYS_ALLOCATE_ARRAY( fids, 1, loadcase_count )
+ SYS_ALLOCATE_ARRAY( s_resTitle, 1, loadcase_count )
+
+ FOR ( i=1 TO loadcase_count )
+      db_get_load_case_title( loadcase_ids(i), loadcase_lbs(i) )
+      lc_lb = loadcase_lbs(i)
+      str_blank_to_underscore(lc_lb)
+      file_build_fname("./","buckling_"//lc_lb,"els","N",fname)
+      text_open(fname, "NOW",0,0,fids(i))
+
+      nwidth  = 9
+
+      s_resTitle(i) = "Buckling(LLOYD) : "//loadcase_lbs(i)//" : "//group_name
+      text_write_string(fids(i),s_resTitle(i))
+      text_write (fids(i),"%I5%",nwidth,1.,"")
+      text_write_string(fids(i),"Subtitle 1:")
+      text_write_string(fids(i),"Subtitle 2:")
+
+ END FOR
+
+
+ FOR ( i = 1 TO pnl_count )
+
+      r_data(1) = pnl_inform(i, 5)
+      r_data(2) = pnl_inform(i, 8)
+      r_data(3) = pnl_inform(i, 9)
+      r_data(4) = pnl_inform(i, 10)
+      r_data(5) = buckling_results(i, 1)
+      r_data(6) = buckling_results(i, 2)
+      r_data(7) = buckling_results(i, 3)
+      r_data(8) = buckling_results(i, 5)
+      r_data(9) = buckling_results(i, 7)
+
+      FOR ( j=1 TO loadcase_count )
+           IF ( pnl_inform(i,2) == loadcase_ids(j) ) THEN
+                BREAK
+           END IF
+      END FOR
+$ avoid zero result
+      FOR ( l=1 TO 9 )
+         IF( r_data(l) == 0. ) THEN   r_data(l)=0.0000001
+      END FOR	
+
+      get_ids_from_entity_list( elm_list(i), "ELEMENT", elem_count, elem_ids )
+
+      FOR ( k=1 TO elem_count )
+
+           i_data(1) = elem_ids(k)
+           db_get_elem_nodes( elem_ids(k), i_data(2), nid )
+
+           text_write(fids(j),"%2I8%%N%%6E13.7%%N%%3E13.7%",i_data,r_data,"")
+
+      END FOR
+
+      SYS_FREE_ARRAY(elem_ids)
+      elem_count = 0
+
+ END FOR
+
+
+
+
+INTEGER i_CntSubID, i_lcID, ia_CntSubID(VIRTUAL), ia_subID(VIRTUAL), ia_lcID(VIRTUAL)
+INTEGER ia_DBLabel(VIRTUAL), ia_DBLabel2(VIRTUAL), ia_labels(VIRTUAL)
+
+ SYS_ALLOCATE_ARRAY(ia_subID,1,loadcase_count) 	
+ SYS_ALLOCATE_ARRAY(ia_lcID, 1,loadcase_count) 	
+ SYS_ALLOCATE_ARRAY(ia_labels, 1,loadcase_count*2)
+ 
+ FOR ( i=1 TO loadcase_count )
+      text_close(fids(i)," ")
+
+      lc_lb = loadcase_lbs(i)
+      str_blank_to_underscore(lc_lb)
+      resold_import_results("./buckling_"//lc_lb//".els", "E", 1E-08, "./lloyd_buckling.res_tmpl")
+      
+      db_get_load_case_id (s_resTitle(i),i_lcID)
+      res_utl_get_subcases(i_lcID, i_CntSubID, ia_CntSubID)
+      ia_lcID (i) = i_lcID
+      ia_subID(i) = ia_CntSubID(i_CntSubID)
+      
+ END FOR
+ 	
+ ia_Labels(1:loadcase_count)=ia_lcID
+ ia_Labels(loadcase_count+1:loadcase_count*2)=ia_subID
+ 
+$      IF( cnt != 0 ) THEN
+$       
+
+STRING  s_titleResCase[80](1)=["LR-"]
+STRING  bbb[80](VIRTUAL), ccc[80](VIRTUAL), ggg[80](VIRTUAL)
+INTEGER count
+INTEGER i_class
+REAL    ddd(1)
+
+INTEGER eee(VIRTUAL) , r_numResCase
+       
+      s_titleResCase(1) = s_titleResCase(1)//group_name//"-Case_"
+      i_class = 1 /* LR */
+
+      IF ( UTL_dbVariable.chk_dbVar(i_class) == 0 ) THEN 
+
+         SYS_ALLOCATE_ARRAY(ia_dbLabel,1,1)
+         s_titleResCase(1)=s_titleResCase(1)//"1"
+         UTL_dbVariable.set_dbVar_resLabel (i_class, loadcase_count,ia_Labels, ia_dbLabel,s_titleResCase)
+         UTL_dbVariable.get_dbVar_resLabel(i_class,ia_dbLabel2,ddd,bbb) 
+         
+$ record result case label        
+         SYS_ALLOCATE_ARRAY(ggg,1,1)
+         SYS_ALLOCATE_ARRAY(eee,1,1)
+         eee(1)=2
+         UTL_dbVariable.set_dbVar_resLabel (2, 1,eee, eee,ggg)
+         
+         file_copy("output.dat",s_titleResCase(1)//".dat")
+
+      ELSE
+
+         UTL_dbVariable.get_dbVar_resLabel(2,ia_dbLabel2,ddd,ggg)
+         r_numResCase = ia_dbLabel2(1)
+
+      	 UTL_dbVariable.get_dbVar_resLabel(i_class,ia_dbLabel2,ddd,bbb) 
+      	 count = sys_array_hbound(bbb,1)
+      	 
+$      	 s_titleResCase(1)=s_titleResCase(1)//str_from_integer(count+1)
+         s_titleResCase(1)=s_titleResCase(1)//str_from_integer(r_numResCase) 
+      	 SYS_ALLOCATE_ARRAY(ia_dbLabel,1,count+1)
+      	 ia_dbLabel(1:count)=ia_dbLabel2
+      	 SYS_REALLOCATE_ARRAY(bbb,1,count+1)
+      	 bbb(count+1) =  s_titleResCase(1)
+         
+         UTL_dbVariable.set_dbVar_resLabel (i_class, loadcase_count,ia_Labels, ia_dbLabel,bbb)
+      	 UTL_dbVariable.get_dbVar_resLabel(i_class,ia_dbLabel2,ddd,bbb) 
+      	 
+      	 SYS_ALLOCATE_ARRAY(eee,1,1)
+      	 eee(1) = r_numResCase+1
+      	 UTL_dbVariable.set_dbVar_resLabel (2, 1,eee, eee,ggg)
+      	 
+      	 file_copy("output.dat",s_titleResCase(1)//".dat")
+
+      END IF	
+
+
+ RETURN 0
+
+END FUNCTION
+
+
+FUNCTION write_data()
+ INTEGER  fid
+ STRING   fname[1024]
+ INTEGER  integer_data(2)
+ REAL     real_data(16)
+ INTEGER  i
+
+ file_build_fname("./","output","dat","N",fname)
+ text_open(fname, "NOW",0,0,fid)
+
+ text_write_string(fid,"#User Data"//" : LLOYD, "//sys_date()//", "//sys_time())
+ text_write(fid,"Edge A Constraint   : %F%", 0, usr_inform(1), "")
+ text_write(fid,"Edge B Constraint   : %F%", 0, usr_inform(2), "")
+ text_write(fid,"Corossion margin    : %F%", 0, usr_inform(3), "")
+ text_write(fid,"Yield Stress        : %F%", 0, usr_inform(4), "")
+ text_write(fid,"Safety factor tO be : %F%", 0, usr_inform(5), "")
+
+ text_write_string(fid,"")
+ text_write_string(fid,"#Panel Data")
+ text_write(fid,"Total number of Panels   : %I%", org_pnl_count, 1., "")
+ text_write(fid,"Total number of selected Load cases   : %I%", loadcase_count, 1., "")
+ text_write_string(fid,"")
+ text_write_string(fid," PID LCID    a       b       t       c       d      Sx     Sy    TAU    Sed    Sec    FOS  Req.t  INC   FOS  Req.a  FOS")
+ text_write_string(fid,"==== ==== ======= ======= ======= ======= ======= ====== ====== ====== ====== ====== ===== ===== ===== ===== ===== =====")
+
+ FOR ( i=1 TO pnl_count )
+      integer_data(1) = pnl_inform(i,1)
+      integer_data(2) = pnl_inform(i,2)
+      real_data(1)    = pnl_inform(i,3)
+      real_data(2)    = pnl_inform(i,4)
+      real_data(3)    = pnl_inform(i,5)
+      real_data(4)    = pnl_inform(i,6)
+      real_data(5)    = pnl_inform(i,7)
+      real_data(6)    = pnl_inform(i,8)
+      real_data(7)    = pnl_inform(i,9)
+      real_data(8)    = pnl_inform(i,10)
+      real_data(9)    = buckling_results(i,1)
+      real_data(10)   = buckling_results(i,2)
+      real_data(11)   = buckling_results(i,3)
+      real_data(12)   = buckling_results(i,4)
+      real_data(13)   = buckling_results(i,5)
+      real_data(14)   = buckling_results(i,6)
+      real_data(15)   = buckling_results(i,7)
+      real_data(16)   = buckling_results(i,8)
+
+      text_write(fid,"%2(%I4% )%%5(%F7.2% )%%5(%F6.2% )%%6(%F5.2% )%", integer_data, real_data, "")
+      text_write_string(fid, elm_list(i))
+
+ END FOR
+ text_close(fid, "")
+
+ RETURN 0
+
+END FUNCTION
+
+
+
+FUNCTION read_data()
+ INTEGER  fid
+ STRING   fname[1024]
+ STRING   input_string[1024]
+ INTEGER  line_length
+ INTEGER  integer_data(2)
+ REAL     real_data(9)
+ INTEGER  i
+
+ fname = "./input.dat"
+ status = text_open(fname, "OR", 0, 0, fid)
+
+ IF ( status != 0 ) THEN
+      RETURN -1
+ END IF
+
+ text_read_string(fid, input_string, line_length)
+
+ text_read_string(fid, input_string, line_length)
+ usr_inform(1) = str_to_real( str_token(input_string, ":", 2) )
+
+ text_read_string(fid, input_string, line_length)
+ usr_inform(2) = str_to_real( str_token(input_string, ":", 2) )
+
+ text_read_string(fid, input_string, line_length)
+ usr_inform(3) = str_to_real( str_token(input_string, ":", 2) )
+
+ text_read_string(fid, input_string, line_length)
+ usr_inform(4) = str_to_real( str_token(input_string, ":", 2) )
+
+ text_read_string(fid, input_string, line_length)
+ usr_inform(5) = str_to_real( str_token(input_string, ":", 2) )
+
+ text_read_string(fid, input_string, line_length)
+ text_read_string(fid, input_string, line_length)
+
+ text_read_string(fid, input_string, line_length)
+ org_pnl_count = str_to_integer( str_token(input_string, ":", 2) )
+
+ text_read_string(fid, input_string, line_length)
+ loadcase_count = str_to_integer( str_token(input_string, ":", 2) )
+
+ text_read_string(fid, input_string, line_length)
+ text_read_string(fid, input_string, line_length)
+ text_read_string(fid, input_string, line_length)
+
+ pnl_count = org_pnl_count * loadcase_count
+ SYS_ALLOCATE_ARRAY(pnl_inform, 1, pnl_count, 1, 11)
+ SYS_ALLOCATE_ARRAY(elm_list,   1, pnl_count)
+
+ FOR ( i=1 TO pnl_count )
+      text_read(fid,"%I% %I% %F% %F% %F% %E% %E% %E% %E% %E% %E%", integer_data, real_data, "")
+
+      IF ( integer_data(1) == 0 ) THEN
+           BREAK
+      END IF
+
+      pnl_inform(i, 1)  = integer_data(1)
+      pnl_inform(i, 2)  = integer_data(2)
+      pnl_inform(i, 3)  = real_data(1)
+      pnl_inform(i, 4)  = real_data(2)
+      pnl_inform(i, 5)  = real_data(3)
+      pnl_inform(i, 6)  = real_data(4)
+      pnl_inform(i, 7)  = real_data(5)
+      pnl_inform(i, 8)  = real_data(6)
+      pnl_inform(i, 9)  = real_data(7)
+      pnl_inform(i, 10) = real_data(8)
+      pnl_inform(i, 11) = real_data(9)
+
+      text_read_string(fid, input_string, line_length)
+      elm_list(i) = input_string
+
+      integer_data(1) = 0
+ END FOR
+
+ text_close(fid, "")
+
+ RETURN 0
+
+END FUNCTION
+
+FUNCTION consider_corrosion_margine()
+
+ SIGMA_x  = SIGMA_x  * thickness / ( thickness - coa )
+ SIGMA_xb = SIGMA_xb * thickness / ( thickness - coa )
+ SIGMA_y  = SIGMA_y  * thickness / ( thickness - coa )
+ SIGMA_yb = SIGMA_yb * thickness / ( thickness - coa )
+ TAU      = TAU      * thickness / ( thickness - coa )
+
+ thickness -= coa
+
+ RETURN 0
+END FUNCTION
+
+FUNCTION get_E( modulus )
+ REAL     modulus
+
+ IF      ( SIGMA_o > 20. && SIGMA_o < 50. ) THEN
+      modulus = 21000.
+ ELSE IF ( SIGMA_o > 200. && SIGMA_o < 500. ) THEN
+      modulus = 206000.
+ ELSE
+      DUMP "Yield Stress error"
+      RETURN -1
+ END IF
+
+ RETURN 0
+END FUNCTION
+
+$ critical stress
+FUNCTION get_R( sigma, direction, sigma_ratio )
+ REAL     sigma
+ INTEGER  direction
+ REAL     sigma_ratio
+ REAL     K, Gamma(3)
+ REAL     sigma_c
+ REAL     s
+ REAL     E
+
+ STX_buckling_lloyd.get_E( E )
+
+ IF ( a < b ) THEN
+      s = a
+ ELSE
+      s = b
+ END IF
+
+ STX_buckling_lloyd.get_K ( direction, K )
+ status = STX_buckling_lloyd.get_gamma( Gamma )
+ IF ( status != 0 ) THEN
+      RETURN -1
+ END IF
+
+ sigma_c = 0.9 * E * (thickness/s)**2. * K * Gamma(direction)
+
+ SWITCH ( direction)
+      CASE (1)
+           sigma_ratio = SIGMA_x / (sigma_c * bc_fac_b)
+      CASE (2)
+           sigma_ratio = SIGMA_y / (sigma_c * bc_fac_a)
+      CASE (3)
+           sigma_ratio = TAU / sigma_c
+ END SWITCH
+
+ RETURN 0
+
+END FUNCTION
+
+$ critical stress
+FUNCTION get_Rb( sigma, direction, sigma_ratio )
+ REAL     sigma
+ INTEGER  direction
+ REAL     sigma_ratio
+ REAL     Kb
+ REAL     sigma_bc
+ REAL     s
+ REAL     E
+
+ STX_buckling_lloyd.get_E( E )
+
+ IF ( a < b ) THEN
+      s = a
+ ELSE
+      s = b
+ END IF
+
+ STX_buckling_lloyd.get_Kb ( direction, Kb )
+
+ sigma_bc = 0.9 * E * (thickness/s)**2. * Kb
+
+ SWITCH ( direction )
+      CASE (1)
+           sigma_ratio = SIGMA_xb / sigma_bc
+      CASE (2)
+           sigma_ratio = SIGMA_yb / sigma_bc
+ END SWITCH
+
+ RETURN 0
+
+END FUNCTION
+
+FUNCTION get_sigma_ed( )
+$ REAL     sigma_ed
+
+ sigma_ed = mth_sqrt( (SIGMA_x + SIGMA_xb)**2. + @
+                      (SIGMA_y + SIGMA_yb)**2. - @
+                      (SIGMA_x + SIGMA_xb)*(SIGMA_y + SIGMA_yb) + @
+                      3.*(TAU**2.) )
+
+ RETURN 0
+END FUNCTION
+
+
+FUNCTION get_K( direction, K )
+ INTEGER  direction
+ REAL     K
+
+ SWITCH ( direction )
+      CASE (1)
+           IF   ( alpha >= 1. ) THEN
+                K = 4.
+           ELSE IF ( alpha <= 1. ) THEN
+                K = ( alpha**2. + 1. )**2.
+           END IF
+      CASE (2)
+           IF   ( alpha >= 1. ) THEN
+                K = ( 1. + 1./(alpha**2.) )**2.
+           ELSE IF ( alpha <= 1. ) THEN
+                K = 4.
+           END IF
+      CASE (3)
+           IF   ( alpha >= 1. ) THEN
+                K = 5.34 + 4./(alpha**2.)
+           ELSE IF ( alpha <= 1 ) THEN
+                K = 5.34 + 4.*(alpha**2.)
+           END IF
+ END SWITCH
+
+ RETURN 0
+END FUNCTION
+
+
+FUNCTION get_Kb( direction, Kb )
+ INTEGER  direction
+ REAL     Kb
+
+ SWITCH ( direction )
+      CASE (1)
+           IF   ( alpha >= 1. ) THEN
+                Kb = 24.
+           ELSE IF ( alpha <= 1. ) THEN
+                Kb = 23.*(alpha**2.) + 1
+           END IF
+      CASE (2)
+           IF   ( alpha >= 1. ) THEN
+                Kb = 23./(alpha**2.) + 1
+           ELSE IF ( alpha <= 1. ) THEN
+                Kb = 24.
+           END IF
+ END SWITCH
+
+ RETURN 0
+END FUNCTION
+
+
+FUNCTION get_gamma(gamma)
+ REAL     gamma()
+ REAL     mu(2)
+ REAL     delta
+
+ gamma(1) = 1.
+
+ IF      ( d/b <= 0.1 && c/b <= 0.1 ) THEN
+
+      gamma(2) = 1.
+      gamma(3) = 1.
+
+ ELSE IF ( d/b > 0.1  || c/b > 0.1  ) THEN
+
+      STX_buckling_lloyd.get_delta( delta )
+      gamma(3) = 1. / ( 1. + 10.*(delta**2.) )
+
+      STX_buckling_lloyd.get_mu ( mu )
+      IF      ( c/d <  1. ) THEN
+
+           gamma(2) = 1. - mu(1)*((c/a)**2.)*(mu(2) - c/a) - 0.5*(1. - c/d)
+
+      ELSE IF ( c/d == 1. ) THEN
+
+           gamma(2) = 1. - mu(1)*((c/a)**2.)*(mu(2) - c/a)
+
+      ELSE IF ( c/d >  1. ) THEN
+
+           gamma(2) = 1. - mu(1)*((c/a)**2.)*(mu(2) - c/a)
+
+      END IF
+
+ ELSE
+      DUMP "get_gamma error ( out of range )"
+      RETURN -1
+ END IF
+
+ RETURN 0
+
+END FUNCTION
+
+FUNCTION get_mu( mu )
+ REAL   mu()
+
+ IF ( c/a <= 0.65 ) THEN
+      IF      ( a/b <= 1.0 ) THEN
+           mu(1) = 4.
+           mu(2) = 0.7
+      ELSE IF ( a/b >= 1.25 ) THEN
+           mu(1) = 2.
+           mu(2) = 0.75
+      ELSE
+           mu(1) = 12. - a/b*8.
+           mu(2) = 0.5 + 0.2* a/b
+      END IF
+ ELSE
+      DUMP "cutout is out of range (c/a > 0.65)"
+      RETURN -1
+ END IF
+
+ RETURN 0
+
+END FUNCTION
+
+FUNCTION get_delta( delta )
+ REAL   delta
+ REAL   delta1, delta2
+
+ IF ( d/b > 0.1 || c/b > 0.1 ) THEN
+
+      IF      ( c/d <  1. ) THEN
+
+           delta1 = ( c+d ) / ( 2.*b )
+           delta2 = c / ( 2.*a - c )
+
+      ELSE IF ( c/d == 1. ) THEN
+
+           delta1 = d/b
+           delta2 = d / ( 2.*a - d )
+
+      ELSE IF ( c/d >  1. ) THEN
+
+           delta1 = c / ( 2.*a - c )
+           delta2 = d/b
+
+      END IF
+
+      delta = mth_max( delta1, delta2 )
+
+ ELSE
+      DUMP "get_delta error (out of range )"
+      RETURN -1
+ END IF
+
+ RETURN 0
+
+END FUNCTION
+
+
+FUNCTION get_p( p )
+ REAL     p
+
+ REAL     p1, p2
+
+ IF ( 0.3 <= alpha && alpha <= 3.5 ) THEN
+
+      IF      ( 0.3 <= alpha && alpha <= 1.  ) THEN
+           p1 = 0.6 + 0.4/alpha
+           p2 = 2.
+      ELSE IF (  1. <= alpha && alpha <= 3.5 ) THEN
+           p1 = 0.6 + 0.4*alpha
+           p2 = 2.
+      END IF
+
+      p = mth_min( p1, p2 )
+
+ ELSE
+      p = 2
+ END IF
+
+ RETURN 0
+
+END FUNCTION
+
+FUNCTION getResTitle()
+
+	RETURN s_resTitle
+
+END FUNCTION
+
+FUNCTION getLcNum()
+
+	RETURN loadcase_count
+
+END FUNCTION
+
+END CLASS
+
+
+FUNCTION str_blank_to_underscore( input )
+
+ STRING  input[]
+ INTEGER loc
+
+ WHILE (TRUE)
+
+      loc = str_find_match( input, " " )
+
+      IF ( loc == 0 ) THEN BREAK
+
+      str_assign( input, loc, 1, "_" )
+
+ END WHILE
+
+ RETURN 0
+
+END FUNCTION

@@ -1,0 +1,84 @@
+/*********************************************************************
+ *   FUNCTION get_ids_from_entity_list( picklist, type, count, ids )
+ *
+ *   Purpose :
+ *        This function derives ids from List processor 
+ *             (ex. "Surface 1:12" to [1,2,3,...,11,12] )
+ *   Input   :
+ *        STRING picklist 
+ *        STRING type
+ *   Output  :
+ *        INTEGER() ids
+ *   Side Effects :
+ *        <none>
+ ********************************************************************/
+ 
+#include	"lpenums.i"
+
+FUNCTION get_ids_from_entity_list( picklist, type, count, ids )
+
+   STRING PICKLIST[], TYPE[]
+   INTEGER IDS(), COUNT
+   INTEGER handle, status, list_count
+   INTEGER lab(1), filter, list_type
+
+
+   count = 0
+
+   SWITCH ( type )
+      CASE ("nodes", "NODE")
+         filter = LP_SUBLIST_NODE
+      CASE ("points", "POINT", "GRID" , "Point")
+         filter = LP_SUBLIST_POINT
+      CASE ("ELEMENT", "elems", "elem", "elements")
+         filter = LP_SUBLIST_ELEMENT
+      CASE ("CURVE", "curves")
+         filter = LP_SUBLIST_CURVE
+      CASE ("SURFACE", "patch", "surface", "surf", "Surface")
+         filter = LP_SUBLIST_SURFACE
+      CASE ("Solid", "Hyperpatch", "hp", "solid", "sol" )
+          filter = LP_SUBLIST_SOLID
+      DEFAULT
+         filter = LP_SUBLIST_ANY
+   END SWITCH
+	
+   status = lp_eval(picklist, LP_EVAL_FOR_ID, handle )
+   IF ( status !=0 ) THEN
+      ui_writec("Error in lp_eval\n")
+      return status
+   END IF
+
+   status = lp_sublist_count(handle, filter , list_count )
+   
+   IF ( list_count == 0 ) THEN   
+   	RETURN (status) 
+   END IF
+
+   status = sys_allocate_array(ids, 1, list_count)
+   
+   IF ( status != 0 ) THEN   
+   	RETURN ( status ) 
+   END IF
+
+   WHILE ( count < list_count ) oi_loop
+      status = lp_sublist_type(handle, LP_SUBLIST_ANY, list_type )
+      IF ( list_type == filter ) THEN
+         status = lp_sublist_attribute_get_int(handle, LP_ATTRIBUTE_ID, lab)
+       count += 1
+         ids(count) = lab
+      END IF
+      status = lp_sublist_next(handle)
+      IF ( status != 0 ) THEN
+         IF ( status != 14000015 ) THEN
+            ui_writec("Error in evaluating lp_sublist_next()\n")
+            ui_writec("count = %d, lcount = %d, status = %d\n", @
+                       count, list_count, status)
+         END IF
+         BREAK oi_loop
+      END IF
+   END WHILE
+
+   RETURN 0
+
+END FUNCTION /* get_ids_from_entity_list */
+

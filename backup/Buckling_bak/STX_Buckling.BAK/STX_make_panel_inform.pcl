@@ -1,0 +1,646 @@
+
+FUNCTION test_lloyd()
+ REAL     usr_inform(5)
+ REAL     pnl_inform(2,7)
+ STRING   elm_list[2048](2)
+ STRING   load_case[32](1)
+ INTEGER  pnl_ids(2)
+
+ usr_inform(1) = 1.0     /* edge a constraint  */
+ usr_inform(2) = 1.0     /* edge b constraint  */
+ usr_inform(3) = 0.      /* corrosion margin   */
+ usr_inform(4) = 235.     /* yield stress       */
+ usr_inform(5) = 1.2       /* safety factor TO be */
+
+ pnl_inform(1,1) = 1877.000     /* a */
+ pnl_inform(1,2) = 595.022   /* b */
+ pnl_inform(1,3) = 0.      /* angle */
+ pnl_inform(1,4) = 1       /* project direction 1, 2, 3 */
+ pnl_inform(1,5) = 0.      /* center of panel x coordinate */
+ pnl_inform(1,6) = 0.      /* center of panel y coordinate */
+ pnl_inform(1,7) = 0.      /* center of panel z coordinate */
+ pnl_inform(2,1) = 4060.   /* a */
+ pnl_inform(2,2) = 1000.    /* b */
+ pnl_inform(2,3) = 0.      /* angle */
+ pnl_inform(2,4) = 1       /* project direction 1, 2, 3 */
+ pnl_inform(2,5) = 0.
+ pnl_inform(2,6) = 0.
+ pnl_inform(2,7) = 0.
+ load_case(1) = "Load Case 1"
+$ load_case(2) = "Load Case 2"
+
+ elm_list(1) = "Elm 570 603:637:17"
+ elm_list(2) = "Elm 654 667:701:17"
+
+ pnl_ids(1) = 3
+ pnl_ids(2) = 4
+
+ STX_make_panel_inform.lloyd_main(load_case, pnl_ids, elm_list, pnl_inform, usr_inform)
+
+END FUNCTION
+
+
+FUNCTION test_dnv()
+ REAL     usr_inform(11)
+ REAL     pnl_inform(2,7)
+ STRING   elm_list[2048](2)
+ STRING   load_case[32](1)
+ INTEGER  pnl_ids(2)
+
+ usr_inform(1)  = 235. /* :  Yield strength of material,[MPa] */
+                       $235(1), 265(2), 315(3), 355(4), 390(5)
+ usr_inform(2)  = 206000.   /* :  Modulus of elasticity, E = 206000 MPa (Steel) */
+                       $206000(1), 69000(2)
+ usr_inform(3)  = 1.   /* :  Plate boundary stiffening */
+                       $Flat bar(1), Bulb profile(2), T-or L-profile(3), Girder or floor(4)
+ usr_inform(4)  = 1.   /* :  Cut out edge stiffening, ( h stiff > 8*t stiff ) */
+                       $None(1), Ring stiffening(2), Buckling stiff. on both sides(3), Stiffeners along longer edge(4), Stiffeners along shorter edge(4)
+
+ usr_inform(5)  = 1.   /* :  eta_sigma */
+                       $1.0, Part of deck, single bottom, long. Stiff. side plating or local plate with extreme load level(1)
+                       $0.9, Part of bottom, inner bottom or transv. stiffened side plate(2)
+                       $0.8, Local plate with normal load level(3)
+ usr_inform(6)  = 1.   /* :  eta_tau */
+                       $0.9, Part of side or BHD subject TO hull girder shear forces(1)
+                       $0.85, Local panel in a girder web and nominal shear is useed(2)
+ usr_inform(7)  = 0.   /* :  eta_xy */
+                       $1.0, Longtudinal stress as given in B205 incorporated in sigax or sigay (TRUE(1) or FALSE(0))
+
+ usr_inform(8)  = 1.   /* :  plate part of double bottom */
+                       $TRUE(1) or FALSE(0)
+ usr_inform(9)  = 0.   /* :  Allowable elastic buckling. */
+                       $TRUE(1) or FALSE(0)
+ usr_inform(10) = 2.   /* :  corrosion margin */
+ usr_inform(11) = 1.0       /* safety factor TO be */
+
+ pnl_inform(1,1) = 4060.     /* l */
+ pnl_inform(1,2) = 1000.      /* s */
+ pnl_inform(1,3) = 0.           /* angle */
+ pnl_inform(1,4) = 1            /* project direction 1, 2, 3 */
+ pnl_inform(1,5) = 11.
+ pnl_inform(1,6) = 22.
+ pnl_inform(1,7) = 33.
+
+ pnl_inform(2,1) = 4060.        /* l */
+ pnl_inform(2,2) = 1000.        /* s */
+ pnl_inform(2,3) = 0.           /* angle */
+ pnl_inform(2,4) = 1            /* project direction 1, 2, 3 */
+ pnl_inform(2,5) = 11.
+ pnl_inform(2,6) = 22.
+ pnl_inform(2,7) = 33.
+
+ load_case(1) = "Load Case 1"
+$ load_case(2) = "Load Case 2"
+
+ elm_list(1) = "Elm 570 603:637:17"
+ elm_list(2) = "Elm 654 667:701:17"
+ pnl_ids(1) = 3
+ pnl_ids(2) = 4
+
+ STX_make_panel_inform.dnv_main(load_case, pnl_ids, elm_list, pnl_inform, usr_inform)
+
+END FUNCTION
+
+FUNCTION test_rina()
+ REAL     usr_inform(7)
+ REAL     pnl_inform(2,7)
+ STRING   elm_list[2048](2)
+ STRING   load_case[32](2)
+ INTEGER  pnl_ids(2)
+
+ usr_inform(1) = 235.       /* yield stress      */
+ usr_inform(2) = 206000.    /* elastic modulus   */
+ usr_inform(3) = 1.         /* edge constraint      */
+ usr_inform(4) = 0.         /* corrosion margin    */
+ usr_inform(5) = 1.02       /* Partial safety factor(Material) */
+ usr_inform(6) = 1.10       /* Partial safety factor(Resistance) */
+ usr_inform(7) = 1.0        /* safety factor */
+
+ pnl_inform(1,1) = 1877.000     /* a */
+ pnl_inform(1,2) = 595.022   /* b */
+ pnl_inform(1,3) = 0.      /* angle */
+ pnl_inform(1,4) = 1       /* project direction 1, 2, 3 */
+ pnl_inform(1,5) = 0.
+ pnl_inform(1,6) = 0.
+ pnl_inform(1,7) = 0.
+ pnl_inform(2,1) = 4060.   /* a */
+ pnl_inform(2,2) = 1000.    /* b */
+ pnl_inform(2,3) = 0.      /* angle */
+ pnl_inform(2,4) = 1       /* project direction 1, 2, 3 */
+ pnl_inform(2,5) = 0.
+ pnl_inform(2,6) = 0.
+ pnl_inform(2,7) = 0.
+ load_case(1) = "Load Case 1"
+ load_case(2) = "Load Case 2"
+
+ elm_list(1) = "Element 1987 27318"
+ elm_list(2) = "Elm 516 600 614 631"
+ pnl_ids(1) = 3
+ pnl_ids(2) = 4
+
+ STX_make_panel_inform.rina_main(load_case, pnl_ids, elm_list, pnl_inform, usr_inform)
+
+END FUNCTION
+
+
+CLASS STX_make_panel_inform
+
+ CLASSWIDE INTEGER elem_count, elem_ids(VIRTUAL), e_count, e_ids(VIRTUAL), e_loc
+ CLASSWIDE REAL    stress(VIRTUAL)
+ CLASSWIDE REAL    sum_area, area(VIRTUAL)
+ CLASSWIDE REAL    min, max
+
+FUNCTION rina_main( load_case, pnl_ids, elm_list, pnl_inform, usr_inform )
+ STRING   load_case[]()
+ INTEGER  pnl_ids()
+ STRING   elm_list[]()
+ REAL     pnl_inform()
+ REAL     usr_inform()
+
+ INTEGER  pnl_count
+ INTEGER  loadcase_count
+ INTEGER  projected_cid_dir
+ INTEGER  loadcase_ids(VIRTUAL)
+ REAL     thickness, angle
+ REAL     pnl_stress(VIRTUAL)
+ STRING   fname[1024]
+ INTEGER  fid
+ INTEGER  integer_data(2)
+ REAL     real_data(9)
+ INTEGER  i, j
+ REAL     SIGMA_H
+
+ pnl_count = sys_array_hbound( pnl_ids, 1 )
+
+ loadcase_count = sys_array_hbound(load_case, 1)
+ SYS_ALLOCATE_ARRAY( loadcase_ids, 1, loadcase_count )
+
+ FOR ( i=1 TO loadcase_count)
+      db_get_load_case_id(load_case(i), loadcase_ids(i))
+ END FOR
+
+ file_build_fname("./","input","dat","N",fname)
+ text_open(fname, "NOW",0,0,fid)
+
+ text_write_string(fid,"#User Data"//" : RINA, "//sys_date()//", "//sys_time())
+ text_write(fid,"Yield strength                    : %F%", 0, usr_inform(1), "")
+ text_write(fid,"Modulus of elasticity             : %F%", 0, usr_inform(2), "")
+ text_write(fid,"Plate boundary stiffening         : %F%", 0, usr_inform(3), "")
+ text_write(fid,"Corrosion margin                  : %F%", 0, usr_inform(4), "")
+ text_write(fid,"Partial safety factor(Material)   : %F%", 0, usr_inform(5), "")
+ text_write(fid,"Partial safety factor(Resistance) : %F%", 0, usr_inform(6), "")
+ text_write(fid,"Safety factor TO be               : %F%", 0, usr_inform(7), "")
+
+ text_write_string(fid,"")
+ text_write_string(fid,"#Panel Data")
+ text_write(fid,"Total number of Panels   : %I%", pnl_count, 1., "")
+ text_write(fid,"Total number of selected Load cases   : %I%", loadcase_count, 1., "")
+ text_write_string(fid,"")
+ text_write_string(fid," PID LCID     a        b        t        c        d       SIGMA ax      SIGMA ay        TAU         SIGMA H")
+ text_write_string(fid,"==== ==== ======== ======== ======== ======== ======== ============= ============= ============= =============")
+
+ extractStress.doit(loadcase_ids, elm_list, elem_count, elem_ids, stress)
+
+ FOR ( i=1 TO pnl_count )
+
+      ui_writec( "Panel Checking Status : %d/%d",i,pnl_count)
+
+      get_ids_from_entity_list( elm_list(i), "ELEMENT", e_count, e_ids )
+
+      STX_make_panel_inform.get_pnl_area()
+
+      STX_make_panel_inform.get_thickness( thickness )
+
+      FOR ( j=1 TO loadcase_count )
+
+           STX_make_panel_inform.get_pnl_stress( j, pnl_stress )
+
+           angle = pnl_inform(i,3)
+
+           IF ( angle > 0. ) THEN
+                STX_make_panel_inform.stress_transform( pnl_stress, angle )
+           END IF
+
+           STX_make_panel_inform.consider_comtression( pnh_stress )
+
+   $      $ calculatyon HuÏl girder stress
+  ( †      SIGMA_» = STX_hull_gir$er_rtresq.main(pnl_inform(),!5:7))
+
+         ($ write input data TO file
+        ! $integer_data(1)  =!pnl_ids(i)
+           integerOdata(2)   loadcaSe_ids(j)
+
+           real[data(1)     = pnl_inform(i,1)
+   † $     Real_dat·(2)"    = pnl_i.vorm(i,2)
+    (    0 reAl_tatc(3) 0   = thiccness
+           reql_date(4)     =!0.
+ †    `0   real_Data(5) (   = 0.           real_data6)     = pnl_stress(1)
+           2ealdata(7)     = pnl_stsess(2)J   "    `0 real_data(8)   0 = pnl_wtress(39
+    $      r%al_eata(9)  ! $= SKGMA_H
+           textWwrite(fid."%2(I4% )%%5(%∆8.3%0)%%4(%E13.7% )%", integer_d!ta, real_d!ta, "")
+   $ 0     text_wride_string(Êi%, elmﬂhmst(i))
+
+           SYS_FREE_ARRAY(pnl_stress)
+
+      END FOV
+
+   !  u_count = 0
+      SYS_FREE_ARRAY(e_ids)
+ç
+ AND FOR
+J text_write_string(bid, "#End Data")
+ dext_clse(fid,"&)
+
+ RETURN 0
+
+EnD FUNCTION
+
+
+FUNCTION dnv_main( load_base, pnl_ids- elmOlist, pnl_inform, Usr_inform ) STRING   load_case[]()
+ INTE«ER  pnl_mds()
+ STRING   enm_list[]()
+ REAL†    pnl_in&orm()
+ VEAL   " usr_inform()
+
+ INTEGER  pnl_co5nt
+ INTEGER0 |oafcasÂ_count
+ INTEGEV  projecdul_cid_dir
+ INTEGER  loadcase_ids(VIRTUAN)
+ REAL    !tiickness, anole
+ REAM     pnl_stress(^IRTUAL)
+!STRING   fnama[1 2]
+ INTEGER  fid
+ ANPEFER  integer_data(2)
+ REEL     real_data(9	
+ INTEGER  i, j
+ REA "   CIGMI_H
+
+ pnl[cgu~t = sys_ar`ay_hbound( pnl_ids, 1 )	
+
+ lo`dcasE_count = sys_array_hbounD8lkad_case, 1)
+ SYR_ALLOCATE_ARRAY( loadcaseids, 1, loadcase_cnunt )
+
+ OR ( i=1 TO midcase_count)
+      db_get_,oad_case_yd(load_case(i), loadcase_ifs(i))
+ END FOR
+ file_build_f.ame("./","input","dat","N",fname(
+ te|t_open(fname, "NOW",0,0,bid)
+ |ext_wr)teWstring(fid<"#User Data"//" : dnV, "//sys_dete()//",0b//sys_time())
+ teht_wriÙe(fid,"PieLd strength  !         0`: %G%"( 0, 4sÚ_hnform(9), "b)
+ taxv_write(fid,"Modulus of elasticity       : %F%", 0, usr_inform(2), "")
+ text_write(fid,"PlAte boundary†stifvening   : %F!"Æ 0, usr_in&orm(1), "")
+ tex4write(fid,"Cut out edge stiffening     :†%F%≤, 0, usr[inform(t)% "")* text_wri4E f{d,"Eta sigma                   : !F%", 0, usr_knfnrm(5), "")
+†text_write(fid,"Eta tau  $       †  (       : -F%", 0, usr_infnrm(7), "")
+ text_grite(fif,"Epa xy    0                 : %F%", 0< usr_inform(7), "")
+ textWwpitu)fid,*Plate part"of doerle botto} : %÷%", 0, usr_inform(8), "")
+ text_write(fid,"Allowabl% elastic buckling  : %F%", 0- usr_inform(9!, "")
+ text_wriTe(fid"cor2gsiÔn margin            : %F%", 0, u3r_mnform(10)< "")
+ text_write(fid,"Safety fictor TO be         : %F%", 0, usr_iÏÊovm(11), "")
+
+ text_write_striÓg(fid,""9 text_write_ctriNg(fi‰,"#Panel Data")
+ text_wrmte(Êid,"Total number of Qanels   : $I%&, pnn_count$ 1.,`"")
+ text_write(fid,"Total nuMber of selected Noad ca{gs   : %I%", loadcase[sount, 1., "")
+ te¯t_write_str)no(fid,"")0text_write_strinw(fid," PID LCID0    l        s     (( t    ` 0 a        b       SIGMA ax      SYGMA ay   `    TAU         SIGMA H")
+ Ùext_write_stÚiNghfid,"===} ==== =5====-= ======== =======5§===?==== ======= ========-=== ===========}= ==<====9===== =============")
+
+ extracpStress.doit(lOadcase_ids, elm_list, elem_count, elem_mds, {t2ess)
+
+ FOR ( i=1 To pnl_count )
+
+  †   ui_wri4ec( "PaÓel Checking StaTus : %d/-d",i,pnl_sount)	
+
+      get_ids_fvoe_entity_list( elm_list(i), "ELEMENT", e_cound, e_ids )
+
+0     STX_make_panen_inform.get_`nl_area(!
+
+      ”TX_make_panel_inform.get_thicknuss(0t(ickneqs )
+
+      FOR ( j=1 To(loadcase_count )
+
+          0STXWmace_pangl_inform.get]polﬂqtress( j- pnl_stress )
+
+          aÓglÂ = pNl_inform(i,3)
+
+           …F ( angle > 0* ) THEN
+           `    STX_mqkeranel_ingorm.str%ss_ÙransÊorm((ll_stresc, angle )
+       8   END IF
+	
+    #      STX_m·ke_pa.el_inforM.consider_comprewsion( pfl_stress )
+
+  (       $ c·,„ulatio~ Hull gir`er stresS
+   (  $    SIGMA_J = STX_hullﬂgirddr_stress.main(p~l_inform(k$ 5:7))
+
+          $ write input data TO file           integer_daÙa(1)  = pnl_ids(i)
+           integerWdata(2)  = loaecasa_ids®j)
+
+`(  ! `    r%al^da|a*1)     ="pnL_infosm(i,1)
+           real_data()     = pnl_inform8i,2i
+           real_Dapa(3+     = thacknessJ†          real_data(4)     ="0.
+         † real_‰atA(µ)$0   =(0.
+           real_data(6)    0= pnl_stress(1) `         rEal_data(7)     = pnl_stvess(2)
+"          real_data8)d    = pnlOstress(3)
+       (   real_data(9)     = SIEMA_H
+
+           |ext_write(fid,"%2(%I4% )%%5(%F8.3% )%%4(%E13.7% 	%", i.teger_dapa,!re!l_data, "")        $  text_write_wtring(fid, elm_list(i))
+
+           SYS_FrEE_ARRAY(pnl_stress)
+
+      END FOR
+)
+      e^Count = 0
+      SYS_FRE_ARRAY(e?ids)
+
+ END FOR
+
+ text_write_s|rilg(fidl "EÓd Data")
+ text_klose(fid,"")
+
+ RETURN 
+
+END F]NCTION
+
+FUNCTION lloyd_main( loid_cas%, pnl_ids( elm_list, pNl_inform, esr_ijform )
+
+ ”TRING   loqd^case[],)
+ INTEGER  Nl_ids(i
+ STRING   elm_list[]()
+ REAL     pnl_info2m()
+ REAL     usr_inform®)
+
+$INTEGER  pnl]#ount INTEGER  Ïoadcase_co}Ót* INTD«ER  p2ojected_c-d_dir INTEGER  loaDcase[ids(VIRTUAN)
+ REAN `   thickness, angleä REAl     pn,_stress(VIRTUAL)
+ WTRING   fname{124]
+ YNTEGER  fid
+ INTEGER  mnteger_data(2)
+ REAL     real_data(9)
+ IOTE«ER  i, b
+ REAL$  † SIGMA_H
+
+ pnL_count = sys_array_hbound( pnl_idq, 1 )
+
+ loafcase_count = sys_array_hbound(load_case, q)
+ dump moadcase_count
+ SYS_ALLOCAtE]ARRAY( loadcase_ids, 1, loadcase_beult )
+
+ FOR ( i=1 TO loadcasg_counT)
+ †    db[ge4_load_case_id(load_case)i), loadcase_ids(i)) ND FOR
+ filu_build_fnamd("Æ/","input","dat","N",flame)
+ text_open(fname, "NW",0,0,fid)
+
+ text_write_string(fId,"#User Data"//" : LLOYD, "//sys_davE()//", "//sis_time(99
+ text_wrmte(fhd,"Edge A Constraint  $: %%", 0, 5sr_inform(1), "")
+ text_write(fid,"GdGe B Constraint   : %F%",!0, usr_inform(2), ""-
+ text_write(fid,"Corossio~ iargin    : %F%", 0, trr_inform(3), "")
+ tept_wrhte(fid,"Yield S4ress        : %F%"l 0, usr_indorm(4), ""--
+ text_write(fi‰,"SafEty f!ctor TO be ∫ 'F%", 0¨ usr_infozm(5), "")
+
+ taxp_write_str)ng(fmd,"")çä text_write_stsine(fid,"#Panel Data")
+ text_write(fid,"Total lumber of Qanels   : %I%", pnl_cound, 1., ""!
+ text]write(fit,"Votil ntmber of selected L/ad cases   : %I%", loadcaSe_cÔunt, 1., "")
+ text_write[stri.g(fid, ")
+$text_write_strmng(fid," PID LCID     e   †    `        t        c        d       SHGMA x     0 SIGMA y   0     TAE     !   SIWMA0H")
+ text_writu_string(fid,"==== ==== =====?==0======y< =====9== ======== ======== ==Ω=?======== ============ ====-======== ======}====-="(
+
+
+ ex4racpSdRers.foi¥(loadcase_i`s, elm_hist, elÂ}_count, elem_ids, stves3)
+
+ FOV ( i=1 TO pnl_count 	
+
+      ui_wbitec( "Tanel Checking Status : %d/%d",i,pnl_count)
+
+  `   get_idr_fRom_e.tity_lict( elm_list(i), "E\MMENTb, e_cou.t, e_ids )
+
+ $    STX_make_panel[inform.get_pjl_area()
+
+      STX_mqke_panel_iNfnrm.geu^vhickness( thickness!)
+-
+      FR`( j=1 TO!loadcase_count ©
+
+ 0         STX_make_panel_inform.gEt_pnl_stress( j,`pnl_strEcq )
+
+           ajgle = pnl_inform(i,3)
+$         $ aÓgle = mth_acosd( pÓl_inform(i(3) )
+       (   IF ( anwle 6 0. ) THEN        `       STX_mak%_ranel_invorm*stress_trAnsfocm("pnl_stbess, angle )-
+          `END IF
+
+           STX_m!ke_panel_mnform.considez_comprecsion( pnl_stress )
+
+          $ calculation Hull girdar(strass
+           SIGMA_H Ω SPX_hull_girder_stress.maij(pnlinform(i¨ 5∫7))
+
+  `       & crite&input data Tœ file
+  $        integer_data(1) = pnm_ils(i©
+   "       integer_data(2) = loadcase[hds(j)
+         ! real_date(5)    = pnl_inform(i,1)        !  rea|_data(2) $  = pnl_inform(il2)
+    "      real_data(3)    = thickness
+           real_eaÙa(4)    = 0.
+      (    re!l_data(5)    = 0.
+           real_data(6)    = pnl_stress(1)
+           rmal_data(7)   0= pnl_stress(2)
+           2eal_data(8)    = pnl_stress(3)
+    †      real_fata(9)    = CIGMA_H
+
+ 0  0     $ tgxt_write_string(fid, "pnl #
+     (     tax|_write(fi§,"%2i%I4% )%%5(%8.3% )%%4(%E13/7% )%b,†int%gerOdata, real_`ata, "")
+    $      text_wride_sttIng(fid, elm_list(i))
+M
+`        $ SYS_FREE_ARREY(pnl_stbesS)
+	
+      END gOR
+
+ 0 ( `e_count = 0
+      SYS_VREE_ARVAY(e_ids)
+
+ END FOR
+
+ texÙ_write_strinc(fid,`"#End Dada")
+ tÁxt_close(fit,"&)
+
+ RETRN†0
+
+END FUNCTION
+
+FUNCTION cons)der_cgmpres{ion( poL_Strdss )
+ REAL     pflWstvess()
+ HNTEGER  i
+* FOR ( i=1 tO 0 )ä
+      IF ( pnÏ_stress(i+ >   ! THEN
+          (pnl[stress(i) = 0.
+" $$" ELSE
+         ! pnl_stress(h) = mth_abs( pnl_stress(i) )
+      DND HF
+
+ END FOR
+
+ RETURN 0
+-
+END FUNCTION
+
+FUNCTION get]pnl_stress( hc_idx, pn,_stress )
+ ANTEGER  Ïc[idx
+(rEAL$    pnl_suress()
+ INTGER  i
+ REAL     sum_stress_xx, sum_suress_yy, sum_stress_xy
+
+ SYS_ALLo√ATE_¡RRAY( pnl_stress, 1, 3 )
+
+ wum_stress_xx = 0.
+ sum_stre{s_yy = 0.
+ sum_stress_xy!= 0.
+
+ FOR ( i=1†TO e_count )
+    0 e_,oc = mth_array_Search( elem_ids, e_ids(m), FALSE )
+0     sem_stress_xx += stresc(lc_idx, 3*e_lmc-2)*!rea(i)
+      sumOstresr_yy += StreÛs(lc_ydy,`3*e_loc-1)*areA(ii
+("    sumstress_xy += rtress®lc_idx, 1*e_loc  )*area(iiZ END FOR
+
+ pn|_stvess(1! = sum_sVrdss_xx/sum_area
+ xnlstress(2! = sue_{tress_yy/sum_asec
+ pndﬂstress(3) = sumOstress_xy/Sum_area
+J RETURN 0
+END FULCTION
+
+FUNCTIœN ged_pnl_area() INTEGER  i
+
+†SYS_ALLOCATE_AZRAY(area, 5, e_counÙ)
+ sum_area = 0.
+
+ FO0( i=1 TO e_co}nt )
+    $ get_element_area, e_ids(i), „rea(i) )
+      stm_area`+="area(i)
+ END NOR
+
+ RETUrN`2
+ENE ∆UNCTION
+
+
+FUNGTIOF ctrews_tralsform( pnl_sTress, angle ©
+ rEEL   ! pll_stress()
+ rEAL!    angle
+ EAL    !xx, iy,`xy
+ 
+ xx = pnl_stress(±) + (mÙj_cosd(angle))**2. + nl_s0ress(2) * ®mth_sind(angLe)).(2Æ + @
+      *pn,_strers(3)*mth_sijd(angle)*e|(_cosd(anele)
+
+ x} = pnl_stresw(1) 
+ (eth_sind(angle))**6. + pll_stress(2+ * (mtx_cosd(angle))**2. - @      :*pnl_stress(3-*mth_sind(angle)*mth_cosd(anwle)
+
+ xy = -1."pnl_stre{s(1) * mdh_cosd(angle)jeth_3ind(!ngle) + pnl_stress(2)*mth_cosd(angle)*mth_sind(angle) + @
+      pnl_streSs(3)(* ( (mth_cosd(angLe))**2. - (mth_siÓd(!ngle))**2. )
+
+ 0nl_stress(1) = xx
+ Pnl_streSs(2) = yy
+ pnl_st2ess(3)`= xy
+
+ RETURN 0
+
+ELD FUOc‘ION
+
+BUNCTION get_thickness( t )
+
+ REAL 0   t
+
+ REAL     t`ick_sum = 1.
+ ITECER  i< rids(VIRTUAL)
+ ILTEGAR  gener_elgm_type,!dof_sÂt_flag, condense_dlag
+ INTEGER  geom_flag, fnvm_flag, lam_flaw, layer_Couot INTEGER  map_id, materiillin, materi·l_dirç
+ STRING   pName[32]
+ REAL   0 real_array(3) INTEGER  data_type, material_id
+ INUEGER  iÓt_value,coord_v`l}e, node_vanue, field_value
+ STRING$  sÙring_vAlue[31]
+
+$ SYS_ALLOCETE_ABV¡ô( thickness, 5, ulem]cotnt )
+ SyS_ALDOCATE]ARRAY( rids,      1, e_count )
+M db_get_reg·on[forwele-ents0  ( e_count,$e_ids,rids)
+
+ FOR ( i = 1 TO e_count )
+
+      db_get_region_definitkol(             "   "        @
+       /* rmgioN ID        */` rids(i)        0         @       /* set name         */  pName,          (  °      @
+       /* element type ID  *! ge~er_elem_type,          @
+"$     -* dof set flAg     */  dof_set_flag,   `         @*    †  /* cnnde~se flag    */  confmnwe_flag,      "     @
+       /
+ geoo flag        */  geom_flag,                @ (†    /* form!flag0       *.  form_flag,  !       0     @       Ô* lam_dlag "       */  lam_flqg, ! !             @
+    0  /* layer count   !  *? 0layebOcount,              @
+   $   /* material id      */  mit_id.                   @     $ /* m!tevial linear  */  miterial_li.,    "  "    (@
+      !* material dirdct  */ 0maderial_dir)
+
+      $b_get_prop_value(        $         0              @
+      †/* reeion0Y     †  */  zids(m),   (               
+       /* word of inveresu */  36, (    $                @
+       /*!material ID $ !  */  maperial_idl              @
+0   (  /* data type      0 */  data_type,   0  d  0      @
+       /
+ 	NTEGE“ valUe    */  int_value,      (         `
+       ?* REAL array       */  real_arpayl              0@
+       /* chAr STZINg      "/ †string_value,             `
+       /+ coord ID   (  p† */  coordvalue,   $          @
+  `    /* node ID          */  node_val5e,          $    @
+     $ /* nield"ID         */  field_value)
+
+      $thicknes{(i!!= raal_array(1)
+      thick_sum += real_array(1)*area(i)
+
+ END FOR
+
+ t = thick_sum / sum_areA
+
+ SYS_FREE_ARRIY( rids )
+
+ RGTURN x
+
+EOD FUNCTION
+
+DND`CLA[S
+
+
+
+
+FUNCTION get_tryangle_aree( n0, n1, n2, area )
+
+ REKL   n0(), n1(), n2()
+ REAL   ivua
+ç
+ REAL   a,b,cls
+
+ q = mth_sqrt( ( .0(1)  n1(1))**2. + ( n0(>) - .1(2) !**2. +(( n0(3) - n1(3) )**0. )
+ b = mth_sqrt( ( nq(1) - Ó2(1) )**2. + ( n1(2	 - n2(2) )™*2.$+ ( n1(3) - N2(3) )**2Æ )
+ c(= mth_sqr|( ® n2(1) / .0(3) i**2. + ( n2(2) - f0(2) )**2. + ( n2(3) - n0(3) )*
+2. )
+ 3 9 (a*b+c)/2.
+M
+ area = mthWsqrt( s*(s-a)*(s-b)*(sc) )
+ RETURN 0
+
+END FUNCTION
+fUNCTIœN get_element_area8 emd, iree!)
+ INTEGEB  mid, numnode
+ REAL     area
+	
+ INTEGER  nid84)
+ REAL     n1(3), n2(3)l n3(3), n4(3), asea1, area:
+
+ $S[SREALLOC@TE^ARR@Y( nid, 1, numnode -
+ db_get_elem_nodes,"eid, numnole nid )
+
+ SWITCH ( numlode )
+      CSE ( 3 )
+   $       db_get_node(nid(1),(nq9
+         !`db_ge|_~odm,nid(r). n2)
+           db_get_node8nit(3)¨ n3)
+   † "   $ geÙ_triingle_a2ea( n1, n2, n3, area )
+  "   CAWE ( 4 )       $   d‚[gmtnode(nid(1), n1)
+          0db_get_noden)d(2), n2)
+           dB_get_node(nid,3), n3)
+           db_get_node(nId(4), n4)
+           get_trkangnearea( n1, n2, n3, area1 )
+  `        get_tviangle_avea( n3, n4, n0, abeA2 -
+           area = area1 + area2
+ EŒD SWITCH
+
+ $ SYS_fREE_ARRAY(nid)ç
+
+ RETU 0
+
+END FUNCTION
+

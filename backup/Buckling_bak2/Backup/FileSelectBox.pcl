@@ -1,0 +1,113 @@
+#include "appforms.p"
+#include "uiforms.p"
+
+class FileSelectBox
+
+   classwide widget form_id, listbox_id, btnExit, btnApply
+   
+   function init()
+
+	 real yloc_form
+	
+     form_id = ui_form_create(                      @
+                /*callback  */      "",                   @
+                /*    x     */     FORM_X_LOC_LRG_NX2_SML,@
+                /*    y     */     FORM_Y_LOC,            @
+                /* position */     "UL",                  @
+                /*  width   */     FORM_WID_SML,          @
+                /*  height  */     0,           @
+                /*  label   */     "Select File",         @
+                /* iconname */     "" )
+
+	yloc_form = FORM_T_MARGIN
+	
+	listbox_id = ui_listbox_create(                  @
+      /*     parent     */              form_id,          @
+      /*    callback    */              "", @
+      /*        x       */              FORM_L_MARGIN,    @
+      /*        y       */              yloc_form,        @
+      /*      width     */              LBOX_WID_SINGLE,  @
+      /*    num_rows    */              15,                @
+      /*      label     */              "InyFile List",  @
+      /* selection_type */              "SINGLE",         @
+      /*      sort      */              TRUE)
+
+      yloc_form += LBOX_5L_HGT_LABOVE * 3 + @
+                   INTER_WIDGET_SPACE
+
+	  btnApply = ui_button_create(                     @
+      /*   parent  */           form_id,             @
+      /*  callback */           "cbkApply",                  @
+      /*     x     */           BUTTON_HALF_X_LOC1,  @
+      /*     y     */           yloc_form,           @
+      /*   width   */           BUTTON_WID_HALF,     @
+      /*   height  */           BUTTON_DEFAULT_HGT,  @
+      /*   label   */           "Apply",             @
+      /*    TRUE   */           TRUE,                @
+      /* highlight */           FALSE)
+
+      btnExit = ui_button_create(                     @
+      /*   parent  */            form_id,             @
+      /*  callback */            "cbkExit",         @
+      /*     x     */            BUTTON_HALF_X_LOC2,  @
+      /*     y     */            yloc_form,           @
+      /*   width   */            BUTTON_WID_HALF,     @
+      /*   height  */            BUTTON_DEFAULT_HGT,  @
+      /*   label   */            "Exit",            @
+      /*    TRUE   */            TRUE,                @
+      /* highlight */            FALSE)
+      
+      yloc_form += BUTTON_DEFAULT_HGT + @
+					INTER_WIDGET_SPACE
+	  
+	  ui_wid_set(form_id, "HEIGHT", yloc_form)
+	  
+    end function   /* init */
+ 
+   function display(FileType)
+ string FileType[]
+
+	  ui_form_display( "FileSelectBox" )
+	  FileSelectBox.load_evalfiles(FileType)
+      ui_wid_save("FileSelectBox")
+
+   end function   /* display */
+
+	function load_evalfiles(FileType)
+		INTEGER status, chan, idx = 0
+		STRING fname[256], EvalFile[256](virtual)
+		string FileType[]
+		
+		status = file_list_start ( ".", "*." // FileType, chan )
+		IF ( status == 0 ) THEN
+			WHILE ( file_list_next ( chan, fname ) == 0 )
+				idx += 1
+				sys_reallocate_array(EvalFile, 1, idx)
+				EvalFile(idx) = fname
+			END WHILE
+			file_list_end ( chan )
+		END IF
+
+    	ui_listbox_items_delete(listbox_id)	
+		ui_listbox_items_create(listbox_id,EvalFile,EvalFile,idx,"")
+		
+	end function
+	
+	function cbkApply()
+		string list_id[64]
+
+		ui_wid_get(listbox_id, "VALUE", list_id)
+		
+		FPI_INY_Editor.set_file(list_id)
+
+		ui_form_hide("FileSelectBox")
+		ui_form_delete("FileSelectBox")
+		
+	end function
+	
+	function cbkExit()
+		ui_form_hide("FileSelectBox")
+		ui_form_delete("FileSelectBox")
+	end function
+	
+end class   /* FileSelectBox */

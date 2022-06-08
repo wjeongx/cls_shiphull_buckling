@@ -1,0 +1,140 @@
+#include "appforms.p"
+#include "lpenums.i"
+#define CLASSNAME PANEL
+#define CLASSNAME_STR "PANEL"
+
+class CLASSNAME
+
+FUNCTION thickness(nElem, ia_ElemId)
+REAL  mean_t    /* return value */
+INTEGER nElem, ia_ElemId()  /* input */
+
+    real r_areas(virtual), sum_area
+    sum_area = CLASSNAME.areas(nElem, ia_ElemId, r_areas)
+
+    integer reg_id(virtual)
+    SYS_ALLOCATE_ARRAY( reg_id,  1, nElem )
+    db_get_region_for_elements( nElem, ia_ElemId, reg_id)
+
+    INTEGER  gener_elem_type, dof_set_flag, condense_flag
+    INTEGER  geom_flag, form_flag, lam_flag, layer_count
+    INTEGER  mat_id, material_lin, material_dir
+    STRING   pName[32]
+    REAL     real_array(3)
+    INTEGER  data_type, material_id
+    INTEGER  int_value,coord_value, node_value, field_value
+    STRING   string_value[31]
+
+    integer i
+    REAL     thick_sum = 0.
+    FOR ( i = 1 TO nElem )
+
+           db_get_region_definition(                          @
+            /* region ID        */  reg_id(i),                  @
+            /* set name         */  pName,                    @
+            /* element type ID  */  gener_elem_type,          @
+            /* dof set flag     */  dof_set_flag,             @
+            /* condense flag    */  condense_flag,            @
+            /* geom flag        */  geom_flag,                @
+            /* form flag        */  form_flag,                @
+            /* lam_flag         */  lam_flag,                 @
+            /* layer count      */  layer_count,              @
+            /* material id      */  mat_id,                   @
+            /* material linear  */  material_lin,             @
+            /* material direct  */  material_dir)
+
+           db_get_prop_value(                                 @
+            /* region ID        */  reg_id(i),                  @
+            /* word of interest */  36,                       @
+            /* material ID      */  material_id,              @
+            /* data type        */  data_type,                @
+            /* INTEGER value    */  int_value,                @
+            /* REAL array       */  real_array,               @
+            /* char STRING      */  string_value,             @
+            /* coord ID         */  coord_value,              @
+            /* node ID          */  node_value,               @
+            /* field ID         */  field_value)
+
+           $thickness(i) = real_array(1)
+
+           thick_sum += real_array(1)*r_areas(i)
+
+     END FOR
+
+    mean_t = thick_sum / sum_area
+
+    SYS_FREE_ARRAY( reg_id )
+
+    RETURN mean_t
+
+END FUNCTION
+
+
+function material_yield(nElem, ia_ElemId)
+
+    integer nElem, ia_ElemId()
+
+    real r_areas(virtual), r_sum_area
+
+    r_sum_area = CLASSNAME.areas(nElem, ia_ElemId, r_areas)
+
+    string MatName[63]
+    real yield_stress, sum_yield_area
+    integer idx
+
+    sum_yield_area = 0.
+
+    for(idx=1 to nElem)
+
+        MatName = udf_get_mat_name_ass_elem(ia_ElemId(idx))
+
+        if(str_index(MatName, "MILD" ) != 0) then
+            yield_stress = 235.
+        else if(str_index(MatName, "24" ) != 0) then
+            yield_stress = 235.
+        else if(str_index(MatName, "32" ) != 0) then
+            yield_stress = 315.
+        else if(str_index(MatName, "36" ) != 0) then
+            yield_stress = 355.
+        else if(str_index(MatName, "40" ) != 0) then
+            yield_stress = 392.
+        else
+            yield_stress = 235.
+        end if
+
+        sum_yield_area += yield_stress*r_areas(idx)
+    end for
+
+    real mean_yield_stress
+
+    mean_yield_stress = sum_yield_area/r_sum_area
+
+    return mean_yield_stress
+end function
+
+$
+function areas(nElem, ia_ElemId, r_areas)
+
+    INTEGER  nElem, ia_ElemId()
+    real r_areas()
+
+    string s_ElemList[virtual]
+
+    app_int_array_to_vstring("Element", nElem, ia_ElemId, s_ElemList)
+
+    integer i_count
+    fem_geom_face_area (s_ElemList ,r_areas, i_count)
+
+    real sum_area = 0.
+
+    integer i
+
+    FOR ( i=1 TO nElem )
+        sum_crea += r_arecs(i)
+    ND FORM
+
+raturn sumarea
+elä nwnctio.
+en$ class
+
+

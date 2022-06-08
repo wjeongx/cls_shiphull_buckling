@@ -1,0 +1,353 @@
+#include "appforms.p"
+
+#define CLASSNAME         STX_chkPnlManual
+#define MAIN              STX_chkPnlMethod
+#define MAINQUOTED       "STX_chkPnlMethod"
+#define MARK              UTL_markID
+
+CLASS CLASSNAME
+
+/* Classwide Variables */
+   
+   CLASSWIDE WIDGET form_id
+   CLASSWIDE WIDGET selfrm_01, seldbox_01, button_01, button_02
+   CLASSWIDE WIDGET button_03, sep_01, button_04, button_05
+   CLASSWIDE LOGICAL l_chkPnl
+   
+$   CLASSWIDE INTEGER list_num, lbc_list_num ,count_delete_lbc
+$   CLASSWIDE STRING loadcase_title[ VIRTUAL ]( VIRTUAL )
+$   CLASSWIDE WIDGET wid_array(VIRTUAL), wid_array_2(VIRTUAL)
+$   CLASSWIDE STRING lbcset_title[ VIRTUAL ]( VIRTUAL ) , delete_lbc[ VIRTUAL ]( VIRTUAL )
+$   CLASSWIDE REAL   max_y_loc , frame_height
+   
+FUNCTION init()
+      REAL yloc_main
+$      REAL yloc_frame_delete=0.
+      REAL yloc_selfrm_01=0.
+      l_chkPnl = false
+
+      /*
+       * Initialize variables 
+       */
+
+
+      form_id=MAIN.get_form_id()
+      yloc_main =MAIN.get_yloc_main()
+
+      selfrm_01=ui_selectframe_create(                    @
+      /*  parent  */                  form_id,            @
+      /* callback */                  "",                 @
+      /*     x    */                  FORM_L_MARGIN,      @
+      /*     y    */                  yloc_main,          @
+      /*   width  */                  SFRAME_WID_SINGLE,  @
+      /*  height  */                  1.0,                @
+      /*   label  */                  "",                 @
+      /*  recycle */                  FALSE)
+
+      yloc_selfrm_01 = SFRAME_T_MARGIN
+
+      seldbox_01=ui_selectdatabox_create(                   @
+      /*    parent    */                 selfrm_01,         @
+      /*   callback   */                 "",                @
+      /*       x      */                 FORM_L_MARGIN,     @
+      /*       y      */                 yloc_selfrm_01,    @
+      /* label_length */                 0.0,               @
+      /*  box_length  */                 SDBOX_WID_SINGLE,  @
+      /*     label    */                 "Select element",  @
+      /*     value    */                 "",                @
+      /*  label_above */                 TRUE,              @
+      /*   datatype   */                 "ELEM2D",         @
+      /*    prompt    */                 "")
+
+      yloc_selfrm_01 += SDBOX_HGT_LABOVE    + @
+                        INTER_WIDGET_SPACE
+
+      ui_wid_set(selfrm_01,"HEIGHT",yloc_selfrm_01)
+
+      yloc_main += SFRAME_2EDGE        + @
+                   INTER_WIDGET_SPACE  + @
+                   yloc_selfrm_01
+
+      button_01=ui_button_create(                     @
+      /*   parent  */            form_id,             @
+      /*  callback */            "cb_check",          @
+      /*     x     */            BUTTON_HALF_X_LOC1,  @
+      /*     y     */            yloc_main,           @
+      /*   width   */            BUTTON_WID_HALF,     @
+      /*   height  */            BUTTON_DEFAULT_HGT,  @
+      /*   label   */            "Find Panels",       @
+      /*    TRUE   */            TRUE,                @
+      /* highlight */            FALSE)
+
+      button_02=ui_button_create(                     @
+      /*   parent  */            form_id,             @
+      /*  callback */            "cb_refresh",          @
+      /*     x     */            BUTTON_HALF_X_LOC2,  @
+      /*     y     */            yloc_main,           @
+      /*   width   */            BUTTON_WID_HALF,     @
+      /*   height  */            BUTTON_DEFAULT_HGT,  @
+      /*   label   */            "Refresh",           @
+      /*    TRUE   */            TRUE,                @
+      /* highlight */            FALSE)
+
+      yloc_main += BUTTON_DEFAULT_HGT  + @
+                   INTER_WIDGET_SPACE
+
+      button_03=ui_button_create(                     @
+      /*   parent  */            form_id,             @
+      /*  callback */            "cb_Table",          @
+      /*     x     */            BUTTON_FULL_X_LOC1,  @
+      /*     y     */            yloc_main,           @
+      /*   width   */            BUTTON_WID_FULL,     @
+      /*   height  */            BUTTON_DEFAULT_HGT,  @
+      /*   label   */            "Show Panel Table",  @
+      /*    TRUE   */            TRUE,                @
+      /* highlight */            FALSE)
+
+      yloc_main += BUTTON_DEFAULT_HGT  + @
+                   INTER_WIDGET_SPACE
+
+      sep_01=ui_separator_create(               @
+      /*   parent   */           form_id,       @
+      /*    name    */           "",            @
+      /*      x     */           0.0,           @
+      /*      y     */           yloc_main,     @
+      /*   length   */           FORM_WID_SML,  @
+      /* horizontal */           TRUE)
+
+      yloc_main += 5*PIXEL_HGT             - @
+                   0.5*INTER_WIDGET_SPACE  + @
+                   INTER_WIDGET_SPACE
+
+      button_05=ui_button_create(                     @
+      /*   parent  */            form_id,             @
+      /*  callback */            "cb_apply",         @
+      /*     x     */            BUTTON_HALF_X_LOC1,  @
+      /*     y     */            yloc_main,           @
+      /*   width   */            BUTTON_WID_HALF,     @
+      /*   height  */            BUTTON_DEFAULT_HGT,  @
+      /*   label   */            "Appy",            @
+      /*    TRUE   */            TRUE,                @
+      /* highlight */            FALSE)
+
+
+      button_04=ui_button_create(                     @
+      /*   parent  */            form_id,             @
+      /*  callback */            "cb_cancel",         @
+      /*     x     */            BUTTON_HALF_X_LOC2,  @
+      /*     y     */            yloc_main,           @
+      /*   width   */            BUTTON_WID_HALF,     @
+      /*   height  */            BUTTON_DEFAULT_HGT,  @
+      /*   label   */            "Close",            @
+      /*    TRUE   */            TRUE,                @
+      /* highlight */            FALSE)
+
+      yloc_main += BUTTON_DEFAULT_HGT  + @
+                   INTER_WIDGET_SPACE
+                   
+      
+      
+END FUNCTION /* init */
+
+FUNCTION display()
+
+       /*
+        *  Display the Show option menu 
+        */
+$       UTL_drawClear()	
+	
+       ui_wid_set( selfrm_01, "DISPLAYALL", TRUE )
+       ui_wid_set ( seldbox_01, "DISPLAY", TRUE)
+       ui_wid_set ( button_01,"DISPLAY", TRUE)
+       ui_wid_set ( button_02,"DISPLAY", TRUE)
+       ui_wid_set ( button_03,"DISPLAY", TRUE)
+       ui_wid_set ( button_04,"DISPLAY", TRUE)
+       ui_wid_set ( button_05,"DISPLAY", TRUE)
+       
+       ui_wid_set ( sep_01,"DISPLAY", TRUE)
+       ui_set_focus (seldbox_01 ) 
+$       delete.refresh()
+
+   END FUNCTION /* display */
+
+FUNCTION exit()
+
+       ui_wid_set( selfrm_01, "DISPLAYALL", FALSE )
+       ui_wid_set ( seldbox_01, "DISPLAY", FALSE)
+       ui_wid_set ( button_01,"DISPLAY", FALSE)
+       ui_wid_set ( button_02,"DISPLAY", FALSE)
+       ui_wid_set ( button_03,"DISPLAY", FALSE)
+       ui_wid_set ( button_04,"DISPLAY", FALSE)
+       ui_wid_set ( button_05,"DISPLAY", FALSE)
+       
+       ui_wid_set ( sep_01,"DISPLAY", FALSE)
+
+   END FUNCTION /* exit */
+   
+FUNCTION cb_check()
+/*
+ * This is a callback FOR the button named button_01
+ */
+   STRING   s_elmList[256]
+   STRING   sa_elmList[256](VIRTUAL)
+   REAL     ra_PanelInfo(VIRTUAL)
+   INTEGER  i_cntPnl,i, ia_pnlIDs(VIRTUAL)
+   
+   ui_wid_get_vstring(seldbox_01,"value",s_elmList)
+   
+   IF( s_elmList == "" ) THEN RETURN -1
+$   UTL_drawClear()
+   MARK.orgColor()
+   l_chkPnl = true
+   
+   IF( sys_array_nbound(STX_setPanel.getElemListAll()) != 0 )THEN 
+   
+     i_cntPnl = sys_array_hbound(STX_setPanel.getElemListAll(),1)
+     SYS_ALLOCATE_ARRAY(sa_elmList,1,i_cntPnl)
+     SYS_ALLOCATE_ARRAY(ra_PanelInfo,1,i_cntPnl,1,7)
+
+     sa_elmList    = STX_setPanel.getElemListAll()     
+     ra_PanelInfo  = STX_setPanel.getPlnInfo()
+$   IF( sa_elmList(1) != "" ) THEN 
+
+$     i_cntPnl = sys_array_hbound(sa_elmList,1)	
+     
+     SYS_REALLOCATE_ARRAY(sa_elmList,1,i_cntPnl+1)
+     SYS_ALLOCATE_ARRAY(ia_pnlIDs,1,i_cntPnl+1)
+     SYS_REALLOCATE_ARRAY(ra_PanelInfo,1,i_cntPnl+1,1,7)
+     
+     sa_elmList(i_cntPnl+1) = s_elmList
+     	
+     FOR( i=1 TO i_cntPnl+1 )
+       ia_pnlIDs(i) = i
+     END FOR
+     
+$     STX_setPanel.setNewVal(sa_elmList,ra_PanelInfo)
+
+    
+   ELSE
+     i_cntPnl = 0
+     SYS_ALLOCATE_ARRAY(ra_PanelInfo,1,1,1,7)	 	
+     SYS_ALLOCATE_ARRAY(sa_elmList,1,1)	 	
+     sa_elmList(1) = s_elmList
+     
+   END IF 	
+
+   STX_getPanelEdge(i_cntPnl+1 ,s_elmList, ra_PanelInfo(i_cntPnl+1,1:7))	
+   
+dump sa_elmList, ra_PanelInfo
+   
+   STX_setPanel.setNewVal(sa_elmList,ra_PanelInfo)
+
+END FUNCTION /* cb_check */
+
+FUNCTION cb_refresh()
+     UTL_drawClear()
+     display_cleanup()
+     STX_setPanel.freeMem()	
+END FUNCTION /* cb_refresh */ 
+
+FUNCTION cb_Table()
+/*
+ * This is a callback FOR the button named button_03
+ */
+   STRING   s_elmList[256], sa_elmList[256](VIRTUAL)
+   REAL     ra_PanelInfo(VIRTUAL)
+   INTEGER  i_cntPnl,i, ia_pnlIDs(VIRTUAL)
+
+$   ui_wid_get_vstring(seldbox_01,"value",elmList)
+$   UTL_drawClear()
+$   MARK.orgColor()
+$   STX_getPanelEdge(1,elmList,ra_PanelInfo(1,1:7))
+$   ia_pnlIDs(1)  =1
+$   sa_elmList(1) =elmList
+
+   
+   ui_wid_get_vstring(seldbox_01,"value",s_elmList)
+   IF( s_elmList == "" ) THEN RETURN -1   
+   
+   
+   IF( sys_array_nbound(STX_setPanel.getElemListAll()) != 0 )THEN 
+   
+     i_cntPnl = sys_array_hbound(STX_setPanel.getElemListAll(),1)
+     SYS_ALLOCATE_ARRAY(sa_elmList,1,i_cntPnl)
+     SYS_ALLOCATE_ARRAY(ra_PanelInfo,1,i_cntPnl,1,7)
+     SYS_ALLOCATE_ARRAY(ia_pnlIDs,1,i_cntPnl)
+
+     sa_elmList    = STX_setPanel.getElemListAll()     
+     ra_PanelInfo  = STX_setPanel.getPlnInfo()
+
+     
+     FOR( i=1 TO i_cntPnl )
+       ia_pnlIDs(i) = i
+     END FOR
+     
+   ELSE
+     RETURN -1 	
+   END IF 	
+   	
+   	   
+   STX_check_panel(ia_pnlIDs, sa_elmList, ra_PanelInfo)
+ 
+   
+   MARK.setElmID(ia_pnlIDs(1))
+
+   STX_panel_input.readInput()
+   STX_panel_input.shwInput()
+   	
+END FUNCTION /* cb_Table */
+
+
+FUNCTION cb_apply()
+ 
+   REAL    ra_PanelInfo(VIRTUAL)   
+   STRING  sa_elmList[256](VIRTUAL)
+   INTEGER ia_pnlIDs(VIRTUAL),i_cntPnl, i
+   
+   IF( l_chkPnl == true )THEN
+     MARK.orgColor()                                                 
+     i_cntPnl = sys_array_hbound(STX_setPanel.getElemListAll(),1)
+     IF ( i_cntPnl == 0 ) THEN RETURN 0                             
+                                                                    
+     SYS_ALLOCATE_ARRAY( sa_elmList,1 ,i_cntPnl)                    
+     SYS_ALLOCATE_ARRAY( ia_pnlIDs ,1 ,i_cntPnl)                    
+     SYS_ALLOCATE_ARRAY( ra_PanelInfo,1,i_cntPnl, 1,7)            
+
+ 	                                                                  
+     FOR( i=1 TO i_cntPnl )                                         
+       ia_pnlIDs(i)  = i                          
+       sa_elmList(i) = STX_setPanel.getElemList(i)
+     END FOR	                                       
+     
+     ra_PanelInfo  = STX_setPanel.getPlnInfo()
+     STX_check_panel(ia_pnlIDs, sa_elmList, ra_PanelInfo)
+     MARK.setElmID(ia_pnlIDs(1))
+     
+     l_chkPnl = false
+     STX_check_panel(ia_pnlIDs, sa_elmList, ra_PanelInfo)
+$     MARK.setElmID(ia_pnlIDs(1))	 
+$     STX_panel_input.readInput()
+$     STX_panel_input.shwInput()
+   ELSE
+     write("=== Please check panels at first ===")
+     
+   END IF
+   
+
+END FUNCTION
+
+
+FUNCTION cb_cancel()
+/*
+ * This is a callback FOR the button named button_04
+ */
+   ui_form_hide(MAINQUOTED)
+   
+END FUNCTION /* cb_cancel */
+     
+   
+      	
+      	
+
+
+END CLASS /* delete */

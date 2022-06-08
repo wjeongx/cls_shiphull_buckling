@@ -1,0 +1,35 @@
+FUNCTION stx_pnlElement(s_elmList) /* find pnl contain selected element */
+	
+	STRING  s_elmList[]
+	STRING  elmListAll[4096](VIRTUAL), s_dummy[VIRTUAL]
+	INTEGER i_cntPnl, i, count
+	INTEGER panel_id(VIRTUAL)
+	
+	UTL_drawClear()
+	i_cntPnl = sys_array_hbound(STX_setPanel.getElemListAll(),1)
+	SYS_ALLOCATE_ARRAY(elmListAll,1,i_cntPnl)
+	elmListAll = STX_setPanel.getElemListAll()
+		
+	list_create_target_list( "lista", s_elmList )
+	count = 0
+	FOR ( i= 1 TO i_cntPnl )
+$	   uil_list_b.clear(  )
+$	   list_create_target_list( "listb", elmListAll(i) )
+$	   uil_list_boolean.create( "and" )
+           
+           list_create_boolean_list (s_elmList,elmListAll(i),"and",s_dummy)
+          
+           IF( s_dummy != "" ) THEN 
+           	STX_hltPanel(i,0)	
+           	count += 1
+                sys_reallocate_array(panel_id,1,count)
+                panel_id(count) = i
+           END IF
+           	
+	END FOR		
+	
+$	dump panel_id
+        STX_chkPnlAuto.selpnl_update(panel_id)
+$        STX_chkPnlAuto.updateSelBox(panel_id)
+		
+END FUNCTION

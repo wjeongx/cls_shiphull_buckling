@@ -1,0 +1,145 @@
+FUNCTION GetPanelStress(ResultCases, elm_lst)
+
+string ResultCases[], elm_lst[]
+
+
+integer result_id(),num_elm,cnt,status,i_entity_count
+real sig(VIRTUAL),sum_sig,msig,r_areas(VIRTUAL), sum_area
+string res_dir[],elm_lst[],coord_id[]
+
+num_elm = fem_u_count_id_list(1024,elm_lst,TRUE,status)
+
+sys_allocate_array(sig,1,num_elm)
+
+GetElementStress(res_id, "XX", elm_lst, sig_x)
+GetElementStress(res_id, "YY", elm_lst, sig_y)
+GetElementStress(res_id, "XY", elm_lst, sig_t)
+
+fem_geom_face_area (elm_lst,r_areas, i_entity_count)
+
+sum_sig=0
+sum_area = 0
+
+for(cnt=1 to num_elm)
+	
+	if(sig(cnt) > 0) then
+		if(res_dir == "XY") then
+			sig(cnt) = mth_abs(sig(cnt))
+		else
+			sig(cnt) = 0.0
+		end if
+	end if
+	
+	sum_sig += mth_abs(sig(cnt))*r_areas(cnt)
+	sum_area += r_areas(cnt)
+	
+end for
+
+msig = mth_abs(sum_sig/sum_area)
+
+return msig
+
+END FUNCTION
+
+
+$ ============================================================
+	
+	
+	real sig(VIRTUAL),sum_sig,msig,r_areas(VIRTUAL), sum_area
+	string res_dir[2](3)=["XX","YY","XY"]
+	integer res_id(5)
+	
+	string load_case[31], sub_case[31]
+	
+	load_case = str_token(ResultCases, ",", 1)
+	sub_case = str_token(ResultCases,",",2)
+			
+	udf_get_result_id(load_case, sub_case, "Stress Tensor", "", res_id)
+
+	string layer[9](2)
+	
+	layer(1) = "At Z1"
+	layer(2) = "At Z2"
+
+	real r_sigx, r_sigy, r_tau
+	
+	r_sigx = 0
+	r_sigy = 0
+	r_tau = 0
+		
+	$ StartFor
+	for(idx=1 to 2)
+		res_id(5) = udf_get_layer_id(i_result_id, layer(idx))
+		r_sigx += buckling.get_panel_stress(i_result_id,s_coord_id,"XX",s_elm_grp(i))
+		r_sigy += buckling.get_panel_stress(i_result_id,s_coord_id,"YY",s_elm_grp(i))
+		r_tau += buckling.get_panel_stress(i_result_id,s_coord_id,"XY",s_elm_grp(i))
+	end for
+	$ EndFor
+	
+	num_elm=fem_u_count_id_list(1024,elm_lst,TRUE,status)
+
+	sys_allocate_array(sig,1,num_elm)
+
+	udf_get_result_data(result_id, coord_id, res_dir, elm_lst, sig)
+
+	fem_geom_face_area (elm_lst,r_areas, i_entity_count)
+
+	sum_sig=0
+	sum_area = 0
+
+	for(cnt=1 to num_elm)
+		
+		if(sig(cnt) > 0.) then
+			if(res_dir == "XX" || res_dir == "YY") then
+				sig(cnt) = 0.0
+			end if
+		end if
+		
+		sum_sig += mth_abs(sig(cnt))*r_areas(cnt)
+		sum_area += r_areas(cnt)
+		
+	end for
+
+	msig = mth_abs(sum_sig/sum_area)
+
+	return msig
+
+	END FUNCTION
+	
+FUNCTION get_panel_stress(result_id,coord_id,res_dir,elm_lst)
+
+integer result_id(),num_elm,cnt,status,i_entity_count
+real sig(VIRTUAL),sum_sig,msig,r_areas(VIRTUAL), sum_area
+string res_dir[],elm_lst[],coord_id[]
+
+num_elm=fem_u_count_id_list(1024,elm_lst,TRUE,status)
+
+sys_allocate_array(sig,1,num_elm)
+
+udf_get_result_data(result_id, coord_id, res_dir, elm_lst, sig)
+
+fem_geom_face_area (elm_lst,r_areas, i_entity_count)
+
+sum_sig=0
+sum_area = 0
+
+for(cnt=1 to num_elm)
+	
+	if(sig(cnt) > 0) then
+		if(res_dir == "XY") then
+			sig(cnt) = mth_abs(sig(cnt))
+		else
+			sig(cnt) = 0.0
+		end if
+	end if
+	
+	sum_sig += mth_abs(sig(cnt))*r_areas(cnt)
+	sum_area += r_areas(cnt)
+	
+end for
+
+msig = mth_abs(sum_sig/sum_area)
+
+return msig
+
+END FUNCTION

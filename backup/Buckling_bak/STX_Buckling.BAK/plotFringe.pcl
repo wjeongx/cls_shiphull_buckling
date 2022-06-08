@@ -1,0 +1,70 @@
+FUNCTION plotFringe()
+
+    STRING  loadcase_title[80]
+    INTEGER sub_num, lcid, i 
+    INTEGER subids(VIRTUAL), nsub2, subid
+    STRING  sub_title[80], frg_title[160] 
+    STRING  primary_title[80], secondary_title[80]
+    STRING  titles[256](VIRTUAL)
+    INTEGER count
+
+    
+    loadcase_title = STX_buckling_fringe.get_loadcase_title()
+    sub_num = STX_buckling_fringe.get_i_loadcase_title()
+    		
+    db_get_load_case_id (loadcase_title,lcid)
+    res_utl_get_subcases(lcid, nsub2, subids)
+$    db_get_sub_case_title(lcid,subids(sub_num),sub_title)
+    db_get_sub_case_title(lcid,sub_num,sub_title)
+
+    count=0
+    FOR( i=1 TO nsub2)
+       if(subids(i)==sub_num) then count=i
+    END FOR
+    
+    IF (count != 1) THEN
+$       sub_title = sub_title//"_"//str_from_integer(sub_num)
+       sub_title = sub_title//"_"//str_from_integer(count)
+    END IF
+    
+    frg_title = STX_buckling_fringe.get_frg_title()
+    	
+    primary_title = str_token(frg_title, ",", 1)	
+    secondary_title = str_token(frg_title, ",", 2)	
+    
+  
+    res_data_load_dbresult( 0, "ENodal", "Scalar", @
+                            loadcase_title,  @
+                            sub_title,       @
+                            primary_title,   @
+                            secondary_title, @
+                            "(NON_LAYERED_9)", "",  @
+                            "AsIs", "DeriveAverage", @
+                            "Element", "ShapeFunc", "", 0. )
+    
+    count = 1
+    SYS_ALLOCATE_ARRAY (titles,1,count)
+    titles(1) = loadcase_title//", "//sub_title//", "//   @
+                primary_title//", "//secondary_title
+$                ", (NON_LAYERED_9)"
+    
+    res_data_title( 0, "ENodal", "Scalar", count, titles )
+    	
+    res_display_fringe_create( "", "FreeFaces", 0, [""], 12, @
+                               ["Range:Fri_default_Fringe",  @
+                                "RangeOverwrite:ON",         @
+$                                "FringeStyle:ElemFill",  @
+                                "FringeStyle:Discrete/Smooth",  @
+                                "Shade:None",    @
+                                "ElemEdge:ElemEdge,Blue,Solid,1", @
+                                "Shrink:0",      @
+                                "TitleDisplay:ON", @
+                                "MinMaxDisplay:OFF",  @
+                                "ValueDisplay:OFF",   @
+                                "Filter:None",      @
+                                "ScaleFactor:1.",  @
+                                "LabelStyle:Fixed, 12, White, 2"], TRUE )
+    
+    res_display_fringe_post( "", 0, "ENodal", TRUE, TRUE )
+
+END FUNCTION

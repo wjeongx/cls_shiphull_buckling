@@ -1,0 +1,184 @@
+#include "appforms.p"
+
+CLASS node_location
+
+/* Classwide Variables */
+   CLASSWIDE WIDGET form_id, label_01, selfrm_01, seldbox_01, sep_01
+   CLASSWIDE WIDGET datbox_01, datbox_02, datbox_03
+   CLASSWIDE WIDGET button_01
+
+FUNCTION init()
+      
+      REAL yloc_main
+      REAL yloc_selfrm_01=0.
+      REAL box_length=0.0
+      REAL FORM_DBOX_LOC=0.
+      
+      form_id=ui_form_create(                     @
+      /* callback */         "",                  @
+      /*     x    */         FORM_X_LOC_SML,      @
+      /*     y    */         FORM_Y_LOC,          @
+      /* position */         "UL",                @
+      /*   width  */         FORM_WID_SML,        @
+      /*  height  */         FORM_HGT_TALL,       @
+      /*   label  */         "Node location",  @
+      /*  unused  */         "")
+
+      yloc_main = FORM_T_MARGIN
+
+      label_01=ui_label_create(                  @
+      /*  parent  */           form_id,          @
+      /* callback */           "",               @
+      /*     x    */           FORM_L_MARGIN,    @
+      /*     y    */           yloc_main,        @
+      /*   label  */           "Node location")
+
+      yloc_main += LABEL_HGT           + @
+                   INTER_WIDGET_SPACE
+
+      selfrm_01=ui_selectframe_create(                    @
+      /*  parent  */                  form_id,            @
+      /* callback */                  "",                 @
+      /*     x    */                  FORM_L_MARGIN,      @
+      /*     y    */                  yloc_main,          @
+      /*   width  */                  SFRAME_WID_SINGLE,  @
+      /*  height  */                  1.0,                @
+      /*   label  */                  "",                 @
+      /*  recycle */                  FALSE)
+
+      yloc_selfrm_01 = SFRAME_T_MARGIN
+
+      seldbox_01=ui_selectdatabox_create(                   @
+      /*    parent    */                 selfrm_01,         @
+      /*   callback   */                 "cb_node",         @
+      /*       x      */                 FORM_L_MARGIN,     @
+      /*       y      */                 yloc_selfrm_01,    @
+      /* label_length */                 0.0,               @
+      /*  box_length  */                 SDBOX_WID_SINGLE,  @
+      /*     label    */                 "Select Node",     @
+      /*     value    */                 "",                @
+      /*  label_above */                 TRUE,              @
+      /*   datatype   */                 "NODE",            @
+      /*    prompt    */                 "")
+
+      yloc_selfrm_01 += SDBOX_HGT_LABOVE    + @
+                        INTER_WIDGET_SPACE
+
+      ui_wid_set(selfrm_01,"HEIGHT",yloc_selfrm_01)
+
+      yloc_main += SFRAME_2EDGE        + @
+                   INTER_WIDGET_SPACE  + @
+                   yloc_selfrm_01
+
+      box_length = DBOX_WID_SINGLE*0.33  - @
+                   0.1
+      FORM_DBOX_LOC +=  FORM_L_MARGIN
+      
+      datbox_01=ui_databox_create(                @
+      /*    parent    */          form_id,        @
+      /*   callback   */          "",             @
+      /*       x      */          FORM_DBOX_LOC,  @
+      /*       y      */          yloc_main,      @
+      /* label_length */          0.1,            @
+      /*  box_length  */          box_length,     @
+      /*     label    */          "X",            @
+      /*     value    */          0.,             @
+      /*  label_above */          FALSE,          @
+      /*   datatype   */          "REAL",         @
+      /*   num_vals   */          1)
+
+      box_length = DBOX_WID_SINGLE*0.33  - @
+                   0.1
+      FORM_DBOX_LOC +=  FORM_L_MARGIN +box_length +0.1
+      
+      datbox_02=ui_databox_create(                @
+      /*    parent    */          form_id,        @
+      /*   callback   */          "",             @
+      /*       x      */          FORM_DBOX_LOC,  @
+      /*       y      */          yloc_main,      @
+      /* label_length */          0.1,            @
+      /*  box_length  */          box_length,     @
+      /*     label    */          "Y",            @
+      /*     value    */          0.,             @
+      /*  label_above */          FALSE,          @
+      /*   datatype   */          "REAL",         @
+      /*   num_vals   */          1)
+      
+      box_length = DBOX_WID_SINGLE*0.33  - @
+                   0.1
+      FORM_DBOX_LOC +=  FORM_L_MARGIN +box_length +0.1
+      
+      datbox_03=ui_databox_create(                @
+      /*    parent    */          form_id,        @
+      /*   callback   */          "",             @
+      /*       x      */          FORM_DBOX_LOC,  @
+      /*       y      */          yloc_main,      @
+      /* label_length */          0.1,            @
+      /*  box_length  */          box_length,     @
+      /*     label    */          "Z",            @
+      /*     value    */          0.,             @
+      /*  label_above */          FALSE,          @
+      /*   datatype   */          "REAL",         @
+      /*   num_vals   */          1)
+      
+      yloc_main += DBOX_HGT_NO_LABOVE  + @
+                   INTER_WIDGET_SPACE
+
+      sep_01=ui_separator_create(               @
+      /*   parent   */           form_id,       @
+      /*    name    */           "",            @
+      /*      x     */           0.0,           @
+      /*      y     */           yloc_main,     @
+      /*   length   */           FORM_WID_SML,  @
+      /* horizontal */           TRUE)
+
+      yloc_main += 5*PIXEL_HGT             - @
+                   0.5*INTER_WIDGET_SPACE  + @
+                   INTER_WIDGET_SPACE
+                   
+      button_01=ui_button_create(                     @
+      /*   parent  */            form_id,             @
+      /*  callback */            "cb_cancel",         @
+      /*     x     */            BUTTON_THIRD_X_LOC2,  @
+      /*     y     */            yloc_main,           @
+      /*   width   */            BUTTON_WID_HALF,     @
+      /*   height  */            BUTTON_DEFAULT_HGT,  @
+      /*   label   */            "Close",            @
+      /*    TRUE   */            TRUE,                @
+      /* highlight */            FALSE)
+
+      yloc_main += BUTTON_DEFAULT_HGT  + @
+                   INTER_WIDGET_SPACE
+
+      ui_wid_set(form_id,"HEIGHT",yloc_main)    
+
+END FUNCTION /* init */
+
+FUNCTION display()
+      ui_form_display("node_location")
+END FUNCTION /* display */   
+
+FUNCTION cb_node(event)
+      
+      STRING  event[],nodeLabel[50]
+      INTEGER nodeId(VIRTUAL), count
+      REAL xyz(3)
+      
+      ui_wid_get( seldbox_01, "VALUE", nodeLabel )	
+      
+      IF ( nodeLabel != "" ) THEN
+         get_ids_from_entity_list( nodeLabel, "node", count, nodeId )
+         db_get_node( nodeId(1), xyz)
+         ui_wid_set( datbox_01, "VALUE", xyz(1) )	
+         ui_wid_set( datbox_02, "VALUE", xyz(2) )	
+         ui_wid_set( datbox_03, "VALUE", xyz(3) )	
+      END IF
+   	 			
+END FUNCTION
+
+FUNCTION cb_cancel()
+      ui_form_delete("node_location")
+END FUNCTION    
+
+END CLASS
+  		                  

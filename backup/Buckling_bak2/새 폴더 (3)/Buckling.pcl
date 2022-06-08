@@ -1,0 +1,752 @@
+#include "appforms.p"
+#include "lpenums.p"
+
+$ Start
+
+CLASS Buckling
+classwide widget form_id, opt_rules, opt_object, opt_method, lstbox_result_cases, btn_option, @
+                 sel_frame_elem, sel_box_elem, frame_select
+
+classwide widget rules_item(1), object_item(4), method_item(4)
+
+ classwide integer elem_count, elem_ids(VIRTUAL), e_loc
+ classwide real    stress(VIRTUAL)
+ classwide real    sum_area, area(VIRTUAL)
+ classwide real    min, max
+
+ 
+   $ Start
+	FUNCTION init()
+	real yloc_main, yloc_frame
+
+		yloc_main = 0.0
+
+		form_id=ui_form_create("form",@
+									 /* x location */  FORM_X_LOC , @
+									 /* y location */ FORM_Y_LOC,"ul", @
+									 /* width      */ FORM_WID_SML, @
+									 /* height     */ FORM_HGT_TALL, @
+									 /* label      */ "Buckling","")
+
+		opt_rules=ui_optionmenu_create(/* parent       */  form_id, @
+										 /* callback     */  "Action_cb", @
+										 /* x            */ AOM_MENU_X_LOC, @
+										 /* y            */ ACTION_MENU_Y_LOC, @
+										 /* label length */ AOM_MENU_LABEL_LEN, @
+										 /* label        */ "Rules :", @
+										 /*              */  false)
+
+				rules_item(1) = ui_item_create(opt_rules,"ABS","ABS",true)
+		
+		opt_object=ui_optionmenu_create(form_id,"",@
+													AOM_MENU_X_LOC, @
+													OBJECT_MENU_Y_LOC, @
+													AOM_MENU_LABEL_LEN, @
+													"Object:", @
+													 FALSE)
+
+				object_item(1)=ui_item_create(opt_object,"UNSTIFFENED","Unstiffned Panel",FALSE)
+
+		opt_method = ui_optionmenu_create(form_id,"",		@
+									   AOM_MENU_X_LOC,		@
+									   METHOD_MENU_Y_LOC,			@
+									   AOM_MENU_LABEL_LEN,	@
+									   "Method:",				@
+									   false)
+
+				 method_item(1) = ui_item_create(opt_method,"CUR_VIEW", "Current View", true)
+				 method_item(2) = ui_item_create(opt_method,"CUR_GROUP", "Current Group", true)		
+				 method_item(3) = ui_item_create(opt_method,"SEL_ELEM", "Select Element", true)
+				 method_item(4) = ui_item_create(opt_method,"SEL_PANEL", "Select Panel", true)
+
+		yloc_main += METHOD_MENU_Y_LOC + OPT_MENU_HGT_NO_LABOVE + INTER_WIDGET_SPACE
+
+		ui_separator_create(/* patrent  */  form_id, @
+							/* callback */  "",@
+							/* x        */  0, @
+							/* y        */  yloc_main, @
+							/* width    */  FORM_WID_SML, @
+											true)
+
+		yloc_main += INTER_WIDGET_SPACE
+		
+		real frame_width
+		
+				frame_width = FRAME_L_MARGIN + SFRAME_WID_SINGLE + FRAME_R_MARGIN
+				
+				yloc_frame = 0.0
+				
+				frame_select = ui_frame_create(form_id,"", @
+										 FRAME_X_LOC_COL1, @
+										 yloc_main, @
+										 frame_width, @
+										 0.0, @
+										 "Select Element")
+										 
+				yloc_frame += FRAME_T_MARGIN
+				
+				sel_frame_elem = ui_selectframe_create( frame_select, "", @
+												 SFRAME_X_LOC_COL1, @
+												 yloc_frame, @
+												 SFRAME_WID_SINGLE, @
+												 SFRAME_1SDB_HGT_NO_LABOVE, @
+												 "Auto Execute", @
+												 false)
+				
+				yloc_frame += INTER_WIDGET_SPACE
+				
+				sel_box_elem = ui_selectdatabox_create(sel_frame_elem,"", @
+												   SFRAME_L_MARGIN, @
+												   SFRAME_T_MARGIN, @
+												   0, @
+												   SDBOX_WID_SINGLE, @
+												   "",@
+												   "",false, @
+												   "elem2d", "" )
+
+				yloc_frame += SFRAME_1SDB_HGT_NO_LABOVE + INTER_WIDGET_SPACE*2
+				
+				ui_button_create(frame_select, @
+								"CheckPanel_cb", @
+								 BUTTON_HALF_X_LOC1, @
+								 yloc_frame, @
+								 BUTTON_WID_HALF, @
+								 BUTTON_DEFAULT_HGT, @
+								 "Check Panel", @
+								 true,false)
+
+				ui_button_create(frame_select,"Clear_cb", @
+											   BUTTON_HALF_X_LOC2, @
+											   yloc_frame, @
+											   BUTTON_WID_HALF, @
+											   BUTTON_DEFAULT_HGT, @
+											   "Clear", @
+											   true,false)
+
+				yloc_frame += BUTTON_DEFAULT_HGT + INTER_WIDGET_SPACE
+				
+				ui_wid_set(frame_select, "HEIGHT", yloc_frame)
+				
+				real frame_height
+				
+				ui_wid_get(frame_select, "HEIGHT", frame_height)
+				
+				yloc_main += frame_height + INTER_WIDGET_SPACE
+		
+		ui_separator_create(/* patrent  */  form_id, @
+							/* callback */  "",@
+							/* x        */  0, @
+							/* y        */  yloc_main, @
+							/* width    */  FORM_WID_SML, @
+											true)
+
+		yloc_main += INTER_WIDGET_SPACE
+		
+		lstbox_result_cases = ui_listbox_create(form_id,"", @
+									 FRAME_L_MARGIN, @
+									 yloc_main, @
+									 LBOX_WID_SINGLE,@
+									 8, @
+									 "Result Cases", @
+									 "extend", @
+									 true)
+
+		yloc_main += LBOX_8L_HGT_LABOVE + INTER_WIDGET_SPACE	
+
+		ui_button_create(form_id,"apply_cb", @
+									   BUTTON_HALF_X_LOC1, @
+									   yloc_main, @
+									   BUTTON_WID_HALF, @
+									   BUTTON_DEFAULT_HGT, @
+									   "Apply", @
+									   true,false)
+
+		ui_button_create(form_id,"cancel_cb", @
+									  BUTTON_HALF_X_LOC2, @
+									  yloc_main, @
+									  BUTTON_WID_HALF, @
+									  BUTTON_DEFAULT_HGT, @
+									  "Cancel", @
+									  true,false)
+		
+		yloc_main += INTER_WIDGET_SPACE + BUTTON_DEFAULT_HGT
+        
+        ui_button_create(form_id,"InputDataView_cb", @
+									  BUTTON_FULL_X_LOC1, @
+									  yloc_main, @
+									  BUTTON_WID_FULL, @
+									  BUTTON_DEFAULT_HGT, @
+									  "Buckling Input data", @
+									  true,false)
+                                      
+		yloc_main += INTER_WIDGET_SPACE + BUTTON_DEFAULT_HGT
+        
+        ui_button_create(form_id,"BucklingStrengthAssessment_cb", @
+									  BUTTON_FULL_X_LOC1, @
+									  yloc_main, @
+									  BUTTON_WID_FULL, @
+									  BUTTON_DEFAULT_HGT, @
+									  "Buckling Strength Assessment", @
+									  true,false)
+		
+
+	END FUNCTION
+	$ End
+
+	$ Start
+	FUNCTION display()
+
+		ui_form_display("Buckling")
+		udf_load_result_cases(lstbox_result_cases)
+		
+	END FUNCTION
+	$ End
+
+	$ Start
+	FUNCTION cancel_cb()
+
+	   ui_form_hide("buckling")
+
+	END FUNCTION
+	$ End
+
+	/* ====================================================
+		apply button callback
+	  ====================================================== */
+	FUNCTION CheckPanel_cb()
+		ui_exec_function("chkPnlMethod","display")
+	END FUNCTION
+	
+	$ Start
+	FUNCTION apply_cb()
+	integer status
+	string select_option[15]
+	string s_ElemList[virtual]
+	string group_name[63]
+	integer group_id, num_elems, ia_elem_id(virtual)
+	integer i_count, idx, panel_ids(virtual)
+	string sa_ElemList[4096](virtual)
+	real ra_PanelInfo(virtual)
+	
+		ui_wid_get(opt_method, "value", select_option)
+		
+		switch (select_option)
+			case("CUR_VIEW");
+			
+			case("CUR_GROUP");
+			
+				db_get_current_group_id(group_id)
+				db_count_elems_in_group ( group_id, num_elems )
+				sys_allocate_array(ia_elem_id, 1, num_elems)
+				db_get_elem_ids_in_group ( num_elems, group_id, ia_elem_id )
+				app_int_array_to_vstring("Element", num_elems, ia_elem_id, s_ElemList)
+			
+			case("SEL_ELEM");
+				ui_wid_get_vstring(sel_box_elem, "value", s_ElemList)
+			
+			case("SEL_PANEL");
+				ui_wid_get_vstring(sel_box_elem, "value", s_ElemList)
+				$ buckling.get_panel_stress()
+		end switch
+		
+		setPanel.getPanel(-1, s_ElemList, i_count, panel_ids, sa_ElemList, ra_PanelInfo)
+		
+		integer ncases
+		
+		ui_wid_get(lstbox_result_cases, "NSELECTED", ncases)
+		
+		string rcList[63](virtual)
+		sys_allocate_array(rcList, 1, ncases)
+		
+		ui_wid_get(lstbox_result_cases, "VALUE", rcList)
+		
+		Buckling.get_panel_stress2( rcList, panel_ids, sa_ElemList, ra_PanelInfo )
+		
+		/*
+		for(idx=1 to i_count)
+			dump ra_PanelInfo(idx,1:7)
+		end for
+		*/
+        /* ra_PanelInfo(1): span  -a
+         * ra_PanelInfo(2): space -b
+         * ra_PanelInfo(3): angle
+         * ra_PanelInfo(4): projected Coordinate (1 or 2)
+		 * ra_PanelInfo(5:7) Coordinate of Panel Center) 
+		 */
+			
+		$ real usr_inform(11)
+		
+		$ make_panel_inform.buckling_input( load_case, panel_ids, sa_ElemList, ra_PanelInfo, usr_inform )
+		
+		$for(idx=1 to ncases)
+		$	dump rcList(idx)
+		$end for
+		
+	END FUNCTION
+	$ End
+	
+    $ START
+    FUNCTION InputDataView_cb()
+/*    
+    	integer f_id, i_tmp
+        real r_tmp
+        string s_tmp[7]
+        
+    	text_open( "input.dat", "or", 0, 0, f_id)
+    	
+    	integer npanel, nloadcase
+    	
+        text_read(f_id, "%I%", npanel, r_tmp, s_tmp)
+        text_read(f_id, "%I%", nloadcase, r_tmp, s_tmp)
+        
+        integer cols = 10
+        integer rows
+        
+        rows = npanel*nloadcase
+         
+        integer i_value(virtual)
+        sys_allocate_array(i_value, 1, rows, 1, 2)
+        
+        real r_value(virtual)
+        sys_allocate_array(r_value, 1, rows, 1, 9)
+        
+        string ElementList[2048](virtual)
+        sys_allocate_array(ElementList, 1, rows)
+        
+        string row_labels[11](virtual)
+        sys_allocate_array(row_labels, 1, rows)
+        
+        string col_labels[11](10)
+ 
+        col_labels(1) = "LID"
+        col_labels(2) = "span-l"
+        col_labels(3) = "space-s"
+        col_labels(4) = "thick."
+        col_labels(5) = "hole-a"
+        col_labels(6) = "hole-b"
+        col_labels(7) = "sig_xx"
+        col_labels(8) = "sig_yy"
+        col_labels(9) = "tau_xy"
+        col_labels(10) = "SIGMA_H"       
+        
+    	integer count = 0
+        integer idx, idz, string_length
+        
+        for(idx=1 to npanel)
+            for(idz=1 to nloadcase)
+                count +=1
+    			text_read(f_id, "%2I%%9F%", i_value(count,1:2), r_value(count,1:9), s_tmp)
+                row_labels(count) =  str_from_integer(i_value(count, 1))
+                
+                text_read_string(f_id, ElementList(count), string_length)
+    		end for
+        end for
+
+    	text_close(f_id, "")
+    
+        sys_class_set("UI_InputDataView", "cols", cols)
+        sys_class_set("UI_InputDataView", "rows", rows)
+        sys_class_set("UI_InputDataView", "col_labels", col_labels)
+        sys_class_set("UI_InputDataView", "row_labels", row_labels)
+*/
+        UI_InputDataView.init()
+	    UI_InputDataView.display()
+
+    END FUNCTION
+    $ END
+
+	$ Start
+	FUNCTION chkPanel_cb()
+		
+	END FUNCTION
+	$ END
+	
+	$ Start
+	FUNCTION Clear_cb()
+		UTL_drawClear()
+		repaint_graphics()
+	END FUNCTION
+	$ End
+	
+FUNCTION get_panel_stress2( result_case, pnl_ids, elm_list, pnl_inform)
+ STRING   result_case[]()
+ INTEGER  pnl_ids()
+ STRING   elm_list[]()
+ REAL     pnl_inform()
+ $ REAL     usr_inform()
+
+ INTEGER  pnl_count
+ INTEGER  loadcase_count
+ INTEGER  projected_cid_dir
+ REAL     thickness, angle
+ REAL     pnl_stress(VIRTUAL)
+ STRING   fname[1024]
+ INTEGER  fid
+ INTEGER  integer_data(2)
+ REAL     real_data(11)
+ INTEGER  i, j
+ REAL     SIGMA_H
+ 
+loadcase_count = sys_array_hbound(result_case, 1)
+
+string load_case[63](virtual)
+string sub_case[63](virtual)
+
+sys_allocate_array(load_case, 1, loadcase_count)
+sys_allocate_array(sub_case, 1, loadcase_count)
+
+integer idx
+		
+for(idx=1 to loadcase_count)
+	load_case(idx) = str_token(result_case(idx), ",", 1)
+	sub_case(idx) = str_token(result_case(idx), ",", 1)
+end for
+
+integer loadcase_ids(virtual)
+integer subcases_ids(virtual)
+
+sys_allocate_array( loadcase_ids, 1, loadcase_count )
+sys_allocate_array( subcases_ids, 1, loadcase_count )
+
+FOR ( i=1 TO loadcase_count)
+      db_get_load_case_id(load_case(i), loadcase_ids(i))
+END FOR
+ 
+pnl_count = sys_array_hbound( pnl_ids, 1 )
+
+ file_build_fname("./","input","dat","N",fname)
+ text_open(fname, "NOW",0,0,fid)
+
+ /*
+ text_write_string(fid,"#User Data"//" : DNV, "//sys_date()//", "//sys_time())
+ text_write(fid,"Yield strength              : %F%", 0, usr_inform(1), "")
+ text_write(fid,"Modulus of elasticity       : %F%", 0, usr_inform(2), "")
+ text_write(fid,"Plate boundary stiffening   : %F%", 0, usr_inform(3), "")
+ text_write(fid,"Cut out edge stiffening     : %F%", 0, usr_inform(4), "")
+ text_write(fid,"Eta sigma                   : %F%", 0, usr_inform(5), "")
+ text_write(fid,"Eta tau                     : %F%", 0, usr_inform(6), "")
+ text_write(fid,"Eta xy                      : %F%", 0, usr_inform(7), "")
+ text_write(fid,"Plate part of double bottom : %F%", 0, usr_inform(8), "")
+ text_write(fid,"Allowable elastic buckling  : %F%", 0, usr_inform(9), "")
+ text_write(fid,"Corrosionmargin            : %F%", 0, usr_inform(10), "")
+ text_write(fid,"Safety factor TO be         : %F%", 0, usr_inform(11), "")
+*/
+ text_write(fid,"%I%", pnl_count, 1., "")
+ text_write(fid,"%I%", loadcase_count, 1., "")
+
+ extractStress.doit(loadcase_ids, elm_list, elem_count, elem_ids, stress)
+
+ integer status, e_count, e_ids(VIRTUAL)
+ real yield_f, corrosion_addition
+
+ FOR ( i=1 TO pnl_count )
+
+      ui_writec( "Panel Checking Status : %d/%d", i, pnl_count)
+
+      $get_ids_from_entity_list( elm_list(i), "ELEMENT", e_count, e_ids )
+	  
+	  e_count = fem_u_count_id_list(LP_SUBLIST_ELEMENT, elm_list(i), false, status)
+	  sys_allocate_array(e_ids, 1, e_count)
+	  fem_u_get_id_list(LP_SUBLIST_ELEMENT, elm_list(i), e_count, TRUE, e_ids)
+	   
+      $ Buckling.get_pnl_area(e_count, e_ids)
+
+      Buckling.get_thickness(e_count, e_ids, thickness )
+      
+      yield_f = Buckling.get_material_property(e_count, e_ids)
+    
+      corrosion_addition = 0.0
+
+      FOR ( j=1 TO loadcase_count )
+
+           Buckling.get_pnl_stress( j, pnl_stress )
+
+           angle = pnl_inform(i,3)
+
+           IF ( angle > 0. ) THEN
+                Buckling.stress_transform( pnl_stress, angle )
+           END IF
+
+           Buckling.consider_compression( pnl_stress )
+
+          $ calculation Hull girder stress
+           SIGMA_H = 0.0
+
+          $ write input data TO file
+           integer_data(1)  = pnl_ids(i)
+           integer_data(2)  = loadcase_ids(j)
+
+           real_data(1)     = pnl_inform(i,1)       /* span - l */
+           real_data(2)     = pnl_inform(i,2)       /* space - s */
+           real_data(3)     = yield_f               /* yield stress */
+           real_data(4)     = thickness             /* thickness */
+           real_data(5)     = corrosion_addition            /* corrosion additions */
+           real_data(6)     = 0.                    /* hole -a */
+           real_data(7)     = 0.                    /* hole -b */
+           real_data(8)     = pnl_stress(1)         /* stress xx */
+           real_data(9)     = pnl_stress(2)         /* stress yy */
+           real_data(10)     = pnl_stress(3)         /* shear stress xy */
+           real_data(11)     = SIGMA_H               /* hull girder stress xx */
+
+           text_write(fid,"%2(%I4% )%%6(%F8.3% )%%4(%F15.3% )%", integer_data, real_data, "")
+           text_write_string(fid, elm_list(i))
+
+           SYS_FREE_ARRAY(pnl_stress)
+
+      END FOR
+
+      e_count = 0
+      SYS_FREE_ARRAY(e_ids)
+
+ END FOR
+
+ text_close(fid,"")
+
+ return 0
+
+END FUNCTION
+
+FUNCTION consider_compression( pnl_stress )
+ REAL     pnl_stress()
+ INTEGER  i
+
+ FOR ( i=1 TO 2 )
+
+      IF ( pnl_stress(i) > 0 ) THEN
+           pnl_stress(i) = 0.
+      ELSE
+           pnl_stress(i) = mth_abs( pnl_stress(i) )
+      END IF
+
+ END FOR
+
+ RETURN 0
+
+END FUNCTION
+
+FUNCTION get_pnl_stress( lc_idx, pnl_stress )
+
+ INTEGER  lc_idx
+ REAL     pnl_stress()
+ INTEGER  i
+ REAL     sum_stress_xx, sum_stress_yy, sum_stress_xy
+
+ SYS_ALLOCATE_ARRAY( pnl_stress, 1, 3 )
+
+ sum_stress_xx = 0.
+ sum_stress_yy = 0.
+ sum_stress_xy = 0.
+
+ FOR ( i=1 TO e_count )
+      e_loc = mth_array_search( elem_ids, e_ids(i), FALSE )
+      sum_stress_xx += stress(lc_idx, 3*e_loc-2)*area(i)
+      sum_stress_yy += stress(lc_idx, 3*e_loc-1)*area(i)
+      sum_stress_xy += stress(lc_idx, 3*e_loc  )*area(i)
+ END FOR
+
+ pnl_stress(1) = sum_stress_xx/sum_area
+ pnl_stress(2) = sum_stress_yy/sum_area
+ pnl_stress(3) = sum_stress_xy/sum_area
+
+ RETURN 0
+END FUNCTION
+
+FUNCTION get_pnl_area(nElem, ia_ElemId)
+ INTEGER  i, nElem, ia_ElemId()
+ real area(virtual), sum_area
+ 
+ SYS_ALLOCATE_ARRAY(area, 1, nElem)
+ sum_area = 0.
+
+ FOR ( i=1 TO nElem )
+      get_element_area( ia_ElemId(i), area(i) )
+      sum_area += area(i)
+ END FOR
+
+ RETURN sum_area
+END FUNCTION
+
+
+FUNCTION stress_transform( pnl_stress, angle )
+ REAL     pnl_stress()
+ REAL     angle
+ REAL     xx, yy, xy
+
+ 
+ xx = pnl_stress(1) * (mth_cosd(angle))**2. + pnl_stress(2) * (mth_sind(angle))**2. + @
+      2*pnl_stress(3)*mth_sind(angle)*mth_cosd(angle)
+
+ yy = pnl_stress(1) * (mth_sind(angle))**2. + pnl_stress(2) * (mth_cosd(angle))**2. - @
+      2*pnl_stress(3)*mth_sind(angle)*mth_cosd(angle)
+
+ xy = -1.*pnl_stress(1) * mth_cosd(angle)*mth_sind(angle) + pnl_stress(2)*mth_cosd(angle)*mth_sind(angle) + @
+      pnl_stress(3) * ( (mth_cosd(angle))**2. - (mth_sind(angle))**2. )
+
+ pnl_stress(1) = xx
+ pnl_stsess(2) = yy
+ ðnl_stress(3) = hy
+
+ eTURN 0
+
+END FUNCTION
+
+/*
+FULCTIMN get_pnlOarea()
+ iNTEGER  i
+
+ SYS_ALLOCATE_ARÒA[(area, 1, e_count)
+ sum_area 5 n
+
+ FOR ( i=1 TO eOc/õnt )
+   (0*get_elem%ot_area( e_ids(i), aRea(i) )
+    ""sum_aòea + area8i)
+(ANÄ FOR
+
+ RETURN 0
+END FUNCTKON
+*/
+
+VUNCUIÏN get_thickness(dnlem,(ia_EìemIä, t )
+
+ REAL( $  t
+ INTMGEÒ nElem, ia_ElelId(h
+
+ REAL    thick_3um = 0.Š INTEGER  i, rid3(RIRTUAL)
+4INTEÇER  geîåv_elem_type, dof[3et_flag, coNdense_flag
+ 	NDUGER  geom_flag, form_flef, l!m_flag- dayer_count
+ ILTEGER  mat_)d, mAteraal_äio, m!terial_dir
+ STBING ` pNcme[32]
+ EAl   ! real_array(3+ INTUGER  da|a_typE, material_ad
+!ÉNTEWER! int_valte,coordOvalue,`nide_value, fieldW~alue
+ STRHNG!  string_vahee[31
+
+$ SS_AL\OCATE_ARRAY( thickness,!1l elem_coult )
+ SYS_ALLOCATE_ARZAY( rids,      1, îElem i
+"db_getWsegion_for_elEmentS ` ( nElem, ha_ElemId, rids)
+
+"FGR ( i = 1 TO nElem )
+
+ `  $ db_get_regikn_deæinition(    0       ` (   !     $ @
+  `    /* region ID (    ! */0(rids(i),                 @
+   !   /* set nqme    $    */  pNamg, `                  @
+       /* Element type ID "*o` genep_elem_type,      `   @       /. df set$blag     */  dofset_flag,             @
+       /* condense fhag    :/  condensg_flag, (          @
+       /* geoM flag        *?" geom_fla',      $       $ @
+       /* form flag     (  ./  form_flaw<    !           @
+  $  0/* Lam_flag         */  lam_fl!g,          "      @
+"      /* layer count      */  layeò_cou~t,              @
+(      /* -aterial it      */  mát_id,                   @
+     `(/* materéal lineab  :+  material_l	n,             P
+  0    /* mateRial dkrect  */  íaqerial_dir)
+
+4 "   dB_get_prop_value(     !        $           "      @
+"      /* region ID        *  rhdshi),    $0          $ @
+$      /* word of0intermst */  36,         $          (  @
+#      /* eateria, IU      */  Miteòial_id,        "    `@
+  !$   /* data typm        */  da$a_type<     "         !@
+"   ! (/* INTEGER!valee    */ !int_value,!      !        @
+       /* RAL árra{   $   */  real_array,     `   `     @
+       /* char SÖRING      :/  string_value,            d@
+       * cokr` iD        */ 0coord_6alug,           $  @
+       /* note ID (        ./  node_value,               @
+       /* fieln ID         */  field_value)
+
+      $thyckNess(i) = reel_arrey(1)
+      t(ick_cum"+= real_array(1)*area(i)
+
+(eD FOR
+
+ t = thick]sum / cem_ardd
+
+(SYs_FREE_ARRA( rids !
+ RETURN 0
+
+END FUNATION
+DUNCTIOÎ"get_material_property(nEldm, ia_ElemId)
+    intmger nElem, iiWel%-Ie()
+    i~tmger idx
+"   sTryng MapNime[63]
+    
+    real yield_stress, sum_yield_aòea$`r_ereas, r_sum_irea
+    integer i_count
+    
+"   sum_yield_area = 0.
+    r_sum_area!=  .
+ 0  
+    forhidx=1 tm$nElem)
+    
+!       MctNAme } udf_get_mat_nam%_css_alem(iaßUlemId(idx))
+ `     
+        id(str_index(MaTNamg, "MILD" - != °) then
+`  "      1`ykeld_strass = 231.
+        el3e af(str_inddx(MatName, "32" ! !9 °) then  0    "    ykeld_stress =`31u.
+   `    else iv(str_index(MatName, "16" ) = 1) then
+    ! $  ( 0yiemd_stress = 355.
+ à      alse if(str_indEx(MatName,!40" ) )= 0) then
+   $ 0      yielt_stress = 392.
+        alse
+          0`yield_stress = 235.
+   (    end if
+        
+        fem_geomFice_irea 8"Element " o/ str_from_integer(ia_ElemId(idx)) ,rWareaó- i_count)
+    
+        sum_yield_ap%a += yigìd_strers*z_areas
+`       r_Sum_area k= r_areaó
+ "      
+  ¡ end noz
+    
+    real mean_yimld_stresS
+ 0 "
+    mean_yield_qtress = sum_yieldargA/suo_area
+   (
+    retupo mean_yield_stressEND NUNCTION
+
+END CLa[S
+$ End`
+
+FUnCTION ge4_element_area( eid, ábea )
+ ILTEGER  eid, Numnode
+ REAL2    aòea
+
+ INTeGER$ nid(4)
+ RMAl     n1(3), n2(3), n3 3),$n4(3	, area1, are!2
+
+ $SYS_READLOCAE_ARRAY( nid, q, numnotE )
+`df_gmt_eld-_no$es(0eid, numnode,!lid`)
+
+ SWITCH ( oumnode )
+   (  cASE!( 3 )           db_cet_node(nid(1), n1)
+   "      "db_get_nole(nid(2), n)
+           db_get_node(Nid(3), n;)
+     0     gåt_trianele_areah n1, n2, n3, irei")
+      CASE ( 4 )
+ !         db_getnïde(nid(1!, n1)
+   "       db_get_nodeîid(²), n0)
+  0        db_get_nodd(nid(3), n3)
+           db_wet_node(fid(4), n4)
+   $       eetO4riangle_arga( n1, n2, n3, area1 )
+   `       get_tpkang|e_area( n3, n4, n1, area2 ©
+           erea = area1 + area2
+ END sWKTCH
+ $ SY]fREE_ARBAY(nid)
+
+ RETURn 0
+
+END FWNCTION
+
+FUNCTION get_traangle_area) n0, n1 n2, area )
+
+!R@AL   n0(+, n1(), n2()
+`ReAM   area
+
+ REAL  (a,b,c,s
+
+ a$= mt`sqrt( , n0(19 - n1h1)0)**2. + ( n0(3) - n12) )**2. + ( n0(3! - n(3)¢(**2. )
+ b = mth]sqrt( ( n1(1) - n2(1) )**2. + ( n1(2) - n2(2) )**2$ + ( ~1,3) - n2() )**2n )
+(ã = mthOsqrt( ( n2,1)!- n0(1) )**2. + ( n2(2- - n0(2) )**2. 
+ ( n2(3) - n0(3) )**2.()* S = (ab+c)/2
+
+ area"= mth_sqrt( s*(s-a!*(s-bi*(s-c) )N
+ RETURN`0
+
+ENL FUNCTIKN 

@@ -1,0 +1,42 @@
+CLASS  STX_menubar 
+
+FUNCTION init()
+    
+    WIDGET  menubar, menu, item1
+    INTEGER status
+    
+    menubar= uil_primary.get_menubar_id()
+    
+    menu= ui_menu_create (menubar, "STX_menu", "Ship.Buckling")
+        
+    item1=ui_item_create (menu, "param", "STX buckling", FALSE )
+    
+    
+END FUNCTION   /* init  */
+    
+FUNCTION STX_menu ( item_name )
+    
+    STRING item_name[]
+    
+    
+    $   ! the value for the item is `item_name`
+    
+    if ( db_is_open() != TRUE ) then
+        user_message("ERROR", 100000, "STX parameter", "Db is not opened.")
+        return
+    end if
+    
+    SWITCH (item_name)
+        CASE ("param")
+            ui_form_delete("STX_buckling")
+            ui_form_delete("STX_buckling_fringe")	
+            ui_form_delete("STX_loadcase")		
+            	
+            ui_exec_function("STX_buckling","display")
+    END SWITCH  		
+    
+    
+END FUNCTION    /* training_menu */
+
+
+END CLASS    /*  STX_menubar  */

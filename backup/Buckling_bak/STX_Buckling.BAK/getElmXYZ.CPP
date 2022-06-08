@@ -1,0 +1,157 @@
+
+/*
+    ex) x_equal_199/y_smaller_100/N
+    getElmXYZ("x_greater_0_/y_greater_0_/z_greater_0_/")
+*/
+
+
+
+function getElmXYZ(chkXYZ)
+
+
+STRING chkXYZ[], buffer[64](virtual), postedGrp[64](virtual), listBuffer[virtual]
+STRING nodeLists[VIRTUAL], chkLoc[8](virtual), chkCrd[3](virtual)
+REAL ncoord(3), valXYZ(virtual), tol
+integer numNodes, numGrp, nodeIDs(virtual), i, j
+
+
+
+
+ga_viewport_ngroups_get ("default_viewport", numGrp)
+sys_reallocate_array(postedGrp,1,numGrp)
+ga_viewport_groups_get ("default_viewport", postedGrp )
+
+
+for( i=1 to numGrp )
+uil_entity_group_members_get ( postedGrp(i), 123, listBuffer )
+	nodeLists = nodeLists//" "//listBuffer
+end for
+	
+uil_list_b.clear( )
+list_create_elem_ass_group( 0,postedGrp, numGrp, "listb", listBuffer )
+
+
+i = 1
+WHILE( str_token( chkXYZ, "/", i, FALSE )!= "" )
+sys_reallocate_array(buffer,1,i)
+sys_reallocate_array(chkCrd,1,i)
+sys_reallocate_array(chkLoc,1,i)
+sys_reallocate_array(valXYZ,1,i,1,2)
+
+
+buffer(i) = str_token( chkXYZ, "/", i, FALSE )
+
+
+chkCrd(i)= str_token( buffer(i), "_", 1, FALSE )
+chkLoc(i)= str_token( buffer(i), "_", 2, FALSE )
+	valXYZ(i,1)= str_to_real ( str_token( buffer(i), "_", 3, FALSE ) )
+		valXYZ(i,2)= str_to_real ( str_token( buffer(i), "_", 4, FALSE ) )
+		
+i += 1
+END WHILE
+	
+tol = str_to_real ( str_token( chkXYZ, "/", 4, FALSE ) )		
+
+
+chkCon( chkCrd, chkLoc, valXYZ , tol)
+
+
+		
+	
+uil_list_boolean.create( "a-b" )/* make listc */
+list_create_elem_ass_node( 0, "`listc`", "lista", listBuffer )
+uil_list_boolean.create( "and" ) 	
+
+
+$gm_hilight_string("`listc`",1)
+	
+
+
+end function
+
+
+
+
+
+
+function chkCon( coord, exp , valxyz, tol1)
+
+
+real valxyz(), range(6), tol(3), tol1
+logical chkExp(3)
+string coord[](), exp[](), strExp[8](3), strBuffer[virtual]
+integer i
+
+
+
+
+for( i =1 to 3 )
+
+
+range(i) = valxyz(i,1)
+range(i+3) = valxyz(i,2)
+
+
+if( coord(i) != "N" ) then
+chkExp(i) = true	
+end if
+	
+end for
+
+
+tol(1) = tol1;tol(2)=0.005;tol(3)=0.5
+
+
+dump range, chkExp, exp, tol
+
+
+
+
+
+
+$ if ( coord =="x" ) then
+$ 	 range(1) = valxyz(1,1)
+$ 	 range(4) = valxyz(1,2)
+$ 	chkExp(1) = true
+$ 	strExp(1) = exp
+$
+$ else if ( 	coord =="y" ) then
+$ 	 range(2) = valxyz(1,1)
+$ 	 range(5) = valxyz(1,2)
+$ 	chkExp(2) = true
+$ 	strExp(2) = exp
+$ 	
+$ else if	( 	coord =="z" ) then
+$ 	 range(3) = valxyz(1,1)
+$ 	 range(6) = valxyz(1,2)
+$ 	chkExp(3) = true
+$ 	strExp(3) = exp
+$ 	
+$ else
+$ end if
+$
+
+
+uil_list_a.clear( )
+list_create_node_att_value( 	range, chkExp, exp, tol, @
+"Coord 0", "lista", strBuffer )
+
+
+		
+end function
+
+
+function highlight()
+	
+gm_hilight_string("`listc`",1)
+	
+end function
+
+
+function nextPage()
+
+
+AAI.next_dialog("wrs.xml","3.","semi")
+
+
+end function

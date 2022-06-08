@@ -1,0 +1,155 @@
+#define CLASSNAME         STX_panel_input
+#define CLASSNAME_QUOTED "STX_panel_input"
+
+CLASS CLASSNAME
+
+    CLASSWIDE STRING   Data[4096](VIRTUAL)
+    CLASSWIDE INTEGER  count
+    CLASSWIDE STRING   text_data[4096](VIRTUAL)
+
+FUNCTION readInput()
+    
+    INTEGER  fid, status, i, i_position
+    INTEGER  i_lenLine
+    
+    INTEGER  i_data(2)
+    REAL     r_data(9)
+    STRING   s_data[4096]
+
+
+    DUMP "++++++++++++++++++++++++++++" 
+    status =text_open("input.dat","or",0,0,fid)
+    IF( status !=0 ) THEN 
+    	DUMP " There is NO input.dat file"
+    END IF
+    
+$    
+$    IF ( STX_buckling.getClass() == "LR" ) THEN
+$       SYS_ALLOCATE_ARRAY(text_data,1,13)
+$       FOR ( i=1 TO 13 )
+$       	text_read_string(fid,s_data,i_lenLine)
+$        text_data(i) = s_data
+$       END FOR
+$    
+$    ELSE IF (STX_buckling.getClass() == "DNV" ) THEN  	
+$       SYS_ALLOCATE_ARRAY(text_data,1,19)
+$       FOR ( i=1 TO 19 )
+$       	text_read_string(fid,s_data,i_lenLine)
+$         text_data(i) = s_data
+$       END FOR
+$    ELSE /* RINA */
+$       SYS_ALLOCATE_ARRAY(text_data,1,15)
+$       FOR ( i=1 TO 15 )
+$       	text_read_string(fid,s_data,i_lenLine)
+$         text_data(i) = s_data
+$       END FOR         	
+$    END IF    	
+
+
+   text_read_string(fid,s_data,i_lenLine)
+   SYS_ALLOCATE_ARRAY(text_data,1,1)
+   text_data(1) = s_data
+   count  = 1 
+   WHILE ( str_find_match(s_data,"=") == 0 )
+      count += 1
+      SYS_REALLOCATE_ARRAY(text_data,1,count)
+      text_read_string(fid,s_data,i_lenLine)
+      text_data(count) = s_data  
+   END WHILE
+
+    count = 0	
+    text_get_position ( fid, i_position )
+    	 	
+    WHILE ( text_read_string(fid,s_data,i_lenLine)  == 0 )
+        count += 1
+        text_read_string(fid,s_data,i_lenLine) 
+    END WHILE	
+    SYS_ALLOCATE_ARRAY( Data, 1,count-1,1,12 )
+
+    text_set_position ( fid, i_position )		
+
+dump count   
+    count  = 0 
+    WHILE ( text_read(fid,"%2I%%5F%%4E%",i_data,r_data,"")  == 0 )
+      
+      count += 1
+      text_read_string(fid,s_data,i_lenLine)  
+      
+$      SYS_REALLOCATE_ARRAY( Data, 1,count,1,12 )
+      
+      Data(count,1) = str_from_integer(i_data(1))
+      Data(count,2) = str_from_integer(i_data(2))
+      Data(count,3) = str_from_real(r_data(1))
+      Data(count,4) = str_from_real(r_data(2))
+      Data(count,5) = str_from_real(r_data(3))
+      Data(count,6) = str_from_real(r_data(4))
+      Data(count,7) = str_from_real(r_data(5))
+      Data(count,8) = str_from_real(r_data(6))
+      Data(count,9) = str_from_real(r_data(7))
+      Data(count,10) = str_from_real(r_data(8))
+      Data(count,11) = str_from_real(r_data(9))
+      Data(count,12) = s_data
+  
+    END WHILE
+  	
+     text_close(fid,"")	
+ 
+$   DUMP Data
+   
+END FUNCTION
+
+FUNCTION shwInput()
+
+   STX_panelinfo_table.InterFace( count, Data )
+
+END FUNCTION
+
+FUNCTION modInput(num_low, mod_data)
+
+    INTEGER num_low
+    STRING mod_data[]()
+    STRING   fname[1024]
+    INTEGER  fid
+    INTEGER  text_count,i
+    INTEGER  i_data(VIRTUAL),integer_data(2)
+    REAL     r_data(VIRTUAL),real_data(9)    
+    STRING   elm_list[1024]
+    
+    file_build_fname("./","input","dat","N",fname)
+    text_open(fname, "NOW",0,0,fid)
+
+    text_count = sys_array_hbound(text_data, 1)
+    FOR (i=1 TO text_count)
+       text_write_string(fid,text_data(i))
+    END FOR
+    
+    SYS_ALLOCATE_ARRAY(i_data,1,num_low,1,2)
+    SYS_ALLOCATE_ARRAY(r_data,1,num_low,1,9)
+
+
+    FOR (i=1 TO num_low)
+    
+       integer_data(1) = str_to_integer( mod_data(i,1) )
+       integer_data(2) = str_to_integer( mod_data(i,2) )
+
+       real_data(1) = str_to_real( mod_data(i,3) )
+       real_data(2) = str_to_real( mod_data(i,4) )
+       real_data(3) = str_to_real( mod_data(i,5) )
+       real_data(4) = str_to_real( mod_data(i,6) )
+       real_data(5) = str_to_real( mod_data(i,7) )
+       real_data(6) = str_to_real( mod_data(i,8) )
+       real_data(7) = str_to_real( mod_data(i,9) )
+       real_data(8) = str_to_real( mod_data(i,10) )
+       real_data(9) = str_to_real( mod_data(i,11) )
+       
+       elm_list= mod_data(i,12)
+
+       text_write(fid,"%2(%I4% )%%5(%F8.3% )%%4(%E13.7% )%", integer_data, real_dada, "")J   (   text_write_string(fid, elm_list)
+   0       	    
+   END FOR$  ‰
+
+ ! text_write_string(fid, "#Mnd Data"	
+   text_close(fid,*")
+     	
+END FUNCTION	
+END CLASQ

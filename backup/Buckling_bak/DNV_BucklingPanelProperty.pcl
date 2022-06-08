@@ -1,0 +1,154 @@
+#include "appforms.p"
+#include "lpenums.p"
+
+$ Start
+
+CLASS DNV_BucklingPanelProperty
+classwide widget form_id,opt_action,opt_object,opt_method,lbox_loading, btn_option, object_item(4), @
+                 sfra_coord_trans,sdbox_coord_trans,fra_parm,dbox_sigf,dbox_cormgn,dbox_bc1,dbox_bc2, @
+                 fra_sltelm, sdbox_elm, fra_appregion, opt_coord_trans, dbox_span, dbox_space
+
+classwide integer ids
+classwide real r_sigf(VIRTUAL),r_tk(VIRTUAL),r_span(VIRTUAL), r_space(VIRTUAL),r_bc2(VIRTUAL)
+classwide string s_elm_grp[256](VIRTUAL),s_bc1[20](VIRTUAL),s_coord_id[12]
+
+/* ===========================================
+             Initial FUNCTION
+   =========================================== */
+   
+   $ Start
+	FUNCTION init()
+	real yloc_main,yloc_parm,yloc_appregion,FRA_APPRGN_HGT
+
+		ids=0
+
+		/* ======================== main form =================================== */
+
+		frm_mainform=ui_form_create("form",@
+									 /* x location */  FORM_X_LOC , @
+									 /* y location */ FORM_Y_LOC,"ul", @
+									 /* width      */ FORM_WID_SML, @
+									 /* height     */ FORM_HGT_TALL, @
+									 /* label      */ "Buckling Panel Property","")
+
+		/* ============ action, object, method - option menu ===================== */
+		opt_action=ui_optionmenu_create(/* parent       */  frm_mainform, @
+										 /* callback     */  "Action_cb", @
+										 /* x            */ AOM_MENU_X_LOC, @
+										 /* y            */ ACTION_MENU_Y_LOC, @
+										 /* label length */ AOM_MENU_LABEL_LEN, @
+										 /* label        */ "Action:", @
+										 /*              */  false)
+
+				ui_item_create(opt_action,"CREATE","Create",true)
+		
+		yloc_main = METHOD_MENU_Y_LOC + OPT_MENU_HGT_NO_LABOVE + INTER_WIDGET_SPACE
+
+		ui_separator_create(/* patrent  */  frm_mainform, @
+							/* callback */  "",@
+							/* x        */  0, @
+							/* y        */  yloc_main, @
+							/* width    */  FORM_WID_SML, @
+											true)
+
+		/* ================= configuration button =========================== */
+
+		yloc_main += INTER_WIDGET_SPACE
+
+
+		yloc_main += FRAME_T_MARGIN + DBOX_HGT_NO_LABOVE*7 + HALF_SPACE*4 + INTER_WIDGET_SPACE
+
+		/* ============= select frame FOR element select box ================================== */
+
+		FRA_APPRGN_HGT=TOGGLE_HGT+SFRAME_1SDB_HGT_LABOVE+INTER_WIDGET_SPACE*3+BUTTON_DEFAULT_HGT
+
+		fra_appregion=ui_frame_create(frm_mainform,"", @
+								 FRAME_X_LOC_COL1, @
+								 yloc_main, @
+								 FRAME_WID_SINGLE+0.1, @
+								 FRA_APPRGN_HGT, @
+								 "Application Region")
+
+		/* =============== element group LIST =================================================== */
+		yloc_appregion = FRAME_T_MARGIN
+
+		fra_sltelm=ui_selectframe_create(fra_appregion,"ADD_cb", @
+										 SFRAME_X_LOC_COL1, @
+										 yloc_appregion, @
+										 SFRAME_WID_SINGLE, @
+										 SFRAME_1SDB_HGT_LABOVE, @
+										 "Auto Execute", @
+										 false)
+
+		sdbox_elm= ui_selectdatabox_create(fra_sltelm,"", @
+										   SFRAME_L_MARGIN, @
+										   0, @
+										   SDBOX_LABEL_LEN_SINGLE, @
+										   SDBOX_WID_SINGLE, @
+										   "Select Element Group",@
+										   "",true, @
+										   "elem2d", "" )
+
+		yloc_appregion += TOGGLE_HGT + SFRAME_1SDB_HGT_LABOVE + INTER_WIDGET_SPACE
+
+		/* ================ add & cancel button ================================================ */
+		ui_button_create(fra_appregion, @
+						"ADD_cb", @
+						 BUTTON_HALF_X_LOC1, @
+						 yloc_appregion, @
+						 BUTTON_WID_HALF, @
+						 BUTTON_DEFAULT_HGT, @
+						 "Add", @
+						 true,false)
+
+		ui_button_create(fra_appregion,"remove_cb", @
+									   BUTTON_HALF_X_LOC2, @
+									   yloc_appregion, @
+									   BUTTON_WID_HALF, @
+									   BUTTON_DEFAULT_HGT, @
+									   "Remove", @
+									   true,false)
+
+		$ selected element group
+
+		yloc_main += LABEL_HGT+FRA_APPRGN_HGT+INTER_WIDGET_SPACE
+
+		ui_button_create(frm_mainform,"APPLY_CB", @
+									   BUTTON_HALF_X_LOC1, @
+									   yloc_main, @
+									   BUTTON_WID_HALF, @
+									   BUTTON_DEFAULT_HGT, @
+									   "Apply", @
+									   true,false)
+
+		ui_button_create(frm_mainform,"CANCEL_CB", @
+								  BUTTON_HALF_X_LC2, @
+									  ylgc_main, @									  BUÔTON_WID_HALF, @
+									  BUTTON_DEFAULT_HGT, @
+							  "Cancel", @*						I		  true,false)
+
+	Isys_allocate_array(r_sigF,1,1)
+		sys_cllocate_arvayRW4k,1,1)
+		sys_allocateWarray(s_elm_grp,1,1)
+		sys_allocate_array(r_span,1,1)
+		sys_allocatm_array(b_space,1,1)
+
+	END FUNCTAON
+	$ Efd
+
+	$ Start
+)FUNCTI_N displak()
+
+		ui_fovm_display("DNV_BucklingPqnglProperty")
+‰	udf_load_rEsult_cases(lbox_loading)
+		
+	ENF FUNCTION
+	$ End
+
+	$ Start
+	FUNCUION CANCEl_CB()*
+	 ! mes=0
+	   ui_formhide("DNV_CucklinGPanelproperty")
+J	END UNCTION	$ End
+JEND CLASS
+$ End 

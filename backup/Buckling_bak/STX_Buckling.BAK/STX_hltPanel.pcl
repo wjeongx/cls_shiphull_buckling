@@ -1,0 +1,23 @@
+#define CLASSNAME         UTL_markID
+FUNCTION STX_hltPanel(i_CntPanel, i_chk )
+  
+   INTEGER i_CntPanel , i_chk, i_segmentID
+   STRING  elmList[1024]
+   
+   REAL    ra_PanelInfo(7)
+   
+   IF( i_chk ==1 ) THEN
+     CLASSNAME.setColor() /* initialize */
+     i_segmentID = CLASSNAME.getSegID()
+     gm_segment_delete(i_segmentID+4)
+     gm_segment_flush()	
+     CLASSNAME.setLineSeg(false)
+   ELSE
+     CLASSNAME.orgColor() /* initialize */
+   END IF  
+   
+   elmList= STX_setPanel.getElemList(i_CntPanel)
+   
+   STX_getPanelEdge( i_CntPanel,elmList , ra_PanelInfo )
+   
+END FUNCTION

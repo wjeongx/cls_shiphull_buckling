@@ -1,0 +1,25 @@
+#include "lpenums.p"
+#include "lpkeywords.p"
+FUNCTION UTL_setArrayToString(array, cnt, VirtualStr)
+	    INTEGER array()
+	    INTEGER cnt
+	    STRING  VirtualStr[]
+	    INTEGER status, idx
+	    INTEGER pklist(VIRTUAL)
+
+	    status = sys_allocate_array(pklist, 1, cnt, 1, 6)
+
+	    FOR (idx = 1 TO cnt BY 1)
+		pklist(idx, 1) = LpFINITE_ELEMENT
+		pklist(idx, 2) = LpELEMENT
+		pklist(idx, 3) = array(idx)
+		pklist(idx, 4) = 0
+		pklist(idx, 5) = 0
+		pklist(idx, 6) = 0
+	    END FOR
+ 	   
+ 	    status = lp_picklist_string_creator_v(pklist(1:, 1:), cnt, 0, VirtualStr)
+	    sys_free_array(pklist)
+
+            RETURN 0
+END FUNCTION

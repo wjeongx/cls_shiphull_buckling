@@ -1,0 +1,27 @@
+
+function add_nodes()/* add nodes to all groups */
+
+
+string grpName[32]
+string elmList[virtual], strBuff[virtual]
+
+
+STRING grpList[50](VIRTUAL)
+INTEGER numGrp, i
+	
+ga_group_ngroups_get( numGrp )
+sys_allocate_array( grpList, 1, numGrp)
+ga_group_groups_get( grpList )
+
+
+for ( i=1 to numGrp )
+grpName = grpList(i)	
+uil_entity_group_members_get( grpName, 124, elmList )
+uil_list_a.clear()	
+list_create_node_ass_elem( elmList, "lista", strBuff )
+list_save_group("lista",grpName, FALSE )
+end for 	
+	
+end function
+	
+	

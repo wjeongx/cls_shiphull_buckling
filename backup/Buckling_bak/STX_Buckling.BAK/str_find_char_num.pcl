@@ -1,0 +1,22 @@
+FUNCTION str_find_char_num(s_str1,s_char,i_num)
+
+   STRING   s_str1[], s_char[], s_subStr[VIRTUAL]
+   INTEGER  i_num, i_index, i_strLength
+   
+   i_num =0
+   i_index     = STR_INDEX(s_str1,s_char)
+   i_strLength = str_length(s_str1)
+   sys_allocate_string(s_subStr,i_strLength)
+   
+   s_subStr = s_str1
+   
+   WHILE(i_index!=0)
+   
+    s_subStr = STR_SUBSTR(s_subStr,i_index+1,i_strLength)
+    i_index  = STR_INDEX(s_subStr,s_char)
+    i_num += 1
+     
+   END WHILE
+	
+	
+END FUNCTION

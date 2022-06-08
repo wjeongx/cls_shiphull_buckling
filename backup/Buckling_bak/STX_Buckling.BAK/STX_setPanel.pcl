@@ -1,0 +1,309 @@
+#include "STX.h"
+#define CLASSNAME         STX_setPanel
+#define CLASSNAME_QUOTED "STX_setPanel"
+
+CLASS CLASSNAME
+
+CLASSWIDE STRING   sa_elmList[MAX_STR](VIRTUAL)
+CLASSWIDE STRING   s_selElmList[VIRTUAL]
+CLASSWIDE REAL     ra_PanelInfo(VIRTUAL)
+
+FUNCTION init(i_chk)
+      
+            INTEGER status, i_chk
+	    INTEGER MaxElemID, GroupElemCnt
+	    INTEGER ElemTable(VIRTUAL)
+	    INTEGER CntTable(VIRTUAL), ElemFlag(VIRTUAL), UseTable(VIRTUAL), ElemChk(VIRTUAL)
+	    INTEGER GroupTable(VIRTUAL)
+	    INTEGER iv_Elems(VIRTUAL), iv_E_Nodes(VIRTUAL) 
+	    INTEGER numnode, nid(VIRTUAL)
+	    INTEGER nelem(VIRTUAL)
+	    INTEGER eid(VIRTUAL)
+	    INTEGER mxelem = 20
+	    INTEGER idx, subidx, ix, jx
+	    INTEGER Cnt, count
+	    INTEGER QueElem(VIRTUAL), QueLen, QueIdx
+	    INTEGER BufElem(VIRTUAL)
+	    INTEGER ElemID
+	    INTEGER GroupID
+	    REAL    orgVectors(VIRTUAL), Vectors(VIRTUAL)
+	    REAL    betweenAngle
+	    LOGICAL Logic
+	    STRING  VirtualStr[VIRTUAL]
+	    
+$	    STRING  sa_elmList[MAX_STR](VIRTUAL)
+	    INTEGER i_CntPanel
+$	    REAL    ra_PanelInfo(VIRTUAL)
+            
+            
+            UTL_markID.orgColor() /* initialize */
+            i_CntPanel =0  
+            
+ 
+	    SYS_ALLOCATE_ARRAY(nelem, 1, 2)
+	    SYS_ALLOCATE_ARRAY(orgVectors, 1, 3)
+	    SYS_ALLOCATE_ARRAY(Vectors, 1, 3)
+	    db_get_current_group_id(GroupID)
+	    db_get_max_elem_id(MaxElemID)
+	    db_count_elems_in_group(GroupID, GroupElemCnt)
+
+	    SYS_ALLOCATE_ARRAY(ElemTable,  1, MaxElemID)
+	    SYS_ALLOCATE_ARRAY(ElemFlag,   1, MaxElemID)
+	    SYS_ALLOCATE_ARRAY(UseTable,   1, MaxElemID)
+	    SYS_ALLOCATE_ARRAY(GroupTable, 1, MaxElemID)
+	    SYS_ALLOCATE_ARRAY(ElemChk,     1, MaxElemID)
+	    
+	    SYS_ALLOCATE_ARRAY(CntTable,   1, GroupElemCnt)
+	    SYS_ALLOCATE_ARRAY(iv_Elems,   1, GroupElemCnt)
+	    SYS_ALLOCATE_ARRAY(iv_E_Nodes, 1, GroupElemCnt, 1, 4)
+	    SYS_ALLOCATE_ARRAY(nid, 1, 4)
+
+	    db_get_elem_ids_in_group(GroupElemCnt, GroupID, iv_Elems)
+	    
+	    IF ( s_selElmList != "" ) THEN
+            	get_ids_from_entity_list( s_selElmList, "elem", GroupElemCnt, iv_Elems )
+            	 
+            END IF	
+
+	    FOR (idx = 1 TO GroupElemCnt BY 1)  
+		ElemTable(iv_Elems(idx)) = idx
+		db_get_elem_nodes(iv_Elems(idx), numnode, nid)
+		CntTable(idx) = numnode
+		GroupTable(iv_Elems(idx)) = 1
+		iv_E_Nodes(idx, 1) = nid(1)
+		iv_E_Nodes(idx, 2) = nid(2)
+
+		IF (numnode >= 3) THEN
+		   iv_E_Nodes(idx, 3) = nid(3)
+		ELSE
+		   iv_E_Nodes(idx, 3) = -1
+		END IF
+
+		IF (numnode >= 4) THEN
+		    iv_E_Nodes(idx, 4) = nid(4)
+		ELSE
+		    iv_E_Nodes(idx, 4) = -1
+		END IF
+	    END FOR
+
+
+	    SYS_FREE_ARRAY(nid)
+	    SYS_FREE_ARRAY(iv_Elems)
+
+	    SYS_ALLOCATE_ARRAY(nid, 1, 2)
+$ =================================================
+$ LOOP START
+
+	    FOR (idx = 1 TO MaxElemID BY 1) all_loop
+		IF (ElemTable(idx) == 0 || ElemChk(idx)==1) THEN
+		    ElemFlag(idx) = -1
+		    CONTINUE
+		ELSE
+		    IF (CntTable(ElemTable(idx)) == 2) THEN
+			ElemFlag(idx) = 1
+			CONTINUE
+		    END IF            
+		END IF
+
+		IF (UseTable(idx) == 1) THEN
+		    CONTINUE
+		END IF
+
+		QueIdx = 1
+		QueLen = 1
+		SYS_REALLOCATE_ARRAY(QueElem, 1, QueLen)
+		QueElem(QueIdx) = idx
+$write("+++++++++++++++++++++++++++++++++++++++++++++")
+$DUMP idx
+		REPEAT
+		    Logic = TRUE
+		    ElemID = QueElem(QueIdx)
+		
+		    IF (UseTable(ElemID) == 0 && ElemFlag(ElemID) == 0) THEN
+			SYS_ALLOCATE_ARRAY(eid, 1, mxelem*2)
+			UseTable(ElemID) = 1 
+
+			UTL_getNormVect(iv_E_Nodes(ElemTable(ElemID), 1:3), orgVectors)
+
+			FOR (subidx = 1 TO CntTable(ElemTable(ElemID)) BY 1)
+			    nid(1) = iv_E_Nodes(ElemTable(QueElem(QueIdx)), subidx)
+	   
+			    IF (subidx == CntTable(ElemTable(QueElem(QueIdx)))) THEN
+				nid(2) = iv_E_Nodes(ElemTable(QueElem(QueIdx)), 1)
+			    ELSE
+				nid(2) = iv_E_Nodes(ElemTable(QueElem(QueIdx)), subidx + 1)
+			    END IF
+
+			    db_get_elems_using_nodes(2, nid, mxelem, nelem, eid)
+			    FOR (ix = 1 TO nelem(1) BY 1)
+				FOR (jx = 1 TO nelem(2) BY 1)
+				    IF (eid(ix) == eid(mxelem + jx) && eid(ix) != ElemID) THEN
+					Cnt += 1
+					SYS_REALLOCATE_ARRAY(BufElem, 1, Cnt)
+					BufElem(Cnt) = eid(ix)
+				    END IF
+				END FOR
+			    END FOR
+			    IF (Cnt == 0) THEN
+				Logic = FALSE 
+			    ELSE IF (Cnt == 1) THEN
+				Logic = TRUE  /* only 1 elem is attachecd */
+			    ELSE IF (Cnt >= 2) THEN
+				Logic = FALSE
+			    END IF
+
+
+			    IF (Logic == TRUE) THEN
+				IF (GroupTable(BufElem(Cnt)) == 0) THEN
+  
+                                   IF ( s_selElmList != "" ) THEN 
+
+                                      Cnt = sys_array_hbound(CntTable,1)                  
+                                      SYS_REALLOCATE_ARRAY(CntTable,   1, Cnt+1)          
+	                              SYS_REALLOCATE_ARRAY(iv_Elems,   1, Cnt+1)          
+	                              SYS_REALLOCATE_ARRAY(iv_E_Nodes, 1, Cnt+1, 1, 4)    
+	                              SYS_ALLOCATE_ARRAY(nid, 1, 4)                       
+                                                                                          
+                                      ElemTable(BufElem(1)) = Cnt+1                       
+		                      db_get_elem_nodes(BufElem(1), numnode, nid)         
+		                      CntTable(Cnt+1) = numnode                           
+		                      GroupTable(BufElem(1)) = 1                          
+		                                                                          
+		                      iv_E_Nodes(Cnt+1, 1) = nid(1)                       
+		                      iv_E_Nodes(Cnt+1, 2) = nid(2)                       
+                                                                                          
+		                      IF (numnode >= 3) THEN                              
+		                         iv_E_Nodes(Cnt+1, 3) = nid(3)                    
+		                      ELSE                                                
+		                         iv_E_Nodes(Cnt+1, 3) = -1                        
+		                      END IF                                              
+                                                                                          
+		                      IF (numnode >= 4) THEN                              
+		                          iv_E_Nodes(Cnt+1, 4) = nid(4)                   
+		                      ELSE                                                
+		                          iv_E_Nodes(Cnt+1, 4) = -1                       
+		                      END IF                                              
+                                                                                          
+                                      IF( CntTable(Cnt+1) == 2 ) THEN                     
+                                         ElemFlag(BufElem(1)) = 1                  
+                                      ELSE                                                
+                                         ElemFlag(BufElem(1)) = 0                         
+                                      END IF                                              
+$ElemFlag(BufElem(1)) = 0                                                              
+                                     Cnt=1
+
+                                      IF (UseTable(BufElem(Cnt)) != 1 && @
+						CntTable(ElemTable(BufElem(Cnt))) != 2) THEN
+   					 UTL_getNormVect(iv_E_Nodes(ElemTable(BufElem(Cnt)), 1:3), Vectors)   
+   					 betweenAngle = mth_acosd(UTL_getAngles(orgVectors, Vectors))
+
+   					 IF (QueElem(QueLen) != BufElem(Cnt) && betweenAngle < 2.5) THEN          
+   					     QueLen += 1                                                          
+   					     SYS_REALLOCATE_ARRAY(QueElem, 1, QueLen)                             
+   					     QueElem(QueLen) = BufElem(Cnt) 
+$write(BufElem(Cnt) )
+$write(QueElem)    					     
+   					 ELSE 
+$DUMP betweenAngle                            
+$                                             ElemTable(BufElem(1)) = 0
+                                             ElemChk(BufElem(1)) = 1
+(     0                                      UseTable(BufElem(1)) = 0
+$                           "                 GsoupTable(BufEleM(1))$=∞ 
+ 
+   					 END IF                                 "                        †        
+   				    1  END AF
+				    	
+  $       "      ( 0      $         †END IF /* s_selEl-List != "" */
+           "             $          	
+          `                       EÃSE  /* GroupTabLe(BufEmem(Cnt)) != 0  */ 	 
+					
+			    IF (UseTable(BufElem(Cnt)) != 1 && @
+						CntTarle(ElemTable(BufElem(Cnt)))!!= 2) THEN
+†					UTL_geÙNormVect(iv_E_Oodes(ElemTable(BwfEnem(Cot)), 1:3), Vectors) 
+					betweenAngle = lth_acos`(]TL_getAngles(orgVectors, Vectnrz))
+				IF (QueEhem(QueLen) != BufElem(Cnt)"&& bet7eenAngle < :.5)"THEN         
+					    QteLen +=†1  ¢                                      $               
+					    SYSﬂREALLOCATE_ARRY(QueElgm, 1,0QueLen)                            
+					    QueElem(QueLen) = BufElem(Cnt)     "   !          `      !          					EÃSE"$"
+					END IF  0   (                      ,              `                    (
+			    END IF
+				 
+			       EFD IF   
+			       	
+			    END MF /* LOGIC = \RUE */
+ 			    	
+			!   UseTabla(QuaElem(QueIdx)) 5 1			 `  CNT = 0
+			    SYS_FRE_ARRAYhBufElem)
+	â	MND FOR 
+			SYS^FREE_ARRAY(ei`)
+$			UseTable(EdemID) = 1"
+		    END IF
+	â `  QueKdp += 1
+	    Logic = TRUE
+ 
+		UNTIL (QueItx ~ QueLen)
+
+$ need`Somethijg
+ 
+		m\h_sgrÙ(QueElem, TRUE, counT)
+		uTL_setArrayToStringQueElem, count, VirtualStr)
+                
+         !      i_CntPanel < i_CntPanel +1
+                SYS_REAlLOC@TE_ARRAX( sa_elmDist< 1, i_CntPane|)
+&d,$$$$ new ! raWPqnelInfo(5:7) added $$$$$ 
+$           !    YSREALLOCATE_ARRAY* za_PanelInfo, 1,i_cotPanel,1,4)
+   `         0 (SYS_REALLOAATE_ARRAQ( ra_PanelInfo, 5,i_knTP`nel,1,7)
+              0 sa_elmÃict(i_CntPanel) = Vmrtual[tr
+$ panel draw
+   (            STX_gEtPanelEdge( i_CntPanel, VirtualStr, ra_PAnelInfo(i_AntPanel,1:7) )
+	SYS_FVEE_ARRAY(QueElmm)
+	)cou.t = 0
+
+	(   END FOR
+
+$ other FTN Call 
+4 IF i_chk =  < THEN check panel resutls            $  IF( i_chi==0 )THEN  STX_check_panel(i_CntPanel, sa_elmList, r·_PanelInfo)
+            s_selElmList = ""
+   (        RETURN 0
+END FUNCTION
+â
+FUNCTION setSelElmList(s_elmList9 
+   ”TRING s_elmList[]
+   s]selElmList = s_dlmList
+END FUNCTION
+
+FUNCTI_N getPlnIn&o()ç
+   rETURJ ra_PanelInfo
+END!FUCTION
+FUNCTION getElemLisT(iWpcnelID)
+$  INTEGER k_panelID
+   RETUZN sa_El}List(i_panelMD)
+END FUNCTION
+
+FUNCTION getElemL)stAll()
+   RGTURN sa_elmList
+END FUNCTYON
+
+
+FUNCTION setNgwVal(dlmLiqt, pnlInfo)
+  INTEGER$i_cntPnl
+  STRING  mlmList[]()
+ "REAL    pnlInfo()
+  
+  CLASSNAMM.freeMem()
+  i_cntPÓl = sys_arÚay_hbound(glmList,1)
+  C[S_ALLOCAVE_ARRAY(sa_elmList,1,i_cntPnl)
+  SYS[ALLCATE_ARRAY(raTanelInfg,1,i_cntPol,1,7)
+  ç
+  sa_elmNis| ! = elmList
+  ra_PanelInfo = pnlInfo
+
+END FUNSTION
+
+
+FENCTION freeMem()
+  SYS_VREE_ARRAY(sa_elmList)	
+  SYS_FREE_ARRAY(ra_X·>elInfk)
+  	  	    	
+END FENCTIOŒç
+END!CLASS 

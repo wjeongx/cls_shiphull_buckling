@@ -1,0 +1,84 @@
+#include "appforms.p"
+#include "lpenums.i"
+#define CLASSNAME "DNV_Buckling_Panel_Property"
+
+class CLASSNAME
+
+classwide widget form_id, button_apply, button_cancel
+
+function init()
+    real yloc_form = 0
+
+   form_id = ui_form_create(CLASSNAME,       @
+          /* x location */  FORM_X_LOC ,     @
+          /* y location */  FORM_Y_LOC,"ul", @
+          /* width      */  FORM_WID_SML,    @
+          /* height     */  FORM_HGT_TALL,   @
+          /* label      */  CLASSNAME,       @
+                            "")
+
+    ui_optionmenu_create( form_id, "callback",
+                             AOM_MENU_X_LOC,
+                             ACTION_MENU_Y_LOC,
+                             AOM_MENU_LABEL_LEN,
+                             ACTION, FALSE )
+    ui_optionmenu_create( form_id, "callback",
+                             AOM_MENU_X_LOC,
+                             OBJECT_MENU_Y_LOC,
+                             AOM_MENU_LABEL_LEN,
+                             OBJECT, FALSE )
+    ui_optionmenu_create( form_id, "callback",
+                             AOM_MENU_X_LOC,
+                             METHOD_MENU_Y_LOC,
+                             AOM_MENU_LABEL_LEN,
+                             METHOD, FALSE )
+    ui_separator_create ( form_id, "", 0.0,
+                             AOM_SEPARATOR_Y_LOC,
+                             FORM_WID_SML, TRUE )
+
+    yloc_form += AOM_SEPARATOR_Y_LOC + INTER_WIDGET_SPACE
+
+      button_apply=ui_button_create(                 @
+      /*   parent  */           form_id,             @
+      /*  callback */           "apply_cb",           @
+      /*     x     */           BUTTON_HALF_X_LOC1,  @
+      /*     y     */           yloc_form,           @
+      /*   width   */           BUTTON_WID_HALF,     @
+      /*   height  */           BUTTON_DEFAULT_HGT,  @
+      /*   label   */           "Apply",             @
+      /*    TRUE   */           TRUE,                @
+      /* highlight */           TRUE)
+
+      button_cancel=ui_button_create(                  @
+      /*   parent  */            form_id,             @
+      /*  callback */            "cancel_cb",          @
+      /*     x     */            BUTTON_HALF_X_LOC2,  @
+      /*     y     */            yloc_form,           @
+      /*   width   */            BUTTON_WID_HALF,     @
+      /*   height  */            BUTTON_DEFAULT_HGT,  @
+      /*   label   */            "Cancel",            @
+      /*    TRUE   */            TRUE,                @
+      /* highlight */            FALSE)
+
+end function
+
+function display()
+
+    ui_exec_function(CLASSNAME, "init")
+    ui_form_display(CLASSNAME)
+
+end function
+
+function apply_cb()
+
+    ui_form_hide(CLASSNAME)
+    ui_form_delete(CLASSNAME)
+end function
+
+function cancel_cb()
+
+    ui_form_hide(CLASSNAME)
+    ui_form_delete(CLASSNAME)
+end function
+
+end class

@@ -1,0 +1,241 @@
+FUNCTION get_vector()
+ 
+ INTEGER status, i, j
+ INTEGER numels, elem_ids(virtual), topo_codes(virtual)
+ INTEGER shape(virtual), nnod(virtual), elm_id(1), nodes(virtual)
+ 
+ STRING  grpName[32](4), elmList[virtual]
+
+ REAL    tol, edge_info, ncoord(3), ncoords(3,3), nvct(3)
+ 
+   grpName(1) ="PLAN"
+   grpName(2) ="SECT"
+   grpName(3) ="ELEV"
+   grpName(4) ="ETC"
+   
+   
+   FOR ( i =1 to 4)
+     ga_group_create( grpName(i))
+   END FOR
+$   ga_group_create("DECK-PLANE")
+$   ga_group_create("SECTION-PLANE")      
+$   ga_group_create("ELEVATION-PLANE")    
+   
+   
+   
+   db_count_elems( numels ) 
+    
+   sys_allocate_array( elem_ids,   1, numels )
+   sys_allocate_array( topo_codes, 1, numels )
+   sys_allocate_array( shape,      1, numels )
+   sys_allocate_array( nnod,       1, numels ) 
+  
+        
+   db_get_elem_ids( numels, elem_ids )
+   db_get_elem_etop( numels, elem_ids, topo_codes )
+   db_get_elem_topology_data( numels, topo_codes,shape, nnod)
+   
+ 
+   FOR ( i =1 to numels  )
+   
+     SWITCH ( shape(i) )
+     
+      CASE(2) /* for beam */
+  
+        sys_allocate_array( nodes,1, 2 ) 
+        elm_id(1) = elem_ids(i)
+        db_get_nodes_for_elems(1,2,elm_id,nodes)
+            
+            for ( j=1 to 2)
+             
+             db_get_node(nodes(j), ncoord)
+             ncoords(j,1)=ncoord(1)
+             ncoords(j,2)=ncoord(2)
+             ncoords(j,3)=ncoord(3)
+            
+            end for    
+             get_norm_vector( shape(i), ncoords, nvct)
+             get_1d_group(nvct,elm_id)
+$            $ dump nvct
+                  
+      CASE(3) 
+        sys_allocate_array( nodes,1, 3 ) 
+        elm_id(1) = elem_ids(i)
+        db_get_nodes_for_elems(1,3,elm_id,nodes)
+       
+           for ( j=1 to 3)
+             
+             db_get_node(nodes(j), ncoord)
+             ncoords(j,1)=ncoord(1)
+             ncoords(j,2)=ncoord(2)
+             ncoords(j,3)=ncoord(3)
+            
+            end for
+          get_norm_vector( shape(i),ncoords, nvct)
+          get_plane(nvct,elm_id)
+       
+      CASE(4) 
+        sys_allocate_array( nodes,1, 4 ) 
+        elm_id(1) = elem_ids(i)
+        db_get_nodes_for_elems(1,4,elm_id,nodes)
+            
+            for ( j=1 to 3)
+             
+             db_get_node(nodes(j), ncoord)
+             ncoords(j,1)=ncoord(1)
+             ncoords(j,2)=ncoord(2)
+             ncoords(j,3)=ncoord(3)
+            
+            end for
+         
+         get_norm_vector( shape(i),ncoords, nvct)
+         get_plane(nvct,elm_id)
+       $  dump nvct
+       
+       DEFAULT
+        
+     END SWITCH
+   
+   
+   END FOR 
+	
+/* generate etc group */
+ uil_list_a.clear(  )
+ uil_list_b.clear(  ) 	
+ 
+ ga_group_create( "ALL_FEM_GROUP" )
+ ga_group_entity_add("ALL_FEM_GROUP", "Node 1:# Element 1:#" )
+
+ list_create_elem_ass_group( 0, ["ALL_FEM_GROUP"], 1, "lista", elmList )
+ list_create_elem_ass_group( 0, ["PLAN", "ELEV", "SECT"], 3, "listb", elmList )
+
+
+ uil_list_boolean.create( "a-b" ) 
+ list_save_group( "listc", "ETC", FALSE  ) 
+ 
+ uil_list_a.clear(  )
+ $ get barElms from ETC
+ list_create_elem_ass_group( 2, ["ETC"], 1, "lista", elmList )  
+ list_save_group( "lista", "BARS", FALSE ) 	
+ list_remove_group( "lista", "ETC" ) 		
+	
+ 
+ END FUNCTION
+ 
+ 
+FUNCTION get_norm_vector( shape_chk,xyzs, nvct )
+ 
+ 	INTEGER shape_chk
+ 	REAL xyzs(), mag, nvct()
+ 	REAL vct1(3), vct2(3), vct(3)
+ 
+ 	vct1(1) = xyzs(2, 1) - xyzs(1, 1)
+ 	vct1(2) = xyzs(2, 2) - xyzs(1, 2)
+ 	vct1(3) = xyzs(2, 3) - xyzs(1, 3)
+      
+      if ( shape_chk != 2 )  then
+ 	
+ 	vct2(1) = xyzs(3, 1) - xyzs(2, 1)
+ 	vct2(2) = xyzs(3, 2) - xyzs(2, 2)
+ 	vct2(3) = xyzs(3, 3) - xyzs(2, 3)
+ 
+ 	cross_product( vct2, vct1, vct )
+      
+      else 
+       
+       vct(1) = vct1(1)
+       vct(2) = vct1(2)
+       vct(3) = vct1(3)
+       
+      end if
+               mag =mth_sqrt(  vct(1)*vct(1) + vct(2)*vct(2) + vct(3)*vct(3) )
+               	
+               nvct(1) = vct(1)/mag
+               nvct(2) = vct(2)/mag
+               nvct(3) = vct(3)/mag
+                               
+ END FUNCTION 
+ 
+ 
+FUNCTION cross_product( vct1, vct2, vct )
+ 
+ 	REAL vct1(), vct2(), vct()
+ 
+ 	vct(1) = vct1(2)*vct2(3) - vct1(3)*vct2(2)
+ 	vct(2) = vct1(3)*vct2(1) - vct1(1)*vct2(3)
+ 	vct(3) = vct1(1)*vct2(2) - vct1(2)*vct2(1)
+ 
+ END FUNCTION 
+ 
+ 
+FUNCTION get_plane( vct , elm_id)
+   
+ REAL vct()
+ REAL tolerence
+ INTEGER elm_id()
+
+ 
+ tolerence = 0.005
+ 
+ IF ( abs(vct(1)) < tolerence  &&   abs(vct(2))  < tolerence && abs(vct(3)) == 1 ) THEN 
+ 
+      ga_group_entity_add("PLAN",  "Elm "//str_from_integer(elm_id(1))  )
+         
+ END IF
+   
+ IF ( abs(vct(1)) < tolerence  &&   abs(vct(3))  < tolerence && abs(vct(2)) == 1 ) THEN 
+ 
+      ga_group_entity_add("ELEV",  "Elm "//str_from_integer(elm_id(1))  )
+         
+ END IF  
+   
+   
+ IF ( abs(vct(2)) < tolerence  &&   abs(vct(3))  < tolerence && abs(vct(1)) == 1 ) THEN 
+ 
+      ga_group_entity_add("SECT",  "Elm "//str_from_integer(elm_id(1))  )
+         
+ END IF     
+   
+END FUNCTION
+ 
+FUNCTION get_1d_group(vct , elm_id)
+
+  REAL vct()
+  REAL tolerence
+  INTEGER elm_id(), i
+  
+  string  grpName[32](3)
+   
+     grpName(1) ="0_0_1"            
+     grpName(2) ="0_1_0"            
+     grpName(3) ="1_0_0"            
+                                    
+                                   
+     FOR ( i =1 to 3)              
+       ga_group_create( grpName(i))
+     END FOR                       
+     
+        
+     tolerence = 0.005                                                                       
+                                                                                             
+     IF ( abs(vct(1)) < tolerence  &&   abs(vct(2))  < tolerence && abs(vct(3)) == 1 ) THEN  
+                                                                                             
+          ga_group_entity_add(grpName(1),  "Elm "//str_from_integer(elm_id(1))  )                
+                                                                                             
+     END IF                                                                                  
+                                                                                             
+     IF ( abs(vct(1)) < tolerence  &&   abs(vct(3))  < tolerence && abs(vct(2)) == 1 ) THEN  
+                                                                                             
+          ga_group_entity_add(grpName(2),  "Elm "//str_from_integer(elm_id(1))  )                
+                                                                                             
+     END IF                                                                                  
+                                                                                             
+                                                                                             
+     IF ( abs(vct(2)) < tolerence  &&   abs(vct(3))  < tolerence && abs(vct(1)) == 1 ) THEN  
+                                                                                             
+          ga_group_entity_add(grpName(3),  "Elm "//str_from_integer(elm_id(1))  )                
+                                                                                             
+     END IF 	                                                                                
+	
+END FUNCTION 
+ 

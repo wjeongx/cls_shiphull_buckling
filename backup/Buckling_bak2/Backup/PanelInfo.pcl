@@ -1,0 +1,467 @@
+#include "appforms.p"
+#include "lpenums.p"
+
+$ Start
+
+CLASS PanelInfo
+classwide widget frm_mainform,opt_action,opt_object,opt_method,lbox_loading, btn_option, object_item(4), @
+                 sfra_coord_trans,sdbox_coord_trans,fra_parm,dbox_sigf,dbox_cormgn,dbox_bc1,dbox_bc2, @
+                 fra_sltelm, sdbox_elm, fra_appregion, opt_coord_trans, dbox_span, dbox_space
+
+classwide integer ids
+classwide real r_sigf(VIRTUAL),r_tk(VIRTUAL),r_span(VIRTUAL), r_space(VIRTUAL),r_bc2(VIRTUAL)
+classwide string s_elm_grp[256](VIRTUAL),s_bc1[20](VIRTUAL),s_coord_id[12]
+
+/* ===========================================
+             Initial FUNCTION
+   =========================================== */
+   
+   $ Start
+	FUNCTION init()
+	real yloc_main,yloc_parm,yloc_appregion,FRA_APPRGN_HGT
+
+		ids=0
+
+		/* ======================== main form =================================== */
+
+		frm_mainform=ui_form_create("form",@
+									 /* x location */  FORM_X_LOC , @
+									 /* y location */ FORM_Y_LOC,"ul", @
+									 /* width      */ FORM_WID_SML, @
+									 /* height     */ FORM_HGT_TALL, @
+									 /* label      */ "PanelInfo","")
+
+		/* ============ action, object, method - option menu ===================== */
+		opt_action=ui_optionmenu_create(/* parent       */  form_id, @
+										 /* callback     */  "Action_cb", @
+										 /* x            */ AOM_MENU_X_LOC, @
+										 /* y            */ ACTION_MENU_Y_LOC, @
+										 /* label length */ AOM_MENU_LABEL_LEN, @
+										 /* label        */ "Action:", @
+										 /*              */  false)
+
+				ui_item_create(opt_action,"CREATE","Create",true)
+		
+		yloc_main = METHOD_MENU_Y_LOC + INTER_WIDGET_SPACE
+
+		ui_separator_create(/* patrent  */  form_id, @
+							/* callback */  "",@
+							/* x        */  0, @
+							/* y        */  yloc_main, @
+							/* width    */  FORM_WID_SML, @
+											true)
+
+		/* ================= configuration button =========================== */
+
+		yloc_main += INTER_WIDGET_SPACE
+
+		FRA_APPRGN_HGT=TOGGLE_HGT+SFRAME_1SDB_HGT_LABOVE+INTER_WIDGET_SPACE*3+BUTTON_DEFAULT_HGT
+
+		fra_appregion=ui_frame_create(form_id,"", @
+								 FRAME_X_LOC_COL1, @
+								 yloc_main, @
+								 FRAME_WID_SINGLE+0.1, @
+								 FRA_APPRGN_HGT, @
+								 "Application Region")
+
+		/* =============== element group LIST =================================================== */
+		yloc_appregion = FRAME_T_MARGIN
+
+		fra_sltelm=ui_selectframe_create(fra_appregion,"ADD_cb", @
+										 SFRAME_X_LOC_COL1, @
+										 yloc_appregion, @
+										 SFRAME_WID_SINGLE, @
+										 SFRAME_1SDB_HGT_LABOVE, @
+										 "Auto Execute", @
+										 false)
+
+		sdbox_elm= ui_selectdatabox_create(fra_sltelm,"", @
+										   SFRAME_L_MARGIN, @
+										   0, @
+										   SDBOX_LABEL_LEN_SINGLE, @
+										   SDBOX_WID_SINGLE, @
+										   "Select Element Group",@
+										   "",true, @
+										   "elem2d", "" )
+
+		yloc_appregion += TOGGLE_HGT + SFRAME_1SDB_HGT_LABOVE + INTER_WIDGET_SPACE
+
+		/* ================ add & cancel button ================================================ */
+		ui_button_create(fra_appregion, @
+						"ADD_cb", @
+						 BUTTON_HALF_X_LOC1, @
+						 yloc_appregion, @
+						 BUTTON_WID_HALF, @
+						 BUTTON_DEFAULT_HGT, @
+						 "Add", @
+						 true,false)
+
+		ui_button_create(fra_appregion,"remove_cb", @
+									   BUTTON_HALF_X_LOC2, @
+									   yloc_appregion, @
+									   BUTTON_WID_HALF, @
+									   BUTTON_DEFAULT_HGT, @
+									   "Remove", @
+									   true,false)
+
+		$ selected element group
+
+		yloc_main += LABEL_HGT+FRA_APPRGN_HGT+INTER_WIDGET_SPACE
+
+		ui_button_create(form_id,"APPLY_CB", @
+									   BUTTON_HALF_X_LOC1, @
+									   yloc_main, @
+									   BUTTON_WID_HALF, @
+									   BUTTON_DEFAULT_HGT, @
+									   "Apply", @
+									   true,false)
+
+		ui_button_create(form_id,"CANCEL_CB", @
+									  BUTTON_HALF_X_LOC2, @
+									  yloc_main, @
+									  BUTTON_WID_HALF, @
+									  BUTTON_DEFAULT_HGT, @
+									  "Cancel", @
+									  true,false)
+
+		sys_allocate_array(r_sigf,1,1)
+		sys_allocate_array(r_tk,1,1)
+		sys_allocate_array(s_elm_grp,1,1)
+
+	END FUNCTION
+	$ End
+
+	$ Start
+	FUNCTION display()
+
+		ui_form_display("PanelInfo")
+		udf_load_result_cases(lbox_loading)
+		
+	END FUNCTION
+	$ End
+
+	$ Start
+	FUNCTION Action_cb(s_action_item)
+	string s_action_item[]
+	real CREATE_Y_LOC, READ_RESULT_Y_LOC
+
+	READ_RESULT_Y_LOC = METHOD_MENU_Y_LOC + OPT_MENU_HGT_NO_LABOVE + INTER_WIDGET_SPACE * 2
+	CREATE_Y_LOC = READ_RESULT_Y_LOC + BUTTON_DEFAULT_HGT + HALF_SPACE * 3 + OPT_MENU_HGT_LABOVE + SFRAME_1SDB_HGT_LABOVE + SFRAME_T_MARGIN
+
+				ui_wid_set(lbox_loading,"Y", CREATE_Y_LOC)
+				ui_wid_set(btn_option,"VISIBLE",TRUE)
+				ui_wid_set(opt_coord_trans,"VISIBLE",TRUE)
+				ui_wid_set(sfra_coord_trans,"VISIBLE",TRUE)
+				ui_wid_set(fra_parm,"VISIBLE",TRUE)
+				ui_wid_set(fra_appregion,"VISIBLE",TRUE)
+				ui_wid_set(object_item(4),"ENABLE",TRUE)
+
+	END FUNCTION
+	$ End 
+
+	$ Start 
+	FUNCTION coord_trans_cb(s_item)
+	STRING s_item[]
+
+		SWITCH (s_item)
+
+			CASE("CID")
+				ui_wid_set (sfra_coord_trans, "VISIBLE", TRUE)
+				ui_wid_set (sdbox_coord_trans, "DATATYPE", "FRAME")
+				
+			CASE("PCID")
+				ui_wid_set (sfra_coord_trans, "VISIBLE", TRUE)
+				ui_wid_set (sdbox_coord_trans, "DATATYPE", "AXIS")
+			
+			CASE("GROBAL")
+				ui_wid_set (sfra_coord_trans, "VISIBLE", FALSE)
+				
+			CASE ("DEFAULT")
+				ui_wid_set (sfra_coord_trans, "VISIBLE", FALSE)
+						
+		END SWITCH
+
+	END FUNCTION
+	$ End 
+
+	$ Start
+	FUNCTION CANCEL_CB()
+
+	   ids=0
+	   ui_form_hide("PanelInfo")
+
+	END FUNCTION
+	$ End
+
+	$ Start
+	FUNCTION ADD_cb()
+	STRING select_elm_list_item[1000]
+	INTEGER i_be_node(4)
+	REAL span, space
+
+		ids += 1
+
+			sys_reallocate_array(r_sigf,1,ids)
+			sys_reallocate_array(r_span,1,ids)
+			sys_reallocate_array(r_space,1,ids)
+			sys_reallocate_array(s_elm_grp,1,ids)
+
+			ui_wid_get(dbox_sigf,"value",r_sigf(ids))
+			ui_wid_get(dbox_span,"value",span)
+			ui_wid_get(dbox_space,"value",space)
+
+			ui_wid_get(sdbox_elm,"value",s_elm_grp(ids))
+			select_elm_list_item="No."// str_from_integer(ids) //" :"//s_elm_grp(ids)
+			ui_writec("%s",select_elm_list_item)
+
+			IF(span <= 0 || space <=0) THEN
+				PanelInfo.get_panel_info(s_elm_grp(ids),i_be_node)
+				PanelInfo.get_a_n_b(i_be_node,r_span(ids),r_space(ids))
+			ELSE
+				r_span(ids) = span
+				r_space(ids) = space
+			END IF
+
+	END FUNCTION
+	$ End
+
+	/* =======================================
+			remove button callback fuction
+	   ======================================= */
+
+	$ Start
+	FUNCTION remove_cb()
+
+	s_elm_grp(ids)=""
+
+	ui_writec("No. %d is deleted",ids)
+
+	ids -= 1
+
+	END FUNCTION
+	$ End
+
+	/* ====================================================
+		apply button callback
+	  ====================================================== */
+
+	$ Start
+	FUNCTION APPLY_CB()
+	STRING action[20]
+	INTEGER status
+
+		status = PanelInfo.Buck_Panel_Info()
+		
+		ids = 0
+	END FUNCTION
+	$ End
+
+	$ Start
+	FUNCTION Buck_Panel_Info()
+	STRING fname_inp[64],group_name[32]
+	INTEGER fid, nrc, i, j, lcid, scid, i_data(5), i_result_id(5), fopt_id, i_tmp,group_id
+	STRING s_rc_list[100](VIRTUAL),s_lc_title[64],s_sc_title[64],opt_coord_item[16],sdbox_coord_item[16],s_data[10](14)
+	REAL r_data(11),r_t,r_sigx,r_sigy,r_tau
+	REAL E, NU,INA,NA, MSH,MSS,MWH,MWS
+	LOGICAL Hull_Girder, local_sigx
+
+	db_get_current_group_id(group_id)
+	db_get_group_name(group_id,group_name)
+	fname_inp=group_name//".inp"
+
+	$ fname_inp = "PanelInfo.inp"
+
+	text_open(fname_inp, "NOWV",0,0,fid)
+
+	text_write_string(fid, str_from_integer(nrc))
+	text_write_string(fid, str_from_integer(ids))
+
+	string layer[5](2)
+	integer idx
+
+	$ Start
+	FOR(i = 1 TO ids)
+		i_data(1) = i
+		r_data(1)= r_sigf(i)
+		r_data(2)= PanelInfo.get_panel_thickness(s_elm_grp(i))
+		r_data(3)=r_span(i)
+		r_data(4)=r_space(i)
+		
+		text_write(fid,"%I5%%7F12.3%",i_data,r_data,"")
+		
+	END FOR
+
+	text_close(fid,"")
+	
+	END FUNCTION
+	$ End
+	
+	$ Start
+	FUNCTION get_panel_info(element_group,nd)
+
+	string element_group[]
+	integer status,id_element(virtual),nid(4),n(1000,4),n1(1000,4),nd()
+	integer num_element,num_node,max_nnode,cnt,ccnt,icnt,iccnt
+
+
+	num_element=fem_u_count_id_list( 1024, @
+								 element_group, @
+								 false, @
+								 status)
+
+	   if(list_error_msg(status,2,"")) then
+
+			return status
+	   end if
+
+	   if(num_element==0) then
+		list_error_msg(48000004,2,"")
+		return 48000004
+	   end if
+
+	sys_allocate_array(id_element,1,num_element)
+
+	fem_u_get_id_list( 1024, @
+					   element_group, @
+					   num_element, @
+					   true, @
+					   id_element)
+
+	for(cnt=1 to num_element) 
+	  db_get_elem_nodes(id_element(cnt),num_node,nid)
+
+		if(max_nnode < num_node) then
+		   max_nnode=num_node
+		 end if
+		
+		for(ccnt=1 to num_node)
+		   n(cnt,ccnt)=nid(ccnt)
+		
+		end for
+
+	end for
+
+	for(cnt=1 to num_element)
+	   for(ccnt=1 to num_node )
+		  for(icnt=1 to num_element)
+			 for(iccnt=1 to num_node)
+			 
+				if(cnt!=icnt && ccnt!=iccnt) then
+					if(n(cnt,ccnt)==n(icnt,iccnt)) then
+						 n1(cnt,ccnt)=-1
+						 n1(icnt,iccnt)=-1
+					end if
+				end if
+			 end for
+		  end for
+	   end for
+	end for
+
+	for(cnt=1 to num_element)
+	   for(ccnt=1 to max_nnode )
+		   if(n1(cnt,ccnt)!=-1) then
+			  nd(ccnt)=n(cnt,ccnt)          
+		   end if
+	   end for
+	end for
+
+	END FUNCTION
+	$ End
+
+	FUNCTION get_a_n_b(belm_nd,l,s)
+
+	integer belm_nd()
+	real a1,a2,b1,b2,side1,side2,l,s,xyz1(3),xyz2(3),xyz3(3),xyz4(3)
+
+	db_get_node(belm_nd(1),xyz1)
+	db_get_node(belm_nd(2),xyz2)
+	db_get_node(belm_nd(3),xyz3)
+	db_get_node(belm_nd(4),xyz4)
+
+	if(mth_abs(xyz1(1)-xyz2(1))>=mth_abs(xyz2(1)-xyz3(1))) then
+
+		a1=sqrt((xyz1(1)-xyz2(1))**2+(xyz1(3)-xyz2(3))**2)
+		b1=sqrt((xyz2(2)-xyz3(2))**2+(xyz2(3)-xyz3(3))**2)
+		a2=sqrt((xyz3(1)-xyz4(1))**2+(xyz3(3)-xyz4(3))**2)
+		b2=sqrt((xyz4(2)-xyz1(2))**2+(xyz4(3)-xyz1(3))**2)
+
+	else
+		a1=sqrt((xyz1(2)-xyz2(2))**2+(xyz1(3)-xyz2(3))**2)
+		b1=sqrt((xyz2(1)-xyz3(1))**2+(xyz2(3)-xyz3(3))**2)
+		a2=sqrt((xyz3(2)-xyz4(2))**2+(xyz3(3)-xyz4(3))**2)
+		b2=sqrt((xyz4(1)-xyz1(1))**2+(xyz4(3)-xyz1(3))**2)
+
+	end if
+
+			
+		side1=(mth_abs(a1)+mth_abs(a2))/2
+		side2=(mth_abs(b1)+mth_abs(b2))/2
+		
+		if(side1>=side2) then
+			l=side1
+			s=side2
+			
+		else
+			l=side2
+			s=side1
+		end if	
+
+
+	END FUNCTION
+
+	$ Start
+	FUNCTION get_panel_thickness(element_group)
+
+	string element_group[],character_val[5]
+	integer num_element,status,id_element(virtual),id_region(500),cnt,mat_id,data_type, @
+			integer_val,coord_id,node_id,field_id
+			
+	real sum_thick,mean_thick,thick(3)
+
+	num_element=fem_u_count_id_list( 1024, @
+								 element_group, @
+								 false, @
+								 status)
+
+	   if(list_error_msg(status,2,"")) then
+
+			return status
+	   end if
+
+	   if(num_element==0) then
+		list_error_msg(48000004,2,"")
+		return 48000004
+	   end if
+
+	sys_allocate_array(id_element,1,num_element)
+
+	fem_u_get_id_list( 1024, @
+					   element_group, @
+					   num_element, @
+					   true, @
+					   id_element)
+
+
+	/* ====  mean thickness of selected elements ==== */
+
+	db_get_region_for_elements(num_element,id_element,id_region)
+
+	   sum_thick=0
+
+	for(cnt=1 to num_element)
+		db_get_prop_value(id_region(cnt),36,mat_id,data_type,integer_val,@
+						 thick,character_val,coord_id,node_id,field_id)
+
+		sum_thick=sum_thick+thick(1)
+
+	end for
+
+	mean_thick=sum_thick/num_element
+
+
+	return mean_thick
+
+	END FUNCTION
+
+END CLASS
+$ End 
